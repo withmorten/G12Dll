@@ -1,0 +1,1 @@
+zCOption *&zoptions = *(zCOption **)0x00ABE8AC;

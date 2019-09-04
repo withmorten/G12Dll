@@ -5,7 +5,12 @@
 *.obj
 *.dll
 *.pdb
+*.txt
+*.rar
 */Release
 */Debug
 .vs/*
+*.ignore
+enumerators.py
+*.zip
 *.aps

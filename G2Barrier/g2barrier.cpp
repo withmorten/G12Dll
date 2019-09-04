@@ -15,7 +15,7 @@
 
 #define WORLD_NAME "WORLD"
 
-static char worldName[MAX_PATH];
+static char worldName[MAX_PATH] = { '\0' };
 
 #define POINTS_WORLD 38
 
@@ -25,9 +25,7 @@ float hMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 {
 	float real_dist;
 	zVEC2 pos2d, a, b, nearest;
-
-	int i;
-
+	int showLineOfDeath = ogame->world->masterFrameCtr && oCNpc::godmode;
 	dist = 10000000.0f;
 
 	pos2d.n[0] = pos.n[0];
@@ -38,15 +36,20 @@ float hMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 		return dist;
 	}
 
-	for (i = 0; i < POINTS_WORLD - 1; i++)
+	for (int x = 0; x < POINTS_WORLD - 1; x++)
 	{
-		a.n[0] = newPointList[i].n[0];
-		a.n[1] = newPointList[i].n[1];
+		a.n[0] = newPointList[x].n[0];
+		a.n[1] = newPointList[x].n[1];
 
-		b.n[0] = newPointList[i + 1].n[0];
-		b.n[1] = newPointList[i + 1].n[1];
+		b.n[0] = newPointList[x + 1].n[0];
+		b.n[1] = newPointList[x + 1].n[1];
 
 		GetNearestPointFromLineSegment2D(a, b, pos2d, nearest);
+
+		if (showLineOfDeath)
+		{
+			DrawLineSegment2D(a, b, pos.n[1], (x & 1) ? GFX_BLUE : GFX_LBLUE);
+		}
 
 		real_dist = sqrtf((nearest.n[1] - pos2d.n[1]) * (nearest.n[1] - pos2d.n[1]) +
 							(nearest.n[0] - pos2d.n[0]) * (nearest.n[0] - pos2d.n[0]));
@@ -71,7 +74,7 @@ void hMagFrontier::DoCheck(void)
 
 		if (world)
 		{
-			if (!_stricmp(world->worldName._Ptr, worldName))
+			if (!_strnicmp(world->worldName._Ptr, worldName, world->worldName._Len))
 			{
 				if (this->npc)
 				{
@@ -212,10 +215,7 @@ void PatchMagicFrontier(void)
 {
 	if (G12GetPrivateProfileBool("MagicFrontierEnable", FALSE))
 	{
-		if (!strlen(worldName))
-		{
-			G12GetPrivateProfileString("WorldName", WORLD_NAME, worldName, MAX_PATH);
-		}
+		if (!*worldName) G12GetPrivateProfileString("WorldName", WORLD_NAME, worldName, MAX_PATH);
 
 		MagicFrontierNewPointListInit();
 
@@ -224,14 +224,18 @@ void PatchMagicFrontier(void)
 
 	if (G12GetPrivateProfileBool("MagicFrontierPointsWorldGRM", FALSE))
 	{
-		// GRMFixes has some different points ... just included here for now
+		// GRMFixes has some different points at the old mine pass ... just included here for now
 		MagicFrontierNewPointListInitGRM();
 	}
 }
 
-#define BARRIER_MIN_OPACITY 0
-#define BARRIER_MAX_OPACITY 120
 #define BARRIER_COLOR 0x00FFFFFF
+
+const int barrierEverLoomingMinOpacity = 1;
+const int barrierEverLoomingMaxOpacity = 15;
+
+static int barrierMinOpacity = 0;
+static int barrierMaxOpacity = 120;
 
 static int meshLoaded = FALSE;
 static int firstRender = TRUE;
@@ -246,19 +250,19 @@ static int alwaysVisible;
 static int tremorEnable;
 static int earthQuakeEnable;
 
-static int activeThunder_Sector1;
-static int activeThunder_Sector2;
-static int activeThunder_Sector3;
-static int activeThunder_Sector4;
+static int activeThunder_Sector1 = FALSE;
+static int activeThunder_Sector2 = FALSE;
+static int activeThunder_Sector3 = FALSE;
+static int activeThunder_Sector4 = FALSE;
 
-static zCSoundFX *sfx1;
-static zTSoundHandle sfxHandle1;
-static zCSoundFX *sfx2;
-static zTSoundHandle sfxHandle2;
-static zCSoundFX *sfx3;
-static zTSoundHandle sfxHandle3;
-static zCSoundFX *sfx4;
-static zTSoundHandle sfxHandle4;
+static zCSoundFX *sfx1 = NULL;
+static zTSoundHandle sfxHandle1 = 0;
+static zCSoundFX *sfx2 = NULL;
+static zTSoundHandle sfxHandle2 = 0;
+static zCSoundFX *sfx3 = NULL;
+static zTSoundHandle sfxHandle3 = 0;
+static zCSoundFX *sfx4 = NULL;
+static zTSoundHandle sfxHandle4 = 0;
 
 static float nextActivation = 8000.0f;
 
@@ -304,7 +308,7 @@ void hBarrier::Init()
 {
 	this->originalTexUVList = 0;
 
-	this->skySphereMesh = zCMesh::Load(zSTRING("magicfrontier_out.3ds"), TRUE);
+	this->skySphereMesh = zCMesh::Load(zSTRING("Magicfrontier_Out.3ds"), TRUE);
 
 	if (this->skySphereMesh)
 	{
@@ -551,14 +555,14 @@ int hBarrier::Render(zTRenderContext &rndContext, int fadeInOut, int alwaysVisib
 					timeUpdatedFade = ztimer.totalTimeFloat;
 				}
 
-				if (this->fadeState > BARRIER_MAX_OPACITY)
+				if (this->fadeState > barrierMaxOpacity)
 				{
 					if (firstRender)
 					{
 						firstRender = FALSE;
 					}
 
-					this->fadeState = BARRIER_MAX_OPACITY;
+					this->fadeState = barrierMaxOpacity;
 					this->fadeIn = FALSE;
 					showThunders = TRUE;
 					fadeTime = ztimer.totalTimeFloat;
@@ -587,9 +591,20 @@ int hBarrier::Render(zTRenderContext &rndContext, int fadeInOut, int alwaysVisib
 						timeUpdatedFade = ztimer.totalTimeFloat;
 					}
 
-					if (this->fadeState <= BARRIER_MIN_OPACITY)
+					if (this->fadeState <= barrierMinOpacity)
 					{
-						this->fadeState = BARRIER_MIN_OPACITY;
+						// ever looming barrier
+						if (barrierMinOpacity >= barrierEverLoomingMinOpacity)
+						{
+							// randomise it a bit
+							barrierMinOpacity = barrierEverLoomingMinOpacity + _rand() % ((barrierEverLoomingMaxOpacity + 1) - barrierEverLoomingMinOpacity);
+							this->fadeState = barrierMinOpacity;
+						}
+						else
+						{
+							this->fadeState = barrierMinOpacity;
+						}
+
 						this->fadeIn = TRUE;
 						this->fadeOut = FALSE;
 						this->bFadeInOut = FALSE;
@@ -771,7 +786,7 @@ int hBarrier::AddThunderSub(myThunder *rootThunder, int startIndex, int startNex
 		myThunder *thunder = &rootThunder->childs[rootThunder->numChilds];
 
 		thunder->polyStrip->camAlign = 1;
-		thunder->polyStrip->alphaFadeSpeed = 0.5;
+		thunder->polyStrip->alphaFadeSpeed = 0.5f;
 		thunder->polyStrip->width = 3000.0f;
 	}
 
@@ -785,7 +800,7 @@ int hBarrier::AddThunder(int startIndex, int length, float random, int sector)
 	myThunder *thunder = &this->myThunderList[thunderIndex];
 
 	thunder->polyStrip->camAlign = 1;
-	thunder->polyStrip->alphaFadeSpeed = 0.5;
+	thunder->polyStrip->alphaFadeSpeed = 0.5f;
 	thunder->polyStrip->width = 3000.0f;
 
 	return thunderIndex;
@@ -906,20 +921,6 @@ void hSkyControler_Barrier::RenderSkyPre(void)
 	{
 		meshLoaded = TRUE;
 
-		::activeThunder_Sector1 = FALSE;
-		::activeThunder_Sector2 = FALSE;
-		::activeThunder_Sector3 = FALSE;
-		::activeThunder_Sector4 = FALSE;
-
-		::sfx1 = NULL;
-		::sfxHandle1 = 0;
-		::sfx2 = NULL;
-		::sfxHandle2 = 0;
-		::sfx3 = NULL;
-		::sfxHandle3 = 0;
-		::sfx4 = NULL;
-		::sfxHandle4 = 0;
-
 		barrier->bFadeInOut = TRUE;
 
 		barrier->Init();
@@ -992,6 +993,13 @@ void PatchBarrier(void)
 		// creates an earthQuake (eines dieser Beben) each interval times the barrier vanishes
 		earthQuakeEnable = G12GetPrivateProfileBool("BarrierEarthQuakeEnable", FALSE);
 		earthQuakeInterval = G12GetPrivateProfileInt("BarrierEarthQuakeInterval", 20);
+
+		// ever looming barrier (idea from "F a w k e s" here https://forum.worldofplayers.de/forum/threads/1541239-G1-Barrier-ever-looming-threat)
+		if (G12GetPrivateProfileBool("BarrierEverLooming", FALSE))
+		{
+			alwaysVisible = FALSE; // set this to false for no clashing
+			barrierMinOpacity = barrierEverLoomingMinOpacity;
+		}
 
 		// Use our own RenderSkyPre()
 		Patch(0x0083C178, &hSkyControler_Barrier::RenderSkyPre); // oCSkyControler_Barrier::`vftable'

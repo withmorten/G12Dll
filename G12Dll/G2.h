@@ -17,9 +17,13 @@ zCClassDef &zCSkyControler_Outdoor::classDef = *(zCClassDef *)0x0099ACD8;
 zCClassDef &oCNpc::classDef = *(zCClassDef *)0x00AB1E20;
 zCClassDef &oCMobInter::classDef = *(zCClassDef *)0x00AB19A0;
 
+zCOLOR &GFX_BLUE = *(zCOLOR *)0x00AB3E24;
+zCOLOR &GFX_LBLUE = *(zCOLOR *)0x00AB3E48;
+
 WRAPPER int _rand(void) { EAXJMP(0x007D2F98); }
 
 WRAPPER void GetNearestPointFromLineSegment2D(zVEC2 &a, zVEC2 &b, zVEC2 &c, zVEC2 &nearest) { EAXJMP(0x00474080); }
+WRAPPER void DrawLineSegment2D(zVEC2 &a, zVEC2 &b, float z, zCOLOR color) { EAXJMP(0x00474140); }
 
 zVEC3 operator +(zVEC3 &v, float f)
 {

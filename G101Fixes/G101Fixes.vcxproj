@@ -14,9 +14,9 @@
     <XPDeprecationWarning>false</XPDeprecationWarning>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{7E5137D3-D31C-4637-BAAC-D56E38F58B25}</ProjectGuid>
-    <RootNamespace>G12Dll</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectGuid>{5E5137D3-D31C-4637-BAAC-D56E38F58B25}</ProjectGuid>
+    <RootNamespace>G101Fixes</RootNamespace>
+    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -46,14 +46,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetExt>.dll</TargetExt>
-    <TargetName>g12</TargetName>
-    <OutDir>$(SolutionDir)G12Dll\$(Configuration)\</OutDir>
+    <TargetName>g101fixes</TargetName>
+    <OutDir>$(SolutionDir)G101Fixes\$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetExt>.dll</TargetExt>
-    <TargetName>g12</TargetName>
-    <OutDir>$(SolutionDir)G12Dll\$(Configuration)\</OutDir>
+    <TargetName>g101fixes</TargetName>
+    <OutDir>$(SolutionDir)G101Fixes\$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -86,20 +86,23 @@
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy /Y "Release\g12.dll" "C:\games\Gothic 12\System" &amp; copy /Y "Release\g12.dll" "C:\games\Gothic\System" &amp; copy /Y "Release\g12.dll" "C:\games\Gothic II\System" &amp; copy /Y "Release\g12.dll" "G:\Program Files\PiranhaBytes\Gothic 1.07c\system" &amp; copy /Y "Release\g12.dll" "G:\Program Files\PiranhaBytes\Gothic 1.08j\system"</Command>
+      <Command>copy /Y "Release\g101fixes.dll" "G:\Program Files\PiranhaBytes\Gothic 1.01d (20.12.2000)\system"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="g12.cpp" />
+    <ClCompile Include="g101fixes.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="G12.h" />
-    <ClInclude Include="MemoryMgr.h" />
+    <ClInclude Include="..\G12Dll\G12.h" />
+    <ClInclude Include="..\G12Dll\G101.h" />
+    <ClInclude Include="..\G12Dll\G101.hpp" />
+    <ClInclude Include="..\G12Dll\MemoryMgr.h" />
+    <ClInclude Include="..\G12Dll\version.h" />
+    <ClInclude Include="g101fixes.hpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="G12Dll.rc" />
+    <ResourceCompile Include="G101Fixes.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

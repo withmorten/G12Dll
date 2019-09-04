@@ -207,16 +207,16 @@ public:
 	T stack[SIZE];
 };
 
-class zSTRING
+class zSTRING // : public std::string
 {
 public:
-	unsigned char allocator;
-	char *_Ptr;
-	int _Len;
-	int _Res;
+	UCHAR allocator;
+	CHAR *_Ptr;
+	INT _Len;
+	INT _Res;
 
 public:
-	virtual void *__vector_deleting_destructor(unsigned int __flags) { XCALL(0x0041C760); }
+	virtual ~zSTRING() { XCALL(0x00401160); };
 
 	zSTRING() { XCALL(0x00402AF0); }
 	zSTRING(char *pstring) { XCALL(0x004010C0); }
@@ -240,6 +240,11 @@ public:
 
 		DWORD dword;
 	};
+
+public:
+	zCOLOR() { };
+	zCOLOR(BYTE rr, BYTE gg, BYTE bb, BYTE aa) { r = rr; g = gg; b = bb; alpha = aa; };
+	zCOLOR(DWORD color) { dword = color; }
 };
 
 struct zTPlane
@@ -381,8 +386,8 @@ public:
 	zSTRING baseClassName;
 	zSTRING scriptClassName;
 	zCClassDef *baseClassDef;
-	zCObject (*createNewInstance) (void);
-	zCObject (*createNewInstanceBackup) (void);
+	zCObject *(*createNewInstance)(void);
+	zCObject *(*createNewInstanceBackup)(void);
 	unsigned int classFlags;
 	unsigned int classSize;
 	int numLivingObjects;
@@ -421,7 +426,7 @@ public:
 	zCArray<zCVob *> activeList;
 
 public:
-	virtual void *__scalar_deleting_destructor(unsigned int __flags) { XCALL(0x0083A610); }
+	virtual ~zTBoxSortHandle() { XCALL(0x0063B030); }
 };
 
 class zCVisual : public zCObject
@@ -948,7 +953,7 @@ public:
 class zCRnd_D3D
 {
 public:
-	virtual void *__scalar_deleting_destructor(unsigned int __flags) { XCALL(0x0064A500); }
+	virtual ~zCRnd_D3D() { XCALL(0x0064A570); }
 	virtual void BeginFrame() { XCALL(0x0064DD20); }
 	virtual void EndFrame() { XCALL(0x0064DF20); }
 	virtual void FlushPolys() { XCALL(0x0064DD10); }
@@ -1186,7 +1191,7 @@ public:
 	int sorted;
 
 public:
-	virtual void *__vector_deleting_destructor(unsigned int __flags) { XCALL(0x0083A624); }
+	virtual ~zCVobBBox3DSorter(){ XCALL(0x006288D0); }
 };
 
 class zCWorld : public zCObject
@@ -1259,7 +1264,7 @@ public:
 class zCSndSys_MSS
 {
 public:
-	virtual void *__scalar_deleting_destructor(unsigned int __flags) { XCALL(0x004EB550); }
+	virtual ~zCSndSys_MSS() { XCALL(0x004EB570); }
 	virtual zCSoundFX *LoadSoundFX(zSTRING &fileName) { XCALL(0x004ED960); }
 	virtual zCSoundFX *LoadSoundFXScript(zSTRING &scriptIdentifier) { XCALL(0x004EE120); }
 	virtual zCParser *GetSFXParser() { XCALL(0x004F4270); }

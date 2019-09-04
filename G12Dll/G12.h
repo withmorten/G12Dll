@@ -1,12 +1,22 @@
-// first 4 bytes of WinMain for each version
-#define GOTHIC101E	(*(int *)0x00512D50 == 0x8A18EC83) // Gothic.exe  1.01e
-#define GOTHIC104D	(*(int *)0x004F56E0 == 0x8A18EC83) // Gothic.exe  1.04d
-#define GOTHIC107C	(*(int *)0x004FD330 == 0x8A18EC83) // Gothic.exe  1.07c
-#define GOTHIC108J	(*(int *)0x004FFFA0 == 0x8A18EC83) // Gothic.exe  1.08j
-#define GOTHIC108KM	(*(int *)0x004F3E10 == 0x5618EC83) // Gothic.exe  1.08k_mod
-#define SPACER150	(*(int *)0x00836A52 == 0x102474FF) // Spacer.exe  1.50
-#define GOTHIC26	(*(int *)0x00502D70 == 0x5614EC83) // Gothic2.exe 2.6
-#define SPACER26	(*(int *)0x008523A2 == 0x102474FF) // Spacer2.exe 2.6
+// first 4 bytes of each version (with debug info)
+#define BASE_ADDR (0x00401000)
+
+#define GOTHIC101E		(*(unsigned int *)BASE_ADDR == 0x7F36E4A1) // Gothic.exe  1.01e_christmas_edition
+#define GOTHIC104D		(*(unsigned int *)BASE_ADDR == 0x7D76B4A1) // Gothic.exe  1.04d
+#define GOTHIC107C		(*(unsigned int *)BASE_ADDR == 0x7F06D4A1) // Gothic.exe  1.07c
+#define GOTHIC108J		(*(unsigned int *)BASE_ADDR == 0x7F66D4A1) // Gothic.exe  1.08j
+#define GOTHIC108K		(*(unsigned int *)BASE_ADDR == 0x7F56E4A1) // Gothic.exe  1.08k
+#define GOTHIC108KM		(*(unsigned int *)BASE_ADDR == 0xE0EC05C7) // Gothic.exe  1.08k_mod
+#define GOTHIC112F		(*(unsigned int *)BASE_ADDR == 0x8136D4A1) // Gothic.exe  1.12f
+#define GOTHIC130		(*(unsigned int *)BASE_ADDR == 0x385C05C7) // Gothic2.exe 1.30
+#define GOTHIC26		(*(unsigned int *)BASE_ADDR == 0x1E1405C7) // Gothic2.exe 2.6
+#define SPACER141		(*(unsigned int *)BASE_ADDR == 0x8C3064A1) // Spacer.exe  1.41
+#define SPACER142G		(*(unsigned int *)BASE_ADDR == 0x8DB064A1) // Spacer.exe  1.42g
+#define SPACER150		(*(unsigned int *)BASE_ADDR == 0x8C4064A1) // Spacer.exe  1.50
+#define SPACER26		(*(unsigned int *)BASE_ADDR == 0xF6E805C7) // Spacer2.exe 2.6
+
+// file offset to image offset
+#define _fo(file_addr) (file_addr + BASE_ADDR)
 
 char G12IniPath[MAX_PATH];
 

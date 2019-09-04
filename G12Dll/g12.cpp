@@ -10,32 +10,8 @@
 
 void PatchGothic107(void)
 {
-	// Nop(0x00642EEC, 3); // alphablendfunc barrier
 	PatchJump(0x0044A6F7, 0x0044A70C); // SendMessageA
-
-	// wbuffer tests
-	// Nop(0x0072CB73);
-	// Patch(0x0072CB73 + 1, (BYTE)0xE9);
-
-#if 0
-	PatchJump(0x0072C8B6, 0x0072C8D3);
-	Nop(0x0072C8B6, 2);
-	Patch(0x0072C8B6 + 0, (BYTE)0x31);
-	Patch(0x0072C8B6 + 1, (BYTE)0xC0);
-	Nop(0x0072C8B8, 2);
-	Nop(0x0072C8BA, 2);
-	Nop(0x0072C8BC, 10);
-	Nop(0x0072C8C6, 5);
-	Nop(0x0072C8CB, 2);
-	Nop(0x0072C8CD, 6);
-#endif
 }
-
-void PatchGothic108j(void)
-{
-	// Patch(0x0071CFA4 + 1, "DEFAULT.TGA");
-}
-
 void PatchGothic108k(void)
 {
 	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE))
@@ -49,6 +25,9 @@ void PatchGothic108k(void)
 		// Enable Show Time
 		Patch(0x006357B8 + 1, (BYTE)0x86);
 	}
+
+	// Disable rain in vobs
+	Patch(0x005B90A4 + 1, 736);
 }
 
 const char *SpacerAppName = "Spacer 1.50";
@@ -70,7 +49,7 @@ void PatchSpacer150(void)
 		Nop(0x0065B932, 6);
 	}
 
-	if (G12GetPrivateProfileBool("SpacerNoLODGenerate", FALSE))
+	if (G12GetPrivateProfileBool("SpacerNoLODGenerate", TRUE))
 	{
 		// Don't generate LOD polygons
 		Patch(0x005A1D13, (BYTE)0xEB);
@@ -144,8 +123,11 @@ void PatchGothic26(void)
 	if (G12GetPrivateProfileBool("GodMode", FALSE))
 	{
 		// oCNpc::godmode
-		Patch(0x00AB2660, 1);
+		Patch(0x00AB2660, TRUE);
 	}
+
+	// Disable rain in vobs
+	// Patch(0x005E2279 + 1, 736);
 }
 
 void PatchSpacer26(void)
@@ -171,11 +153,6 @@ void Init(void)
 	{
 		G12AllocConsole();
 		PatchGothic107();
-	}
-	else if (GOTHIC108J)
-	{
-		G12AllocConsole();
-		PatchGothic108j();
 	}
 	else if (GOTHIC108KM)
 	{
