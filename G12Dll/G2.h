@@ -8,17 +8,22 @@ zMAT4 &zMAT4::s_identity = *(zMAT4 *)0x008D45E8;
 
 zCCamera *&zCCamera::activeCam = *(zCCamera **)0x008D7F94;
 
-int &zCSkyControler::s_skyEffectsEnabled = *(int *)0x008A5DB0;
+bool &zCSkyControler::s_skyEffectsEnabled = *(bool *)0x008A5DB0;
 
 oCNpc *&oCNpc::player = *(oCNpc **)0x00AB2684;
-int &oCNpc::godmode = *(int *)0x00AB2660;
+bool &oCNpc::godmode = *(bool *)0x00AB2660;
 
 zCClassDef &zCSkyControler_Outdoor::classDef = *(zCClassDef *)0x0099ACD8;
 zCClassDef &oCNpc::classDef = *(zCClassDef *)0x00AB1E20;
+zCClassDef &oCMOB::classDef = *(zCClassDef *)0x00AB1A10;
 zCClassDef &oCMobInter::classDef = *(zCClassDef *)0x00AB19A0;
+zCClassDef &oCItem::classDef = *(zCClassDef *)0x00AB1168;
 
 zCOLOR &GFX_BLUE = *(zCOLOR *)0x00AB3E24;
 zCOLOR &GFX_LBLUE = *(zCOLOR *)0x00AB3E48;
+
+zCCollisionObjectDef &zCCollObjectBoxPassThrough::s_oCollObjClass = *(zCCollisionObjectDef *)0x008D832C;
+zCCollisionObjectDef &zCCollObjectProjectile::s_oCollObjClass = *(zCCollisionObjectDef *)0x008D8368;
 
 WRAPPER int _rand(void) { EAXJMP(0x007D2F98); }
 
@@ -121,7 +126,7 @@ void zCArray<zCVob *>::RemoveIndex(int index)
 	}
 }
 
-int zCModel::IsAniActive(zSTRING &aniName)
+bool zCModel::IsAniActive(zSTRING &aniName)
 {
 	return this->IsAniActive(this->GetAniFromAniID(this->GetAniIDFromAniName(aniName)));
 }

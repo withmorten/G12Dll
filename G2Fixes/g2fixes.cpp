@@ -22,7 +22,7 @@ void hNpc::CreateVobList(float max_dist)
 	zCClassDef *classDef;
 	int i;
 
-	int delete_vob;
+	bool delete_vob;
 
 	if (this->homeWorld)
 	{
@@ -79,14 +79,53 @@ void hNpc::CreateVobList(float max_dist)
 	}
 }
 
-// SPL_* should probably be read from INI, just using unused values for now
-#define SPL_LIGHTNINGFLASH 29
-#define SPL_PYROKINESIS 37
+// SPL_* should probably be read from INI, just using hardcoded values for now - same as the game does it :)
+#define SPL_TELEPORT5 13 // Sumpflager
+#define SPL_TELEPORT1 14 // Feuermagier
+#define SPL_TELEPORT3 15 // Dämonenbeschwörer
+#define SPL_TELEPORT2 16 // Wassermagier
+#define SPL_TELEPORT4 17 // Orkisch
+#define SPL_LIGHT 18
+#define SPL_FIREBOLT 19
+#define SPL_THUNDERBOLT 20
+#define SPL_CHAINLIGHTNING 24
+#define SPL_WINDFIST 26
+#define SPL_SLEEP 27
+#define SPL_FIREBALL 30
+#define SPL_SUMMONSKELETON 31
+#define SPL_FEAR 32
+#define SPL_ICECUBE 33
+#define SPL_THUNDERBALL 34
+#define SPL_SUMMONGOLEM 35
+#define SPL_DESTROYUNDEAD 36
+#define SPL_FIRESTORM 37
+#define SPL_ICEWAVE 39
+#define SPL_SUMMONDEMON 40
+#define SPL_FIRERAIN 42
+#define SPL_BREATHOFDEATH 43
+#define SPL_MASSDEATH 44
+#define SPL_ARMYOFDARKNESS 45
+#define SPL_SHRINK 46
+#define SPL_TRF_MEATBUG 47
+#define SPL_TRF_SCAVENGER 48
+#define SPL_TRF_MOLERAT 49
+#define SPL_TRF_CRAWLER 50
+#define SPL_TRF_WOLF 51
+#define SPL_TRF_WARAN 52
+#define SPL_TRF_SNAPPER 53
+#define SPL_TRF_ORCDOG 54
+#define SPL_TRF_BLOODFLY 55
+#define SPL_TRF_LURKER 56
+#define SPL_TRF_SHADOWBEAST 57
+#define SPL_CHARM 59
+#define SPL_NEW1 60
 #define SPL_CONTROL 64
 #define SPL_TELEKINESIS 65
 #define SPL_TELEKINESIS2 66
-#define SPL_CHAINLIGHTNING 67
+#define SPL_BERZERK 67
 #define SPL_HEAL 68
+#define SPL_PYROKINESIS 69
+#define SPL_STORMFIST 72
 
 #define BS_MOD_CONTROLLED 2048
 #define BS_MOD_CONTROLLING 8192
@@ -174,7 +213,7 @@ void hSpell::DoLogicInvestEffect()
 
 		if (zinput->GetState(GAME_LEFT))
 		{
-			move += -right;
+			move -= right;
 		}
 		else if (zinput->GetState(GAME_RIGHT))
 		{
@@ -228,56 +267,111 @@ void hSpell::DoLogicInvestEffect()
 	}
 }
 
-static int investHookRead = FALSE;
-static BYTE oCSpell_Invest_Hook_Bytes[HOOK_SIZE];
-
-void oCSpell_Invest_Hook_End(void)
+bool hSpell::Invest()
 {
-	PatchBytes(0x004851F9, oCSpell_Invest_Hook_Bytes, sizeof(oCSpell_Invest_Hook_Bytes)); // oCSpell::Invest()
-}
+	if (!this->effect) return FALSE;
 
-ASM(oCSpell_Invest_Hook_Start)
-{
-	__asm
+	int manaLeft = 0;
+	if (this->spellCasterNpc) manaLeft = this->spellCasterNpc->attribute[this->spellEnergy];
+
+	if (manaLeft > 0)
 	{
-		mov ecx, ebp
-		call hSpell::DoLogicInvestEffect
-		pushad // needed ?
-		call oCSpell_Invest_Hook_End
-		popad // needed ?
+		this->DoLogicInvestEffect();
+	}
+	else
+	{
+		if (this->manaInvested > 0)
+		{
+			this->SetReleaseStatus();
+
+			return TRUE;
+		}
+
+		return FALSE;
 	}
 
-	RET(0x004851F9)
-}
-
-void oCSpell_Invest_Hook(void)
-{
-	if (!investHookRead)
+	if (!this->manaInvested)
 	{
-		investHookRead = TRUE;
-		ReadBytes(0x004851F9, oCSpell_Invest_Hook_Bytes, sizeof(oCSpell_Invest_Hook_Bytes)); // oCSpell::Invest()
+		this->spellCasterNpc->CreatePassivePerception(NPC_PERC_ASSESSCASTER, NULL, NULL);
+
+		this->manaTimer += this->manaInvestTime;
+	}
+	else
+	{
+		this->manaTimer += ztimer.frameTimeFloat;
 	}
 
-	InjectHook(0x004851F9, oCSpell_Invest_Hook_Start, PATCH_JUMP); // oCSpell::Invest()
+	if (this->manaTimer >= this->manaInvestTime)
+	{
+		this->manaTimer -= this->manaInvestTime;
+
+		if (this->spellStatus == SPL_STATUS_CANINVEST || this->spellStatus == SPL_STATUS_CANINVEST_NO_MANADEC)
+		{
+			if (this->spellCasterNpc && manaLeft > 0)
+			{
+				this->CallScriptInvestedMana();
+
+				if (this->spellStatus == SPL_STATUS_CAST || this->spellStatus == SPL_STATUS_CANINVEST || this->spellStatus == SPL_STATUS_CANINVEST_NO_MANADEC || this->spellStatus == SPL_STATUS_NEXTLEVEL)
+				{
+					if (this->manaInvested && this->spellStatus == SPL_STATUS_CANINVEST)
+					{
+						this->spellCasterNpc->attribute[this->spellEnergy]--;
+					}
+
+					this->manaInvested++;
+				}
+				else if (this->spellStatus & SPL_STATUS_FORCEINVEST)
+				{
+					this->manaInvested = this->spellStatus - SPL_STATUS_FORCEINVEST;
+					this->spellStatus = SPL_STATUS_CANINVEST;
+
+					this->spellCasterNpc->attribute[this->spellEnergy] -= this->manaInvested;
+				}
+
+				if (this->spellStatus == SPL_STATUS_CAST)
+				{
+					return TRUE;
+				}
+
+				if (this->spellStatus == SPL_STATUS_STOP)
+				{
+					return TRUE;
+				}
+
+				if (this->spellStatus == SPL_STATUS_NEXTLEVEL)
+				{
+					this->spellStatus = SPL_STATUS_CANINVEST;
+					this->spellLevel++;
+
+					if (this->effect) this->effect->InvestNext();
+				}
+
+				return TRUE;
+			}
+		}
+	}
+
+	return FALSE;
 }
 
-int hSpell::IsInvestSpell()
+bool hSpell::IsInvestSpell()
 {
 	switch (this->spellID)
 	{
-	case SPL_LIGHTNINGFLASH:
 	case SPL_PYROKINESIS:
 	case SPL_CHAINLIGHTNING:
 	case SPL_HEAL:
 		return TRUE;
+
 		break;
 	default:
 		return FALSE;
+
 		break;
 	}
 }
 
-int hSpell::CastSpecificSpell()
+bool hSpell::CastSpecificSpell()
 {
 	int rV = this->oCSpell::CastSpecificSpell();
 
@@ -400,25 +494,30 @@ void hSpell::DoTimedEffect()
 	}
 }
 
-int hSpell::IsValidTarget(zCVob *v)
+bool hSpell::IsValidTarget(zCVob *v)
 {
-	int rV = oCSpell::IsValidTarget(v);
+	bool rV = oCSpell::IsValidTarget(v);
 
-	if (this->spellID == SPL_TELEKINESIS)
+	if (rV)
 	{
-		if (!dynamic_cast<oCItem *>(v) && !dynamic_cast<oCMOB *>(v) ||
-			(dynamic_cast<oCMOB *>(v) && !static_cast<oCMOB *>(v)->IsMovable())) // do we need to allow MOBs to be moved?
+		zCClassDef *classDef = v->_GetClassDef();
+
+		if (this->spellID == SPL_TELEKINESIS)
 		{
-			this->spellStatus = 0;
-			return FALSE;
+			if (!zCObject::CheckInheritance(&oCItem::classDef, classDef) && !zCObject::CheckInheritance(&oCMOB::classDef, classDef) ||
+				(zCObject::CheckInheritance(&oCMOB::classDef, classDef) && !((oCMOB *)v)->IsMovable())) // do we need to allow MOBs to be moved?
+			{
+				this->spellStatus = SPL_STATUS_DONTINVEST;
+				return FALSE;
+			}
 		}
-	}
-	else if (this->spellID == SPL_TELEKINESIS2) // TODO: Check for oCNpc, what is IsMovable()
-	{
-		if (!dynamic_cast<oCNpc *>(v))
+		if (this->spellID == SPL_TELEKINESIS2) // TODO: Check for oCNpc, what is IsMovable()
 		{
-			this->spellStatus = 0;
-			return FALSE;
+			if (!zCObject::CheckInheritance(&oCNpc::classDef, classDef))
+			{
+				this->spellStatus = SPL_STATUS_DONTINVEST;
+				return FALSE;
+			}
 		}
 	}
 
@@ -429,8 +528,6 @@ void hSpell::StopTargetEffects(zCVob *vob)
 {
 	if (this->spellID == SPL_TELEKINESIS || this->spellID == SPL_TELEKINESIS2)
 	{
-		zCWorld *homeWorld = vob->homeWorld;
-
 		if (vob && vob->homeWorld)
 		{
 			zVEC3 positionWorld = vob->trafoObjToWorld.GetTranslation();
@@ -440,7 +537,7 @@ void hSpell::StopTargetEffects(zCVob *vob)
 			groundVec.n[1] = -(positionWorld.n[1] - vob->bbox3D.mins.n[1]) - 1.0f;
 			groundVec.n[2] = 0.0f;
 
-			if (!homeWorld->TraceRayNearestHit(positionWorld, groundVec, vob, 2049))
+			if (!vob->homeWorld->TraceRayNearestHit(positionWorld, groundVec, vob, 2049))
 			{
 				zVEC3 velocity;
 
@@ -509,6 +606,56 @@ ASM(oCSpell_Kill_Hook)
 	RET(0x00485841);
 }
 
+void hVisualFX::SetCollisionEnabled(bool en)
+{
+	if (this->collDetectionDynamic || this->collDetectionStatic)
+	{
+		this->emCheckCollision = TRUE;
+
+		return;
+	}
+
+	this->emCheckCollision = en;
+
+	this->collDetectionStatic = en && this->emActionCollDyn != TACTION_COLL_NONE;
+	this->collDetectionDynamic = en && this->emActionCollDyn != TACTION_COLL_NONE;
+
+	if (!this->visual) return;
+	if (!this->emCheckCollision) return;
+
+	if (this->bIsProjectile)
+	{
+		this->SetCollisionClass(&zCCollObjectProjectile::s_oCollObjClass);
+
+		return;
+	}
+
+	switch (this->spellType)
+	{
+	case SPL_FIREBALL:
+	case SPL_WINDFIST:
+	case SPL_DESTROYUNDEAD:
+	case SPL_FIREBOLT:
+	case SPL_THUNDERBOLT:
+	case SPL_THUNDERBALL:
+	case SPL_ICECUBE:
+	case SPL_BREATHOFDEATH:
+	case SPL_NEW1:
+		this->SetCollisionClass(&zCCollObjectProjectile::s_oCollObjClass);
+
+		break;
+	case SPL_FIRESTORM:
+		if (this->visName_S.Contains("_SPREAD")) this->SetCollisionClass(&zCCollObjectBoxPassThrough::s_oCollObjClass);
+		else this->SetCollisionClass(&zCCollObjectProjectile::s_oCollObjClass);
+
+		break;
+	default:
+		this->SetCollisionClass(&zCCollObjectBoxPassThrough::s_oCollObjClass);
+
+		break;
+	}
+}
+
 void PatchSpells(void)
 {
 	// Does this even work? No way to check currently ...
@@ -528,7 +675,7 @@ void PatchSpells(void)
 	InjectHook(0x00473303, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
 
 	// Injects hook
-	oCSpell_Invest_Hook();
+	InjectHook(0x0047668E, &hSpell::Invest); // oCMag_Book::Spell_Invest
 
 	// Hooks for hSpell::StopTargetEffects
 	InjectHook(0x00484A77, oCSpell_Setup_Hook, PATCH_JUMP); // oCSpell::Setup()
@@ -536,7 +683,16 @@ void PatchSpells(void)
 	InjectHook(0x00485626, oCSpell_Stop_Hook, PATCH_JUMP); // oCSpell::Stop()
 	InjectHook(0x004857D7, oCSpell_Kill_Hook, PATCH_JUMP); // oCSpell::Kill()
 
-	// oCSpell::SetCollisionEnabled() understand and fix switch
+	// oCVisualFX::SetCollisionEnabled()
+	Patch(0x00830374, &hVisualFX::SetCollisionEnabled); // oCVisualFX::`vftable'
+	Patch(0x0083060C, &hVisualFX::SetCollisionEnabled); // oCVisFX_MultiTarget::`vftable'
+
+	// Remove unneeded (?) collsion enabling in oCVisualFX::InitEffect()
+	PatchJump(0x00494B56, 0x00494BAC); // oCVisualFX::InitEffect()
+
+	// oCNpc::IsConditionValid() actual Pyrokinesis!!!
+
+	// oCTriggerChangeLevel::TriggerTarget but this seems fine, transform ids stayed in the same spot
 }
 
 void hSkyControler_Outdoor::ReadFogColorsFromINI()

@@ -1,3 +1,6 @@
+#define bool int
+#define byte unsigned char
+
 // first 4 bytes of each version (with debug info)
 #define BASE_ADDR (0x00401000)
 
@@ -25,7 +28,7 @@ UINT G12GetPrivateProfileInt(LPCTSTR lpKeyName, INT nDefault)
 	return GetPrivateProfileInt(G12DLL_NAME, lpKeyName, nDefault, G12IniPath);
 }
 
-UINT G12GetPrivateProfileBool(LPCTSTR lpKeyName, INT nDefault)
+BOOL G12GetPrivateProfileBool(LPCTSTR lpKeyName, INT nDefault)
 {
 	return G12GetPrivateProfileInt(lpKeyName, nDefault);
 }

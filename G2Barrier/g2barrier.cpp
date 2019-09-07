@@ -237,23 +237,23 @@ const int barrierEverLoomingMaxOpacity = 15;
 static int barrierMinOpacity = 0;
 static int barrierMaxOpacity = 120;
 
-static int meshLoaded = FALSE;
-static int firstRender = TRUE;
+static bool meshLoaded = FALSE;
+static bool firstRender = TRUE;
 
-static int isBarrierRender;
+static bool isBarrierRender;
 
 static int earthQuakeInterval;
 static int earthQuakeTimer = 0;
 
-static int ignoreSkyEffectsSetting;
-static int alwaysVisible;
-static int tremorEnable;
-static int earthQuakeEnable;
+static bool ignoreSkyEffectsSetting;
+static bool alwaysVisible;
+static bool tremorEnable;
+static bool earthQuakeEnable;
 
-static int activeThunder_Sector1 = FALSE;
-static int activeThunder_Sector2 = FALSE;
-static int activeThunder_Sector3 = FALSE;
-static int activeThunder_Sector4 = FALSE;
+static bool activeThunder_Sector1 = FALSE;
+static bool activeThunder_Sector2 = FALSE;
+static bool activeThunder_Sector3 = FALSE;
+static bool activeThunder_Sector4 = FALSE;
 
 static zCSoundFX *sfx1 = NULL;
 static zTSoundHandle sfxHandle1 = 0;
@@ -266,7 +266,7 @@ static zTSoundHandle sfxHandle4 = 0;
 
 static float nextActivation = 8000.0f;
 
-static int showThunders = FALSE;
+static bool showThunders = FALSE;
 static float fadeTime;
 static float timeUpdatedFade = 0.0f;
 static float timeStepToUpdateFade = 1.0f;
@@ -380,7 +380,7 @@ void hBarrier::Init()
 		this->myVertList = new myVert[this->numMyVerts];
 		memset(this->myVertList, 0x00, sizeof(myVert) * this->numMyVerts);
 
-		int goOn = TRUE;
+		bool goOn = TRUE;
 
 		for (int x = 0; x < this->numMyVerts; x++)
 		{
@@ -525,7 +525,7 @@ void hBarrier::Init()
 	}
 }
 
-int hBarrier::Render(zTRenderContext &rndContext, int fadeInOut, int alwaysVisible)
+bool hBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible)
 {
 	if (this->skySphereMesh)
 	{
@@ -626,7 +626,7 @@ int hBarrier::Render(zTRenderContext &rndContext, int fadeInOut, int alwaysVisib
 			}
 		}
 
-		int zBufferWriteEnabled;
+		bool zBufferWriteEnabled;
 		float zFarClip;
 
 		if (this->fadeState > 0 || alwaysVisible)
