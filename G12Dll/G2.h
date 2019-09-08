@@ -19,8 +19,9 @@ zCClassDef &oCMOB::classDef = *(zCClassDef *)0x00AB1A10;
 zCClassDef &oCMobInter::classDef = *(zCClassDef *)0x00AB19A0;
 zCClassDef &oCItem::classDef = *(zCClassDef *)0x00AB1168;
 
-zCOLOR &GFX_BLUE = *(zCOLOR *)0x00AB3E24;
-zCOLOR &GFX_LBLUE = *(zCOLOR *)0x00AB3E48;
+zCOLOR GFX_WHITE(255, 255, 255, 255);
+zCOLOR GFX_BLUE(0, 0, 255, 255);
+zCOLOR GFX_LBLUE(173, 216, 230, 255);
 
 zCCollisionObjectDef &zCCollObjectBoxPassThrough::s_oCollObjClass = *(zCCollisionObjectDef *)0x008D832C;
 zCCollisionObjectDef &zCCollObjectProjectile::s_oCollObjClass = *(zCCollisionObjectDef *)0x008D8368;

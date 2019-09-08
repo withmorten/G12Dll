@@ -63,7 +63,7 @@ float hMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 	return dist;
 }
 
-void hMagFrontier::DoCheck(void)
+void hMagFrontier::DoCheck()
 {
 	this->oCMagFrontier::DoCheck();
 
@@ -200,7 +200,7 @@ void MagicFrontierNewPointListInit(void)
 
 void MagicFrontierNewPointListInitGRM(void)
 {
-	// newPointList from GRM
+	// newPointList from GRM - different at the old mine pass
 	newPointList[17].n[0] = -26219.2f;
 	newPointList[17].n[1] =  40844.2f;
 	newPointList[18].n[0] = -34576.0f;
@@ -228,8 +228,6 @@ void PatchMagicFrontier(void)
 		MagicFrontierNewPointListInitGRM();
 	}
 }
-
-#define BARRIER_COLOR 0x00FFFFFF
 
 const int barrierEverLoomingMinOpacity = 1;
 const int barrierEverLoomingMaxOpacity = 15;
@@ -366,10 +364,10 @@ void hBarrier::Init()
 					alpha = 0;
 				}
 
-				feat->lightDyn.dword = BARRIER_COLOR;
+				feat->lightDyn = GFX_WHITE;
 				feat->lightDyn.alpha = alpha;
 
-				feat->lightStat.dword = BARRIER_COLOR;
+				feat->lightStat = GFX_WHITE;
 				feat->lightStat.alpha = alpha;
 			}
 		}
@@ -911,7 +909,7 @@ int hBarrier::RenderThunder(myThunder *thunder, zTRenderContext &rndContext)
 	return FALSE;
 }
 
-void hSkyControler_Barrier::RenderSkyPre(void)
+void hSkyControler_Barrier::RenderSkyPre()
 {
 	this->zCSkyControler_Outdoor::RenderSkyPre();
 

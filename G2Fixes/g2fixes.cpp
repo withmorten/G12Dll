@@ -61,7 +61,7 @@ void hNpc::CreateVobList(float max_dist)
 			{
 				npc = (oCNpc *)vob;
 
-				if (npc->attribute[0] <= 0 && npc->inventory2.IsEmpty(TRUE, TRUE))
+				if (npc->IsDead() && npc->inventory2.IsEmpty(TRUE, TRUE))
 				{
 					delete_vob = TRUE;
 				}
@@ -98,7 +98,7 @@ void hNpc::CreateVobList(float max_dist)
 #define SPL_THUNDERBALL 34
 #define SPL_SUMMONGOLEM 35
 #define SPL_DESTROYUNDEAD 36
-#define SPL_FIRESTORM 37
+#define SPL_PYROKINESIS 37
 #define SPL_ICEWAVE 39
 #define SPL_SUMMONDEMON 40
 #define SPL_FIRERAIN 42
@@ -124,7 +124,7 @@ void hNpc::CreateVobList(float max_dist)
 #define SPL_TELEKINESIS2 66
 #define SPL_BERZERK 67
 #define SPL_HEAL 68
-#define SPL_PYROKINESIS 69
+#define SPL_FIRESTORM  69
 #define SPL_STORMFIST 72
 
 #define BS_MOD_CONTROLLED 2048
@@ -673,9 +673,7 @@ void PatchSpells(void)
 	InjectHook(0x00733FEC, &hSpell::IsValidTarget); // oCNpc::CollectFocusVob()
 	InjectHook(0x00473154, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
 	InjectHook(0x00473303, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
-
-	// Injects hook
-	InjectHook(0x0047668E, &hSpell::Invest); // oCMag_Book::Spell_Invest
+	InjectHook(0x0047668E, &hSpell::Invest); // oCMag_Book::Spell_Invest()
 
 	// Hooks for hSpell::StopTargetEffects
 	InjectHook(0x00484A77, oCSpell_Setup_Hook, PATCH_JUMP); // oCSpell::Setup()
@@ -689,10 +687,6 @@ void PatchSpells(void)
 
 	// Remove unneeded (?) collsion enabling in oCVisualFX::InitEffect()
 	PatchJump(0x00494B56, 0x00494BAC); // oCVisualFX::InitEffect()
-
-	// oCNpc::IsConditionValid() actual Pyrokinesis!!!
-
-	// oCTriggerChangeLevel::TriggerTarget but this seems fine, transform ids stayed in the same spot
 }
 
 void hSkyControler_Outdoor::ReadFogColorsFromINI()
@@ -901,6 +895,8 @@ void PatchGothic2(void)
 		PatchJump(0x00640811, 0x00640861); // oCZoneMusic::ProcessZoneList()
 
 		// Fix dark trees in WALD sectors
+		// very hacky - there are other lighting differences, too (see Old Mine Entrance)
+		// perhaps it's better to understand how the lighting differs from G1 to G2 ...
 		InjectHook(0x005D57DA, zCRenderLightContainer_CollectLights_StatLights_Hook); // zCRenderLightContainer::CollectLights_StatLights()
 	}
 

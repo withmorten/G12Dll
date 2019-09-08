@@ -229,7 +229,7 @@ public:
 	zSTRING(char *pstring) { XCALL(0x004010C0); }
 	void Clear() { XCALL(0x0059D010); }
 	int Search(int startIndex, char *substr, unsigned int num) { XCALL(0x0046C920); }
-	int Contains(char *substr) { return Search(0, substr, 1) != -1; }
+	int Contains(char *substr) { return this->Search(0, substr, 1) != -1; }
 };
 
 class zCOLOR
@@ -1610,6 +1610,7 @@ public:
 	bool StartAIState(zSTRING &name, int endOldState, int timeBehaviour, float timed, bool isRtnState) { XCALL(0x0076C700); }
 	void ClearAIState() { XCALL(0x0076D6E0); }
 	void EndCurrentState() { XCALL(0x0076D880); }
+	bool IsInState(int stateID) { XCALL(0x0076C040); }
 };
 
 class oCItemContainer : public zCInputCallback
@@ -1721,6 +1722,11 @@ struct oSDamageDescriptor
 };
 
 #define NPC_PERC_ASSESSCASTER 29
+
+#define NPC_ATR_HITPOINTS 0
+
+#define NPC_AISTATE_UNCONSCIOUS (-4)
+#define NPC_AISTATE_FADEAWAY (-5)
 
 class oCNpc : public oCVob
 {
@@ -1940,6 +1946,10 @@ public:
 	void SetBodyStateModifier(int nr) { XCALL(0x0075EC10); }
 	int ModifyBodyState(int add, int remove) { XCALL(0x0075EF50); }
 	void CreatePassivePerception(int percType, zCVob *other, zCVob *victim) { XCALL(0x0075B270); }
+
+	bool IsDead() { return this->attribute[NPC_ATR_HITPOINTS] <= 0; }
+	bool IsUnconscious() { return this->state.IsInState(NPC_AISTATE_UNCONSCIOUS); }
+	bool IsFadingAway() { return this->state.IsInState(NPC_AISTATE_FADEAWAY); }
 };
 
 class zCModel : public zCObject
@@ -2229,9 +2239,9 @@ public:
 	virtual void SetTarget(zCVob *targetVob, bool recalcTrj) { XCALL(0x004912E0); }
 	virtual void SetTarget(zVEC3 &targetPos, bool recalcTrj) { XCALL(0x00491450); }
 	virtual void SetInflictor(zCVob *inflictorVob) { XCALL(0x00491220); }
-	virtual zCVob *GetOrigin() { return origin; }
-	virtual zCVob *GetTarget() { return target; }
-	virtual zCVob *GetInflictor() { return inflictor; }
+	virtual zCVob *GetOrigin() { return this->origin; }
+	virtual zCVob *GetTarget() { return this->target; }
+	virtual zCVob *GetInflictor() { return this->inflictor; }
 	virtual void Init(zCVob *orgVob, zVEC3 &targetPos) { XCALL(0x00491E10); }
 	virtual void Init(zCVob *orgVob, zCVob *trgtVob, zCVob *inflictorVob) { XCALL(0x00491F20); }
 	virtual void Init(zCArray<zCVob *> &trajectoryVobs) { XCALL(0x004926A0); }
