@@ -74,7 +74,7 @@ void hMagFrontier::DoCheck()
 
 		if (world)
 		{
-			if (!_strnicmp(world->worldName._Ptr, worldName, world->worldName._Len))
+			if (world->worldName == worldName)
 			{
 				if (this->npc)
 				{
@@ -945,7 +945,7 @@ void hSkyControler_Barrier::RenderSkyPre()
 	}
 
 	if ((zCSkyControler::s_skyEffectsEnabled || ignoreSkyEffectsSetting)
-		&& !_stricmp(ogame->GetGameWorld()->worldName._Ptr, worldName))
+		&& ogame->GetGameWorld()->worldName == worldName)
 	{
 		memset(&rndContext, 0x00, sizeof(zTRenderContext));
 		rndContext.clipFlags = -1;

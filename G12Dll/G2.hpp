@@ -236,17 +236,33 @@ public:
 	zSTRING(unsigned int xWert) { XCALL(0x00461E90); }
 	zSTRING(const float xWert, int digits = 20) { XCALL(0x00435970); }
 	zSTRING(const double xWert, int digits = 20) { XCALL(0x00454680); }
+
 	byte IsEmpty() const { return _Ptr == NULL; }
 	int Length() const { return _Len; }
 	char *ToChar() const { return _Ptr; }
 	void Clear() { XCALL(0x0059D010); }
-	int Search(int startIndex, char *substr, unsigned int num) { XCALL(0x0046C920); }
+
+	int Search(int startIndex, const char *substr, unsigned int num = 1) { XCALL(0x0046C920); }
+	int Search(int startIndex, const zSTRING &substr, unsigned int num = 1) { return this->Search(startIndex, substr.ToChar(), num); }
+	int Search(const zSTRING &substr, unsigned int num = 1) { return this->Search(0, substr.ToChar(), num); }
+	int Search(const char *substr, unsigned int num = 1) { return this->Search(0, substr, num); }
+
 	int Contains(char *substr) { return this->Search(0, substr, 1) != -1; }
+	int Contains(const zSTRING &substr) { return Search(0, substr.ToChar(), 1) != -1; }
+
 	friend zSTRING operator+(const zSTRING &xStr1, const zSTRING &xStr2) { XCALL(0x004045C0); }
 	friend zSTRING operator+(const zSTRING &xStr1, const char *pstring) { XCALL(0x00404880); }
 	friend zSTRING operator+(const zSTRING &xStr1, const char ch) { XCALL(0x00445DD0); }
 	friend zSTRING operator+(const char *pstring, const zSTRING &xStr2) { XCALL(0x00404710); }
 	friend zSTRING operator+(const char ch, const zSTRING &xStr2) { XCALL(0x0044A190); }
+
+	friend bool operator==(const zSTRING &xStr1, const zSTRING &xStr2) { XCALL(0x00674220); }
+	friend bool operator==(const zSTRING &xStr1, const char *xStr2) { XCALL(0x006CFF50); }
+	friend bool operator==(const char *xStr1, const zSTRING &xStr2) { return xStr2 == xStr1; }
+
+	friend bool operator!=(const zSTRING &xStr1, const zSTRING &xStr2) { return !(xStr1 == xStr1); }
+	friend bool operator!=(const zSTRING &xStr1, const char *xStr2) { return !(xStr1 == xStr2); }
+	friend bool operator!=(const char *xStr1, const zSTRING &xStr2) { return !(xStr1 == xStr2); }
 };
 
 class zCOLOR
