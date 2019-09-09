@@ -609,6 +609,8 @@ ASM(oCSpell_Kill_Hook)
 static int DAM_CRITICAL_MULTIPLIER = -1;
 static int NPC_MINIMAL_DAMAGE = -1;
 
+#define printf(x, ...)
+
 void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 {
 	// this->oCNpc::OnDamage_Hit(descDamage);
@@ -861,6 +863,8 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 
 	printf("\n");
 }
+
+#undef printf
 
 void hVisualFX::SetCollisionEnabled(bool en)
 {
@@ -1151,12 +1155,18 @@ void PatchGothic2(void)
 		PatchJump(0x00640811, 0x00640861); // oCZoneMusic::ProcessZoneList()
 
 		// Fix dark trees in WALD sectors
-		// very hacky - there are other lighting differences, too (see Old Mine Entrance)
+		// very hacky - there are other lighting differences, too (see Old Mine Entrance, Abandoned Mine Entrance ...)
 		// perhaps it's better to understand how the lighting differs from G1 to G2 ...
 		InjectHook(0x005D57DA, zCRenderLightContainer_CollectLights_StatLights_Hook); // zCRenderLightContainer::CollectLights_StatLights()
 
 		// Damage calculation
 		InjectHook(0x00666513, &hNpc::OnDamage_Hit); // oCNpc::OnDamage()
+
+		// TODO Fire in OnDamage_Anim
+
+		// TODO Why is the water less transparent?
+
+		// TODO override GetTalentValue ... Npc_SetTalentSkill doesn't set talent value, which is unnice to say the least since no NPC actually has "value" ...
 
 		// An attempt at reintroducing the hardcoded spells from Gothic 1 (Telekinesis, Control)
 		PatchSpells();
