@@ -606,6 +606,262 @@ ASM(oCSpell_Kill_Hook)
 	RET(0x00485841);
 }
 
+static int DAM_CRITICAL_MULTIPLIER = -1;
+static int NPC_MINIMAL_DAMAGE = -1;
+
+void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
+{
+	// this->oCNpc::OnDamage_Hit(descDamage);
+
+	// return;
+
+	if (DAM_CRITICAL_MULTIPLIER == -1)
+	{
+		zCPar_Symbol *pSymbol = parser.GetSymbol("DAM_CRITICAL_MULTIPLIER");
+		if (pSymbol) pSymbol->GetValue(DAM_CRITICAL_MULTIPLIER, 0);
+		else DAM_CRITICAL_MULTIPLIER = 2; // default value
+	}
+
+	if (NPC_MINIMAL_DAMAGE == -1)
+	{
+		zCPar_Symbol *pSymbol = parser.GetSymbol("NPC_MINIMAL_DAMAGE");
+		if (pSymbol) pSymbol->GetValue(NPC_MINIMAL_DAMAGE, 0);
+		else NPC_MINIMAL_DAMAGE = 10; // default value
+	}
+
+	printf("descDamage:\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	oCNpc *pNpcAttacker = descDamage.pNpcAttacker;
+
+	if (pNpcAttacker && !pNpcAttacker->IsMonster())
+	{
+		int talentNr = NPC_TAL_INVALID;
+
+		if (pNpcAttacker->GetWeaponMode() == NPC_WEAPON_1HS) talentNr = NPC_TAL_1H;
+		else if (pNpcAttacker->GetWeaponMode() == NPC_WEAPON_2HS) talentNr = NPC_TAL_2H;
+		else if (pNpcAttacker->GetWeaponMode() == NPC_WEAPON_BOW) talentNr = NPC_TAL_BOW;
+		else if (pNpcAttacker->GetWeaponMode() == NPC_WEAPON_CBOW) talentNr = NPC_TAL_CROSSBOW;
+
+		if (talentNr != NPC_TAL_INVALID)
+		{
+			printf("talentNr != NPC_TAL_INVALID:\n");
+
+			int nChance = pNpcAttacker->GetTalentValue(talentNr);
+			printf("nChance: %d\n", nChance);
+
+			int nPercentage = zRand(100) + 1;
+			printf("nPercentage: %d\n", nPercentage);
+
+			if (nPercentage <= nChance)
+			{
+				descDamage.fDamageMultiplier *= DAM_CRITICAL_MULTIPLIER;
+			}
+
+			printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+			printf("\n");
+		}
+	}
+
+	if (descDamage.fDamageMultiplier != 1.0f)
+	{
+		for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)
+		{
+			descDamage.aryDamage[nIndex] *= (unsigned int)descDamage.fDamageMultiplier;
+		}
+
+		descDamage.fDamageTotal *= descDamage.fDamageMultiplier;
+	}
+
+	printf("descDamage.fDamageMultiplier != 1.0f\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	int nDamageTotal = 0;
+
+	for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)
+	{
+		if (this->HasFlag(descDamage.enuModeDamage, 1 << nIndex))
+		{
+			nDamageTotal += descDamage.aryDamage[nIndex];
+		}
+	}
+
+	printf("for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("nDamageTotal: %d, %d\n", nDamageTotal, !nDamageTotal);
+	printf("\n");
+
+	bool bDivideTotalDamage = !nDamageTotal;
+	bool bIsSemiHuman = pNpcAttacker && pNpcAttacker->IsSemiHuman();
+
+	if (bDivideTotalDamage)
+	{
+		if (pNpcAttacker && !bIsSemiHuman)
+		{
+			if (!descDamage.pFXHit)
+			{
+				descDamage.fDamageTotal = (float)pNpcAttacker->attribute[NPC_ATR_STRENGTH];
+			}
+		}
+
+		int nDamageTotal = (int)descDamage.fDamageTotal;
+		ApplyDamages(descDamage.enuModeDamage, (int *)descDamage.aryDamage, nDamageTotal);
+		descDamage.fDamageTotal = (float)nDamageTotal;
+	}
+
+	printf("bDivideTotalDamage\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	if (pNpcAttacker && bIsSemiHuman)
+	{
+		for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)
+		{
+			descDamage.aryDamage[nIndex] += pNpcAttacker->damage[nIndex];
+		}
+	}
+
+	printf("pNpcAttacker && bIsSemiHuman\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	if (pNpcAttacker)
+	{
+		if (!descDamage.pFXHit && bIsSemiHuman)
+		{
+			bool bBlunt = ((descDamage.enuModeDamage & oEDamageType_Blunt) == oEDamageType_Blunt);
+			bool bEdge = ((descDamage.enuModeDamage & oEDamageType_Edge) == oEDamageType_Edge);
+			bool bPoint = ((descDamage.enuModeDamage & oEDamageType_Point) == oEDamageType_Point);
+
+			if (!(bBlunt || bEdge || bPoint) && pNpcAttacker->IsMonster())
+			{
+				descDamage.enuModeDamage |= oEDamageType_Edge;
+				bEdge = TRUE;
+			}
+
+			float fDivisor = 0.0f;
+			float fStrength = (float)pNpcAttacker->attribute[NPC_ATR_STRENGTH];
+
+			if (bBlunt) fDivisor = 1.0f;
+			if (bEdge) fDivisor += 1.0f;
+
+			if (fDivisor != 0.0f)
+			{
+				fStrength /= fDivisor;
+
+				if (bBlunt) descDamage.aryDamage[oEDamageIndex_Blunt] += (unsigned int)fStrength;
+				if (bEdge) descDamage.aryDamage[oEDamageIndex_Edge] += (unsigned int)fStrength;
+			}
+		}
+	}
+
+	printf("bBlunt || bEdge || bPoint\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	int nDamageEffective = 0;
+	int nDamageApplied = 0;
+	int nDamageCurrent = 0;
+	int nProtectionTotal = 0;
+	int nProtectionCurrent = 0;
+	bool immortalByProtection = FALSE;
+	bool canBeImmortalByProtection = TRUE;
+
+	for (int nDamageIndex = 0; nDamageIndex < oEDamageIndex_MAX; nDamageIndex++)
+	{
+		if ((descDamage.enuModeDamage & (1 << nDamageIndex)) == (1 << nDamageIndex))
+		{
+			nDamageCurrent = descDamage.aryDamage[nDamageIndex];
+			nProtectionCurrent = this->protection[nDamageIndex];
+
+			if (nProtectionCurrent > 0)	canBeImmortalByProtection = FALSE;
+			if (canBeImmortalByProtection && nProtectionCurrent < 0) immortalByProtection = TRUE;
+
+			nProtectionTotal += nProtectionCurrent;
+			nDamageApplied = (nDamageCurrent - nProtectionCurrent);
+			if (nDamageApplied < 0) nDamageApplied = 0;
+			nDamageEffective += nDamageApplied;
+			descDamage.aryDamageEffective[nDamageIndex] = nDamageApplied;
+		}
+		else
+		{
+			descDamage.aryDamageEffective[nDamageIndex] = 0;
+		}
+	}
+
+	printf("int nDamageIndex = 0; nDamageIndex < oEDamageIndex_MAX; nDamageIndex++\n");
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("aryDamageEffective Edge: %d\n", descDamage.aryDamageEffective[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	descDamage.fDamageTotal = (float)nDamageEffective;
+
+	if (this->HasFlag(NPC_FLAG_IMMORTAL) || immortalByProtection) descDamage.fDamageTotal = 0.0f;
+
+	descDamage.fDamageEffective = descDamage.fDamageTotal;
+
+	if (descDamage.fDamageEffective < 0.0f) descDamage.fDamageEffective = 0.0f;
+
+	descDamage.fDamageReal = descDamage.fDamageEffective;
+	int nDamage = (int)descDamage.fDamageEffective;
+
+	printf("NPC_FLAG_IMMORTAL\n");
+	printf("this->HasFlag(NPC_FLAG_IMMORTAL) || immortalByProtection: %d\n", this->HasFlag(NPC_FLAG_IMMORTAL) || immortalByProtection);
+	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
+	printf("aryDamageEffective Edge: %d\n", descDamage.aryDamageEffective[oEDamageIndex_Edge]);
+	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
+	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
+	printf("\n");
+
+	// zERR_FAULT("X: Dealing " + zSTRING(nDamage) + " damage!");
+
+	bool bBarrier = this->HasFlag(descDamage.enuModeDamage, oEDamageType_Barrier);
+	bool bDeathByBarrier = FALSE;
+	const bool bForceBarrierDeath = TRUE; // for some extra spicy barrier behaviour
+
+	if (bBarrier)
+	{
+		if (this->anictrl)
+		{
+			bool bInWater = this->anictrl->GetWaterLevel() > 1;
+			bDeathByBarrier = bInWater;
+		}
+
+		if (bDeathByBarrier || bForceBarrierDeath) nDamage = this->attribute[NPC_ATR_HITPOINTS];
+	}
+
+	if (this->IsSelfPlayer() && nDamage <= 0)
+	{
+		nDamage = NPC_MINIMAL_DAMAGE;
+	}
+
+	if (!this->HasFlag(NPC_FLAG_IMMORTAL) && !immortalByProtection)
+	{
+		this->ChangeAttribute(NPC_ATR_HITPOINTS, -nDamage);
+	}
+
+	this->hpHeal = this->attribute[NPC_ATR_REGENERATEHP] * 1000.0f;
+	this->manaHeal = this->attribute[NPC_ATR_REGENERATEMANA] * 1000.0f;
+
+	printf("\n");
+}
+
 void hVisualFX::SetCollisionEnabled(bool en)
 {
 	if (this->collDetectionDynamic || this->collDetectionStatic)
@@ -654,39 +910,6 @@ void hVisualFX::SetCollisionEnabled(bool en)
 
 		break;
 	}
-}
-
-void PatchSpells(void)
-{
-	// Does this even work? No way to check currently ...
-	InjectHook(0x006665BF, &hNpc::OnDamage_Events); // oCNpc::OnDamage()
-	InjectHook(0x004854CF, &hSpell::CastSpecificSpell); // oCSpell::Cast()
-	InjectHook(0x0043BEB0, &hSpell::EndTimedEffect); // oCTriggerChangeLevel::TriggerTarget()
-	InjectHook(0x0047214D, &hSpell::EndTimedEffect); // oCAIHuman::CheckActiveSpells()
-	InjectHook(0x004872BB, &hSpell::EndTimedEffect); // oCSpell::DoTimedEffect()
-	InjectHook(0x0073D1F9, &hSpell::DoTimedEffect); // oCNpc::DoActiveSpells()
-	InjectHook(0x00484C04, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484C22, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484C4D, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484CCB, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484E48, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00733FEC, &hSpell::IsValidTarget); // oCNpc::CollectFocusVob()
-	InjectHook(0x00473154, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
-	InjectHook(0x00473303, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
-	InjectHook(0x0047668E, &hSpell::Invest); // oCMag_Book::Spell_Invest()
-
-	// Hooks for hSpell::StopTargetEffects
-	InjectHook(0x00484A77, oCSpell_Setup_Hook, PATCH_JUMP); // oCSpell::Setup()
-	InjectHook(0x00485417, oCSpell_Cast_Hook, PATCH_JUMP); // oCSpell::Cast()
-	InjectHook(0x00485626, oCSpell_Stop_Hook, PATCH_JUMP); // oCSpell::Stop()
-	InjectHook(0x004857D7, oCSpell_Kill_Hook, PATCH_JUMP); // oCSpell::Kill()
-
-	// oCVisualFX::SetCollisionEnabled()
-	Patch(0x00830374, &hVisualFX::SetCollisionEnabled); // oCVisualFX::`vftable'
-	Patch(0x0083060C, &hVisualFX::SetCollisionEnabled); // oCVisFX_MultiTarget::`vftable'
-
-	// Remove unneeded (?) collsion enabling in oCVisualFX::InitEffect()
-	PatchJump(0x00494B56, 0x00494BAC); // oCVisualFX::InitEffect()
 }
 
 void hSkyControler_Outdoor::ReadFogColorsFromINI()
@@ -777,6 +1000,39 @@ const char *NoSound = "NEWGAME";
 const char *SectorName = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 #define zPARTICLE_MAX_GLOBAL 65536
+
+void PatchSpells(void)
+{
+	// Does this even work? No way to check currently ...
+	InjectHook(0x006665BF, &hNpc::OnDamage_Events); // oCNpc::OnDamage()
+	InjectHook(0x004854CF, &hSpell::CastSpecificSpell); // oCSpell::Cast()
+	InjectHook(0x0043BEB0, &hSpell::EndTimedEffect); // oCTriggerChangeLevel::TriggerTarget()
+	InjectHook(0x0047214D, &hSpell::EndTimedEffect); // oCAIHuman::CheckActiveSpells()
+	InjectHook(0x004872BB, &hSpell::EndTimedEffect); // oCSpell::DoTimedEffect()
+	InjectHook(0x0073D1F9, &hSpell::DoTimedEffect); // oCNpc::DoActiveSpells()
+	InjectHook(0x00484C04, &hSpell::IsValidTarget); // oCSpell::Setup()
+	InjectHook(0x00484C22, &hSpell::IsValidTarget); // oCSpell::Setup()
+	InjectHook(0x00484C4D, &hSpell::IsValidTarget); // oCSpell::Setup()
+	InjectHook(0x00484CCB, &hSpell::IsValidTarget); // oCSpell::Setup()
+	InjectHook(0x00484E48, &hSpell::IsValidTarget); // oCSpell::Setup()
+	InjectHook(0x00733FEC, &hSpell::IsValidTarget); // oCNpc::CollectFocusVob()
+	InjectHook(0x00473154, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
+	InjectHook(0x00473303, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
+	InjectHook(0x0047668E, &hSpell::Invest); // oCMag_Book::Spell_Invest()
+
+	// Hooks for hSpell::StopTargetEffects
+	InjectHook(0x00484A77, oCSpell_Setup_Hook, PATCH_JUMP); // oCSpell::Setup()
+	InjectHook(0x00485417, oCSpell_Cast_Hook, PATCH_JUMP); // oCSpell::Cast()
+	InjectHook(0x00485626, oCSpell_Stop_Hook, PATCH_JUMP); // oCSpell::Stop()
+	InjectHook(0x004857D7, oCSpell_Kill_Hook, PATCH_JUMP); // oCSpell::Kill()
+
+	// oCVisualFX::SetCollisionEnabled()
+	Patch(0x00830374, &hVisualFX::SetCollisionEnabled); // oCVisualFX::`vftable'
+	Patch(0x0083060C, &hVisualFX::SetCollisionEnabled); // oCVisFX_MultiTarget::`vftable'
+
+	// Remove unneeded (?) collsion enabling in oCVisualFX::InitEffect()
+	PatchJump(0x00494B56, 0x00494BAC); // oCVisualFX::InitEffect()
+}
 
 void PatchGothic2(void)
 {
@@ -898,6 +1154,12 @@ void PatchGothic2(void)
 		// very hacky - there are other lighting differences, too (see Old Mine Entrance)
 		// perhaps it's better to understand how the lighting differs from G1 to G2 ...
 		InjectHook(0x005D57DA, zCRenderLightContainer_CollectLights_StatLights_Hook); // zCRenderLightContainer::CollectLights_StatLights()
+
+		// Damage calculation
+		InjectHook(0x00666513, &hNpc::OnDamage_Hit); // oCNpc::OnDamage()
+
+		// An attempt at reintroducing the hardcoded spells from Gothic 1 (Telekinesis, Control)
+		PatchSpells();
 	}
 
 	if (G12GetPrivateProfileBool("NoGamestartMusic", FALSE))
@@ -921,12 +1183,6 @@ void PatchGothic2(void)
 		Patch(0x0047405E + 2, 0x008CDF94 + sizeof(zVEC2)); // oCMagFrontier::GetDistanceNewWorld()
 		Patch(0x00474568 + 2, 0x008CDEC0 + sizeof(zVEC2)); // oCMagFrontier::GetDistanceDragonIsland()
 		Patch(0x00474728 + 2, 0x008CDE6C + sizeof(zVEC2)); // oCMagFrontier::GetDistanceAddonWorld()
-	}
-
-	if (G12GetPrivateProfileBool("G1Spells", FALSE))
-	{
-		// An attempt at reintroducing the hardcoded spells from Gothic 1 (Telekinesis, Control)
-		PatchSpells();
 	}
 }
 

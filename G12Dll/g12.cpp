@@ -28,6 +28,9 @@ void PatchGothic108k(void)
 
 	// Disable rain in vobs
 	Patch(0x005B90A4 + 1, 736);
+
+	// Debug damage
+	// Patch(0x009D987C, TRUE);
 }
 
 const char *SpacerAppName = "Spacer 1.50";

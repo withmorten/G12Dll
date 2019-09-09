@@ -80,6 +80,8 @@ class zCVobScreenFX;
 class zCPositionKey;
 class zCKBSpline;
 class zCModelNodeInst;
+class zFILE;
+class zCMutex;
 
 class oCNpc;
 class oCNpcTalent;
@@ -226,10 +228,25 @@ public:
 	virtual ~zSTRING() { XCALL(0x00401160); };
 
 	zSTRING() { XCALL(0x00402AF0); }
+	zSTRING(const zSTRING &xStr) { XCALL(0x00416500); }
+	zSTRING(const zSTRING *pstr) { XCALL(0x007928D0); }
 	zSTRING(char *pstring) { XCALL(0x004010C0); }
+	zSTRING(char ch) { XCALL(0x0051AC80); }
+	zSTRING(int xWert) { XCALL(0x00435870); }
+	zSTRING(unsigned int xWert) { XCALL(0x00461E90); }
+	zSTRING(const float xWert, int digits = 20) { XCALL(0x00435970); }
+	zSTRING(const double xWert, int digits = 20) { XCALL(0x00454680); }
+	byte IsEmpty() const { return _Ptr == NULL; }
+	int Length() const { return _Len; }
+	char *ToChar() const { return _Ptr; }
 	void Clear() { XCALL(0x0059D010); }
 	int Search(int startIndex, char *substr, unsigned int num) { XCALL(0x0046C920); }
 	int Contains(char *substr) { return this->Search(0, substr, 1) != -1; }
+	friend zSTRING operator+(const zSTRING &xStr1, const zSTRING &xStr2) { XCALL(0x004045C0); }
+	friend zSTRING operator+(const zSTRING &xStr1, const char *pstring) { XCALL(0x00404880); }
+	friend zSTRING operator+(const zSTRING &xStr1, const char ch) { XCALL(0x00445DD0); }
+	friend zSTRING operator+(const char *pstring, const zSTRING &xStr2) { XCALL(0x00404710); }
+	friend zSTRING operator+(const char ch, const zSTRING &xStr2) { XCALL(0x0044A190); }
 };
 
 class zCOLOR
@@ -1721,12 +1738,90 @@ struct oSDamageDescriptor
 	oCVisualFX *pVisualFX;
 };
 
+enum oEIndexDamage
+{
+	oEDamageIndex_Barrier,
+	oEDamageIndex_Blunt,
+	oEDamageIndex_Edge,
+	oEDamageIndex_Fire,
+	oEDamageIndex_Fly,
+	oEDamageIndex_Magic,
+	oEDamageIndex_Point,
+	oEDamageIndex_Fall,
+	oEDamageIndex_MAX
+};
+
+typedef oEIndexDamage oEDamageIndex;
+typedef oEIndexDamage oEProtectionIndex;
+
+enum oETypeDamage
+{
+	oEDamageType_Unknown = 0,
+	oEDamageType_Barrier = 1,
+	oEDamageType_Blunt = oEDamageType_Barrier << 1,
+	oEDamageType_Edge = oEDamageType_Blunt << 1,
+	oEDamageType_Fire = oEDamageType_Edge << 1,
+	oEDamageType_Fly = oEDamageType_Fire << 1,
+	oEDamageType_Magic = oEDamageType_Fly << 1,
+	oEDamageType_Point = oEDamageType_Magic << 1,
+	oEDamageType_Fall = oEDamageType_Point << 1,
+	oEDamageType_ForceDWORD = 0xffffffff
+};
+
+typedef oETypeDamage oEDamageType;
+
 #define NPC_PERC_ASSESSCASTER 29
 
+#define NPC_FLAG_IMMORTAL (1 << 1)
+#define NPC_FLAG_GHOST (1 << 2)
+
 #define NPC_ATR_HITPOINTS 0
+#define NPC_ATR_HITPOINTSMAX 1
+#define NPC_ATR_MANA 2
+#define NPC_ATR_MANAMAX 3
+#define NPC_ATR_STRENGTH 4
+#define NPC_ATR_DEXTERITY 5
+#define NPC_ATR_REGENERATEHP 6
+#define NPC_ATR_REGENERATEMANA 7
+#define NPC_ATR_MAX 8
 
 #define NPC_AISTATE_UNCONSCIOUS (-4)
 #define NPC_AISTATE_FADEAWAY (-5)
+
+#define NPC_WEAPON_NONE 0
+#define NPC_WEAPON_FIST 1
+#define NPC_WEAPON_DAG 2
+#define NPC_WEAPON_1HS 3
+#define NPC_WEAPON_2HS 4
+#define NPC_WEAPON_BOW 5
+#define NPC_WEAPON_CBOW 6
+#define NPC_WEAPON_MAG 7
+#define NPC_WEAPON_MAX 8
+
+#define NPC_TAL_INVALID (-1)
+#define NPC_TAL_UNKNOWN 0
+#define NPC_TAL_1H 1
+#define NPC_TAL_2H 2
+#define NPC_TAL_BOW 3
+#define NPC_TAL_CROSSBOW 4
+#define NPC_TAL_PICKLOCK 5
+#define NPC_TAL_PICKPOCKET 6
+#define NPC_TAL_MAGE 7
+#define NPC_TAL_SNEAK 8
+#define NPC_TAL_REGENERATE 9
+#define NPC_TAL_FIREMASTER 10
+#define NPC_TAL_ACROBAT 11
+#define NPC_TAL_PICKPOCKET_G2 12
+#define NPC_TAL_SMITH 13
+#define NPC_TAL_RUNES 14
+#define NPC_TAL_ALCHEMY 15
+#define NPC_TAL_TAKEANIMALTROPHY 16
+#define NPC_TAL_FOREIGNLANGUAGE 17
+#define NPC_TAL_WISPDETECTOR 18
+#define NPC_TAL_C 19
+#define NPC_TAL_D 20
+#define NPC_TAL_E 21
+#define NPC_TAL_MAX 22
 
 class oCNpc : public oCVob
 {
@@ -1933,6 +2028,7 @@ public:
 	zCPlayerGroup *playerGroup;
 
 public:
+	void OnDamage_Hit(oSDamageDescriptor &descDamage) { XCALL(0x00666610); }
 	void OnDamage_Events(oSDamageDescriptor &descDamage) { XCALL(0x0067ABE0); }
 	void StandUp(bool walkingallowed, bool startAniTransition) { XCALL(0x00682B40); }
 	zCModel *GetModel() { XCALL(0x00738720); }
@@ -1946,10 +2042,21 @@ public:
 	void SetBodyStateModifier(int nr) { XCALL(0x0075EC10); }
 	int ModifyBodyState(int add, int remove) { XCALL(0x0075EF50); }
 	void CreatePassivePerception(int percType, zCVob *other, zCVob *victim) { XCALL(0x0075B270); }
-
 	bool IsDead() { return this->attribute[NPC_ATR_HITPOINTS] <= 0; }
 	bool IsUnconscious() { return this->state.IsInState(NPC_AISTATE_UNCONSCIOUS); }
 	bool IsFadingAway() { return this->state.IsInState(NPC_AISTATE_FADEAWAY); }
+	bool IsHuman() { XCALL(0x00742640); }
+	bool IsOrc() { XCALL(0x00742670); }
+	bool IsGoblin() { XCALL(0x00742650); }
+	bool IsSkeleton() { XCALL(0x00742680); }
+	bool IsMonster() { XCALL(0x00742600); }
+	bool IsSemiHuman() { return this->IsHuman() || this->IsOrc() || this->IsGoblin() || this->IsSkeleton(); }
+	int GetWeaponMode() { XCALL(0x00738C40); }
+	int GetTalentValue(int talentNr) { XCALL(0x00730DC0); }
+	bool HasFlag(unsigned int dwValue, unsigned int dwFlag) { XCALL(0x0067BD20); }
+	bool HasFlag(int nr) { XCALL(0x007309E0); }
+	bool IsSelfPlayer() { return this == oCNpc::player; }
+	void ChangeAttribute(int nr, int value) { XCALL(0x0072FF60); }
 };
 
 class zCModel : public zCObject
@@ -1965,6 +2072,8 @@ class oCAniCtrl_Human : public zCObject
 {
 public:
 	void SearchStandAni(bool forceStartAni) { XCALL(0x006A4D20); }
+	int GetWaterLevel() { XCALL(0x006B89D0); }
+	bool IsInWater() { return this->GetWaterLevel() > 0; }
 };
 
 #define SPL_STATUS_DONTINVEST 0
@@ -2318,4 +2427,38 @@ struct zSParticle
 	zVEC3 color;
 	zVEC3 colorVel;
 	zCPolyStrip *polyStrip;
+};
+
+class zCPar_Symbol
+{
+public:
+	void GetValue(int &val, int nr) { XCALL(0x007A1FE0); }
+};
+
+class zCParser
+{
+public:
+	zCPar_Symbol *GetSymbol(const zSTRING &s) { XCALL(0x007938D0); }
+};
+
+class zERROR
+{
+public:
+	void (*onexit)();
+
+	zSTRING filter_authors;
+	unsigned int filter_flag;
+	char filter_level;
+	int target;
+
+	int ack_type;
+	zFILE *log_file;
+	unsigned char indent_depth;
+	HWND spyHandle;
+	zCMutex *spyMutex;
+
+public:
+	virtual ~zERROR() { XCALL(0x0044C650); }
+
+	int Report(int xLevel, int xId, const zSTRING &xMessage, char level, unsigned int flag, int line, char *file, char *function) { XCALL(0x0044C8D0); }
 };

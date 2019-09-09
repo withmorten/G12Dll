@@ -3,6 +3,8 @@ zCRnd_D3D *&zrenderer = *(zCRnd_D3D **)0x00982F08;
 zCSndSys_MSS *&zsound = *(zCSndSys_MSS **)0x0099B03C;
 zCTimer &ztimer = *(zCTimer *)0x0099B3D4;
 oCGame *&ogame = *(oCGame **)0x00AB0884;
+zCParser &parser = *(zCParser *)0x00AB40C0;
+zERROR &zerr = *(zERROR *)0x008CDCD0;
 
 zMAT4 &zMAT4::s_identity = *(zMAT4 *)0x008D45E8;
 
@@ -26,10 +28,21 @@ zCOLOR GFX_LBLUE(173, 216, 230, 255);
 zCCollisionObjectDef &zCCollObjectBoxPassThrough::s_oCollObjClass = *(zCCollisionObjectDef *)0x008D832C;
 zCCollisionObjectDef &zCCollObjectProjectile::s_oCollObjClass = *(zCCollisionObjectDef *)0x008D8368;
 
+#define zERR_WARNING(text) zerr.Report(2, 0, text, 0, 0, __LINE__, __FILE__, 0)
+
+#define zERR_FAULT(text) zerr.Report(3, 0, text, 0, 0, __LINE__, __FILE__, 0)
+
 WRAPPER int _rand(void) { EAXJMP(0x007D2F98); }
 
 WRAPPER void GetNearestPointFromLineSegment2D(zVEC2 &a, zVEC2 &b, zVEC2 &c, zVEC2 &nearest) { EAXJMP(0x00474080); }
 WRAPPER void DrawLineSegment2D(zVEC2 &a, zVEC2 &b, float z, zCOLOR color) { EAXJMP(0x00474140); }
+
+WRAPPER void ApplyDamages(unsigned int damageTypes, int *damage, int &damageTotal) { EAXJMP(0x0065E5A0); }
+
+inline int zRand(int max)
+{
+	return _rand() % max;
+}
 
 zVEC3 operator +(zVEC3 &v, float f)
 {

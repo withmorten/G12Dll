@@ -1,6 +1,7 @@
 class hNpc : public oCNpc
 {
 public:
+	void OnDamage_Hit(oSDamageDescriptor &descDamage);
 	void OnDamage_Events(oSDamageDescriptor &descDamage);
 	void CreateVobList(float max_dist);
 };
