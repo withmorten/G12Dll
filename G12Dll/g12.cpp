@@ -27,9 +27,12 @@ void PatchGothic108k(void)
 	}
 
 	// Disable rain in vobs
-	Patch(0x005B90A4 + 1, 736);
+	// Patch(0x005B90A4 + 1, 736);
 
-	// Debug damage
+	// Don't show "memory leaks found" everytime quitting
+	Patch(0x0058B7F7 + 1, (BYTE)2);
+
+	// Debug damage (this doesn't work with SystemPack)
 	// Patch(0x009D987C, TRUE);
 }
 
@@ -131,6 +134,9 @@ void PatchGothic26(void)
 
 	// Disable rain in vobs
 	// Patch(0x005E2279 + 1, 736);
+
+	// Debug damage (this doesn't work with SystemPack)
+	// Patch(0x00AAC60C, TRUE);
 }
 
 void PatchSpacer26(void)

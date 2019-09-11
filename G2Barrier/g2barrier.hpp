@@ -1,11 +1,11 @@
-class hMagFrontier : public oCMagFrontier
+class hCMagFrontier : public oCMagFrontier
 {
 public:
 	void DoCheck();
 	float GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint);
 };
 
-class hBarrier : public oCBarrier
+class hCBarrier : public oCBarrier
 {
 public:
 	void Init();
@@ -17,7 +17,7 @@ public:
 	bool RenderThunder(myThunder *thunder, zTRenderContext &rndContext);
 };
 
-class hSkyControler_Barrier : public oCSkyControler_Barrier
+class hCSkyControler_Barrier : public oCSkyControler_Barrier
 {
 public:
 	void RenderSkyPre();

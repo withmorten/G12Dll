@@ -21,7 +21,7 @@ static char worldName[MAX_PATH] = { '\0' };
 
 static zVEC2 newPointList[POINTS_WORLD];
 
-float hMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
+float hCMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 {
 	float real_dist;
 	zVEC2 pos2d, a, b, nearest;
@@ -63,7 +63,7 @@ float hMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 	return dist;
 }
 
-void hMagFrontier::DoCheck()
+void hCMagFrontier::DoCheck()
 {
 	this->oCMagFrontier::DoCheck();
 
@@ -219,7 +219,7 @@ void PatchMagicFrontier(void)
 
 		MagicFrontierNewPointListInit();
 
-		InjectHook(0x0073E71B, &hMagFrontier::DoCheck); // oCNpc::ProcessNpc()
+		InjectHook(0x0073E71B, &hCMagFrontier::DoCheck); // oCNpc::ProcessNpc()
 	}
 
 	if (G12GetPrivateProfileBool("MagicFrontierPointsWorldGRM", FALSE))
@@ -229,7 +229,7 @@ void PatchMagicFrontier(void)
 	}
 }
 
-const int barrierEverLoomingMinOpacity = 1;
+const int barrierEverLoomingMinOpacity = 5;
 const int barrierEverLoomingMaxOpacity = 15;
 
 static int barrierMinOpacity = 0;
@@ -279,7 +279,7 @@ static float delayTimeSector4 = 10000.0f;
 static myThunder *myThunderList = NULL;
 static int numMyThunders;
 
-void hBarrier::AddTremor(zTRenderContext &renderContext)
+void hCBarrier::AddTremor(zTRenderContext &renderContext)
 {
 	zVEC3 amplitude;
 
@@ -290,7 +290,7 @@ void hBarrier::AddTremor(zTRenderContext &renderContext)
 	renderContext.cam->AddTremor(renderContext.cam->connectedVob->trafoObjToWorld.GetTranslation(), 4000.0f * 4000.0f, 3000.0f, amplitude);
 }
 
-void hBarrier::AddEarthQuake()
+void hCBarrier::AddEarthQuake()
 {
 	oCVisualFX *vfx = oCVisualFX::CreateAndPlay(zSTRING("FX_EarthQuake"), oCNpc::player, oCNpc::player, 0, 0, 0, FALSE);
 
@@ -302,7 +302,7 @@ void hBarrier::AddEarthQuake()
 	}
 }
 
-void hBarrier::Init()
+void hCBarrier::Init()
 {
 	this->originalTexUVList = 0;
 
@@ -523,7 +523,7 @@ void hBarrier::Init()
 	}
 }
 
-bool hBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible)
+bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible)
 {
 	if (this->skySphereMesh)
 	{
@@ -775,7 +775,7 @@ bool hBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVi
 	return this->bFadeInOut;
 }
 
-int hBarrier::AddThunderSub(myThunder *rootThunder, int startIndex, int startNexIntex, int length, int mumSplits)
+int hCBarrier::AddThunderSub(myThunder *rootThunder, int startIndex, int startNexIntex, int length, int mumSplits)
 {
 	int rV = this->oCBarrier::AddThunderSub(rootThunder, startIndex, startNexIntex, length, mumSplits);
 
@@ -791,7 +791,7 @@ int hBarrier::AddThunderSub(myThunder *rootThunder, int startIndex, int startNex
 	return rV;
 }
 
-int hBarrier::AddThunder(int startIndex, int length, float random, int sector)
+int hCBarrier::AddThunder(int startIndex, int length, float random, int sector)
 {
 	int thunderIndex = this->oCBarrier::AddThunder(startIndex, length, random, sector);
 
@@ -804,7 +804,7 @@ int hBarrier::AddThunder(int startIndex, int length, float random, int sector)
 	return thunderIndex;
 }
 
-int hBarrier::RenderThunder(myThunder *thunder, zTRenderContext &rndContext)
+int hCBarrier::RenderThunder(myThunder *thunder, zTRenderContext &rndContext)
 {
 	if (thunder->valid)
 	{
@@ -909,11 +909,11 @@ int hBarrier::RenderThunder(myThunder *thunder, zTRenderContext &rndContext)
 	return FALSE;
 }
 
-void hSkyControler_Barrier::RenderSkyPre()
+void hCSkyControler_Barrier::RenderSkyPre()
 {
 	this->zCSkyControler_Outdoor::RenderSkyPre();
 
-	hBarrier *barrier = (hBarrier *)this->barrier;
+	hCBarrier *barrier = (hCBarrier *)this->barrier;
 
 	if (!meshLoaded)
 	{
@@ -1000,10 +1000,10 @@ void PatchBarrier(void)
 		}
 
 		// Use our own RenderSkyPre()
-		Patch(0x0083C178, &hSkyControler_Barrier::RenderSkyPre); // oCSkyControler_Barrier::`vftable'
+		Patch(0x0083C178, &hCSkyControler_Barrier::RenderSkyPre); // oCSkyControler_Barrier::`vftable'
 
 		// Use a slightly moddified AddThunderSub()
-		InjectHook(0x006BB376, &hBarrier::AddThunderSub); // oCBarrier::AddThunder()
+		InjectHook(0x006BB376, &hCBarrier::AddThunderSub); // oCBarrier::AddThunder()
 	}
 }
 

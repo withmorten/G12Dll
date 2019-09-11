@@ -82,6 +82,7 @@ class zCKBSpline;
 class zCModelNodeInst;
 class zFILE;
 class zCMutex;
+class zCCollisionReport;
 
 class oCNpc;
 class oCNpcTalent;
@@ -123,16 +124,16 @@ public:
 class zVEC3
 {
 public:
-	zVEC3 &operator +=(zVEC3 &v) { XCALL(0x004B60A0); }
-	zVEC3 &operator -=(zVEC3 &v) { XCALL(0x00554A00); }
-	friend zVEC3 operator -(zVEC3 &v);
-	friend zVEC3 operator +(zVEC3 &v, float f);
-	friend zVEC3 operator +(zVEC3 &a, zVEC3 &b);
-	friend zVEC3 operator -(zVEC3 &v, float f);
-	friend zVEC3 operator -(zVEC3 &a, zVEC3 &b);
-	friend zVEC3 operator *(zVEC3 &v, float f);
-	friend float operator *(zVEC3 &a, zVEC3 &b);
-	friend zVEC3 operator ^(zVEC3 &a, zVEC3 &b);
+	zVEC3 &operator+=(zVEC3 &v) { XCALL(0x004B60A0); }
+	zVEC3 &operator-=(zVEC3 &v) { XCALL(0x00554A00); }
+	friend zVEC3 operator-(zVEC3 &v);
+	friend zVEC3 operator+(zVEC3 &v, float f);
+	friend zVEC3 operator+(zVEC3 &a, zVEC3 &b);
+	friend zVEC3 operator-(zVEC3 &v, float f);
+	friend zVEC3 operator-(zVEC3 &a, zVEC3 &b);
+	friend zVEC3 operator*(zVEC3 &v, float f);
+	friend float operator*(zVEC3 &a, zVEC3 &b);
+	friend zVEC3 operator^(zVEC3 &a, zVEC3 &b);
 
 	float LengthApprox() { XCALL(0x00490E10); }
 	zVEC3 &Normalize() { XCALL(0x00490EA0); }
@@ -175,6 +176,9 @@ public:
 	int numInArray;
 
 public:
+	zCArray() { numInArray = 0; numAlloc = 0; array = NULL; }
+	~zCArray() { delete[] array; array = NULL; }
+
 	void RemoveIndex(int index);
 };
 
@@ -436,6 +440,10 @@ public:
 	zCArray<zCObject *> objectList;
 	unsigned short archiveVersion;
 	unsigned short archiveVersionSum;
+
+public:
+	static void ObjectCreated(zCObject *object, zCClassDef *objClassDef) { XCALL(0x005AAEB0); }
+	static void ObjectDeleted(zCObject *object, zCClassDef *objClassDef) { XCALL(0x005AAFD0); }
 };
 
 class zCObject
@@ -840,6 +848,7 @@ public:
 	void SetPhysicsEnabled(bool enable) { XCALL(0x0061D190); }
 	void BeginMovement() { XCALL(0x0061DA80); }
 	void SetCollisionClass(zCCollisionObjectDef *collClass) { XCALL(0x0061E610); }
+	void RemoveVobFromWorld() { XCALL(0x00601C40); }
 };
 
 class zCCamera
@@ -1786,6 +1795,9 @@ enum oETypeDamage
 
 typedef oETypeDamage oEDamageType;
 
+#define BS_MOD_CONTROLLED 2048
+#define BS_MOD_CONTROLLING 8192
+
 #define NPC_PERC_ASSESSCASTER 29
 
 #define NPC_FLAG_IMMORTAL (1 << 1)
@@ -1838,6 +1850,10 @@ typedef oETypeDamage oEDamageType;
 #define NPC_TAL_D 20
 #define NPC_TAL_E 21
 #define NPC_TAL_MAX 22
+
+#define NPC_GIL_SKELETON 31
+#define NPC_GIL_SUMMONED_SKELETON 32
+#define NPC_GIL_SKELETON_MAGE 33
 
 class oCNpc : public oCVob
 {
@@ -2073,6 +2089,8 @@ public:
 	bool HasFlag(int nr) { XCALL(0x007309E0); }
 	bool IsSelfPlayer() { return this == oCNpc::player; }
 	void ChangeAttribute(int nr, int value) { XCALL(0x0072FF60); }
+	bool AssessMagic_S(oCNpc *other, int spellType) { XCALL(0x0075CC30); }
+	bool AssessStopMagic_S(oCNpc *other, int spellType) { XCALL(0x0075CF30); }
 };
 
 class zCModel : public zCObject
@@ -2155,6 +2173,7 @@ public:
 	void DoTimedEffect() { XCALL(0x00487280); }
 	void SetReleaseStatus() { XCALL(0x00486670); }
 	void CallScriptInvestedMana() { XCALL(0x00485D30); }
+	zSTRING GetSpellInstanceName(int _spellID);
 };
 
 class oCMOB : public oCVob
@@ -2203,6 +2222,8 @@ public:
 class oCVisualFX : public zCEffect
 {
 public:
+	static zCClassDef &classDef;
+
 	zSTRING visName_S;
 	zSTRING visSize_S;
 	float visAlpha;
@@ -2252,7 +2273,7 @@ public:
 	bool sendAssessMagic;
 	float secsPerDamage;
 
-	byte dScriptEnd;
+	byte dScriptEnd; // will be abused as bool lightning
 
 	zVEC3 visSize;
 	int emTrjMode;
@@ -2340,7 +2361,7 @@ public:
 	int queueSetLevel : 5;
 
 	float damage;
-	float damageType;
+	int damageType;
 
 	int spellType;
 	int spellCat;
@@ -2356,11 +2377,22 @@ public:
 	float m_fSleepTimer;
 
 public:
+	static oCVisualFX *_CreateNewInstance() { XCALL(0x0049A230); }
 	static oCVisualFX *CreateAndPlay(zSTRING &id, zCVob *org, zCVob *target, int level, float damage, int damageType, int bIsProjectile) { XCALL(0x0048E760); }
 	static oCVisualFX *CreateAndPlay(zSTRING &id, zVEC3 &orgPos, zCVob *target, int level, float damage, int damageType, int bIsProjectile) { XCALL(0x0048EA80); }
 
+	oCVisualFX() { XCALL(0x00489AA0); }
+
+	virtual zCClassDef *_GetClassDef() { XCALL(0x0048A010); }
+	virtual void Archive(zCArchiver &arc) { XCALL(0x00499B40); }
+	virtual void Unarchive(zCArchiver &arc) { XCALL(0x00499B50); }
+	virtual ~oCVisualFX() { XCALL(0x0048A1F0); }
+
+	virtual void OnTick() { XCALL(0x00499A20); }
+	virtual bool CanThisCollideWith(zCVob *vob) { XCALL(0x00496AC0); }
 	virtual void Open() { XCALL(0x004918E0); }
 	virtual void SetOrigin(zCVob *orgVob, bool recalcTrj) { XCALL(0x004910F0); }
+	void _SetOrigin(zCVob *orgVob, bool recalcTrj) { XCALL(0x004910F0); }
 	virtual void SetTarget(zCVob *targetVob, bool recalcTrj) { XCALL(0x004912E0); }
 	virtual void SetTarget(zVEC3 &targetPos, bool recalcTrj) { XCALL(0x00491450); }
 	virtual void SetInflictor(zCVob *inflictorVob) { XCALL(0x00491220); }
@@ -2375,8 +2407,47 @@ public:
 	virtual int GetLevel() { XCALL(0x00493150); }
 	virtual void Cast(bool killAfterDone) { XCALL(0x00493160); }
 	virtual void Stop(bool killAfterDone) { XCALL(0x00493BE0); }
+	virtual void Kill() { XCALL(0x00493F70); }
+	virtual void Play(float keyCycleTime, zMAT4 *orgTrafo, zMAT4 *targetTrafo) { }
+	virtual bool CanBeDeleted() { XCALL(0x004942B0); }
+	virtual bool IsFinished() { XCALL(0x004942F0); }
+	virtual bool IsLooping() { XCALL(0x00494370); }
+	virtual void SetByScript(const zSTRING &id) { XCALL(0x0048D4B0); }
+	virtual void SetDuration(float fSecDuration) { emFXLifeSpan = fSecDuration; }
+	virtual void Reset() { XCALL(0x00491C20); }
+	virtual void ResetForEditing() { XCALL(0x0049E950); }
+	virtual void ReportCollision(zCCollisionReport &collisionReport) { XCALL(0x00494E80); }
+	virtual void SetCollisionEnabled(bool en) { XCALL(0x0048D330); }
+	virtual void SetCollisionCandidates(zCArray<zCVob *> collisionVobs) { XCALL(0x004968E0); }
+	virtual void GetCollisionCandidates(zCArray<zCVob *> &collisionVobs) { XCALL(0x0048A070); }
+	virtual int GetNumCollisionCandidates() { return allowedCollisionVobList.numInArray; }
+	virtual bool GetCollidedCandidates(zCArray<zCVob *> &collidedVobs) { XCALL(0x00496A00); }
+	virtual void SetDamage(float dam) { damage = dam; }
+	virtual void SetDamageType(int damType) { damageType = damType; }
+	virtual float GetDamage() { return damage; }
+	virtual int GetDamageType() { return damageType; }
+	virtual bool IsASpell() { return sendAssessMagic; }
+	virtual void SetSpellType(int _type) { spellType = _type; }
+	virtual void SetSpellCat(int cat) { spellCat = cat; }
+	virtual int GetSpellCat() { return spellCat; }
+	virtual int GetSpellTargetTypes() { return spellTargetTypes; }
+	virtual void SetSpellTargetTypes(int types) { spellTargetTypes = types; }
+	virtual bool GetSendsAssessMagic() { XCALL(0x0048B350); }
+	virtual void SetSendsAssessMagic(bool a_bSendAssessMagic) { XCALL(0x0048B2C0); }
+	virtual bool GetIsProjectile() { return bIsProjectile; }
+	virtual void SetIsProjectile(bool b) { bIsProjectile = b; }
+	virtual void SetVisualByString(const zSTRING &visName) { XCALL(0x0048C220); }
+	virtual void CalcTrajectory(bool &updateTargetOnly) { XCALL(0x0048F620); }
+	virtual void Collide(bool killAfterDone) { XCALL(0x00493A00); }
+	virtual void CollisionResponse(zVEC3 &collisionNormal, bool alignCollNormal) { XCALL(0x00496380); }
 
-	void SetSpellTargetTypes(int types) { XCALL(0x0048A1C0); }
+	void InitValues() { XCALL(0x0048B820); }
+};
+
+class oCVisFX_MultiTarget : public oCVisualFX
+{
+public:
+	static oCVisFX_MultiTarget *_CreateNewInstance() { XCALL(0x0049F750); }
 };
 
 class zCTimer
@@ -2393,6 +2464,10 @@ public:
 	unsigned int minFrameTime;
 	unsigned int forcedMaxFrameTime;
 };
+
+#define GAME_LEFT 1
+#define GAME_RIGHT 2
+#define GAME_UP 3
 
 class zCInput_Win32
 {
@@ -2449,12 +2524,16 @@ class zCPar_Symbol
 {
 public:
 	void GetValue(int &val, int nr) { XCALL(0x007A1FE0); }
+	void GetValue(zSTRING &s, int nr) { XCALL(0x007A2040); }
+	void *GetInstanceAdr() { XCALL(0x007A1DC0); }
 };
 
 class zCParser
 {
 public:
 	zCPar_Symbol *GetSymbol(const zSTRING &s) { XCALL(0x007938D0); }
+	void GetParameter(int &value) { XCALL(0x007A0760); }
+	void GetParameter(zSTRING &s) { XCALL(0x007A07B0); }
 };
 
 class zERROR

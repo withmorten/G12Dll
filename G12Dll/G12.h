@@ -21,6 +21,7 @@
 // file offset to image offset
 #define _fo(file_addr) (file_addr + BASE_ADDR)
 
+char G12Cwd[MAX_PATH];
 char G12IniPath[MAX_PATH];
 
 UINT G12GetPrivateProfileInt(LPCTSTR lpKeyName, INT nDefault)
@@ -52,6 +53,7 @@ FILE *conin, *conout;
 void G12AllocConsole(void)
 {
 	// does not belong here, but whatever
+	_getcwd(G12Cwd, sizeof(G12Cwd));
 	_getcwd(G12IniPath, sizeof(G12IniPath));
 	strncat(G12IniPath, "\\G12.ini", sizeof(G12IniPath));
 

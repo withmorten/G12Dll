@@ -12,7 +12,7 @@
 #include "..\G12Dll\G2.h"
 #include "g2fixes.hpp"
 
-void hNpc::CreateVobList(float max_dist)
+void hCNpc::CreateVobList(float max_dist)
 {
 	zCVob *vob;
 	oCMobInter *mob;
@@ -79,544 +79,16 @@ void hNpc::CreateVobList(float max_dist)
 	}
 }
 
-// SPL_* should probably be read from INI, just using hardcoded values for now - same as the game does it :)
-#define SPL_TELEPORT5 13 // Sumpflager
-#define SPL_TELEPORT1 14 // Feuermagier
-#define SPL_TELEPORT3 15 // Dämonenbeschwörer
-#define SPL_TELEPORT2 16 // Wassermagier
-#define SPL_TELEPORT4 17 // Orkisch
-#define SPL_LIGHT 18
-#define SPL_FIREBOLT 19
-#define SPL_THUNDERBOLT 20
-#define SPL_CHAINLIGHTNING 24
-#define SPL_WINDFIST 26
-#define SPL_SLEEP 27
-#define SPL_FIREBALL 30
-#define SPL_SUMMONSKELETON 31
-#define SPL_FEAR 32
-#define SPL_ICECUBE 33
-#define SPL_THUNDERBALL 34
-#define SPL_SUMMONGOLEM 35
-#define SPL_DESTROYUNDEAD 36
-#define SPL_PYROKINESIS 37
-#define SPL_ICEWAVE 39
-#define SPL_SUMMONDEMON 40
-#define SPL_FIRERAIN 42
-#define SPL_BREATHOFDEATH 43
-#define SPL_MASSDEATH 44
-#define SPL_ARMYOFDARKNESS 45
-#define SPL_SHRINK 46
-#define SPL_TRF_MEATBUG 47
-#define SPL_TRF_SCAVENGER 48
-#define SPL_TRF_MOLERAT 49
-#define SPL_TRF_CRAWLER 50
-#define SPL_TRF_WOLF 51
-#define SPL_TRF_WARAN 52
-#define SPL_TRF_SNAPPER 53
-#define SPL_TRF_ORCDOG 54
-#define SPL_TRF_BLOODFLY 55
-#define SPL_TRF_LURKER 56
-#define SPL_TRF_SHADOWBEAST 57
-#define SPL_CHARM 59
-#define SPL_NEW1 60
-#define SPL_CONTROL 64
-#define SPL_TELEKINESIS 65
-#define SPL_TELEKINESIS2 66
-#define SPL_BERZERK 67
-#define SPL_HEAL 68
-#define SPL_FIRESTORM  69
-#define SPL_STORMFIST 72
-
-#define BS_MOD_CONTROLLED 2048
-#define BS_MOD_CONTROLLING 8192
-
-void hNpc::OnDamage_Events(oSDamageDescriptor &descDamage)
+bool hCNpc::IsSkeleton()
 {
-	this->oCNpc::OnDamage_Events(descDamage);
-
-	hSpell *spell = NULL;
-	oCNpc *npcTarget = NULL;
-	oCNpc *npcAttacker = descDamage.pNpcAttacker;
-
-	if (npcAttacker)
-	{
-		spell = (hSpell *)npcAttacker->IsSpellActive(SPL_CONTROL);
-		npcTarget = spell ? spell->spellTargetNpc : NULL;
-	}
-
-	if (spell && npcTarget && this->attribute[0] <= 0)
-	{
-		spell->EndTimedEffect();
-	}
-
-	if (this->HasBodyStateModifier(BS_MOD_CONTROLLING))
-	{
-		spell = (hSpell *)npcAttacker->IsSpellActive(SPL_CONTROL);
-
-		if (spell)
-		{
-			spell->EndTimedEffect();
-		}
-	}
-}
-
-#define GAME_LEFT 1
-#define GAME_RIGHT 2
-#define GAME_UP 3
-
-void hSpell::DoLogicInvestEffect()
-{
-	if (!this->spellCasterNpc)
-	{
-		return;
-	}
-
-	if (this->spellID == SPL_TELEKINESIS || this->spellID == SPL_TELEKINESIS2)
-	{
-		if (!this->manaInvested)
-		{
-			this->spellCasterNpc->CheckForOwner(this->spellTarget);
-		}
-
-		if (!this->spellCasterNpc->GetModel()->IsAniActive(zSTRING("S_TELSHOOT")))
-		{
-			return;
-		}
-
-		zVEC3 move, add, right, tmp, pos, curPos;
-		float fac;
-		int inMove;
-
-		float speed = 75.0f / 1000.0f;
-
-		move.n[0] = 0.0f;
-		move.n[1] = 0.0f;
-		move.n[2] = 0.0f;
-
-		add = this->spellTarget->trafoObjToWorld.GetTranslation() - this->spellCasterNpc->trafoObjToWorld.GetTranslation();
-		add.n[1] = 0.0f;
-		add.NormalizeApprox();
-
-		right.n[0] = 0.0f;
-		right.n[1] = 1.0f;
-		right.n[2] = 0.0f;
-		right = right ^ add;
-
-		if (zinput->GetState(GAME_UP))
-		{
-			if ((this->spellTarget->trafoObjToWorld.GetTranslation()
-				- this->spellCasterNpc->trafoObjToWorld.GetTranslation()).LengthApprox() > 200.0f)
-			{
-				move += -add;
-			}
-		}
-
-		if (zinput->GetState(GAME_LEFT))
-		{
-			move -= right;
-		}
-		else if (zinput->GetState(GAME_RIGHT))
-		{
-			move += right;
-		}
-
-		fac = speed * ztimer.frameTimeFloat;
-
-		if (this->up < 150.0f)
-		{
-			tmp.n[0] = 0.0f;
-			tmp.n[1] = 1.0f;
-			tmp.n[2] = 0.0f;
-
-			move += tmp;
-			up += fac;
-		}
-
-		pos = this->spellTarget->trafoObjToWorld.GetTranslation();
-		pos += move * fac;
-
-		if (this->up >= 150.0f)
-		{
-			this->hoverY += this->hoverDir * ztimer.frameTimeFloat * speed / 4.0f;
-
-			if (this->hoverY <= -5.0f || this->hoverY >= 5.0f)
-			{
-				this->hoverDir = -this->hoverDir;
-			}
-
-			move.n[1] += this->hoverY - this->hoverOld;
-			this->hoverOld = this->hoverY;
-		}
-
-		curPos = pos;
-		curPos += move;
-
-		inMove = (this->spellCasterNpc->isInMovementMode != 0);
-
-		if (inMove)
-		{
-			this->spellCasterNpc->EndMovement(TRUE); // possibly FALSE
-		}
-
-		this->spellTarget->SetPositionWorld(curPos);
-
-		if (inMove)
-		{
-			this->spellCasterNpc->BeginMovement();
-		}
-	}
-}
-
-bool hSpell::Invest()
-{
-	if (!this->effect) return FALSE;
-
-	int manaLeft = 0;
-	if (this->spellCasterNpc) manaLeft = this->spellCasterNpc->attribute[this->spellEnergy];
-
-	if (manaLeft > 0)
-	{
-		this->DoLogicInvestEffect();
-	}
-	else
-	{
-		if (this->manaInvested > 0)
-		{
-			this->SetReleaseStatus();
-
-			return TRUE;
-		}
-
-		return FALSE;
-	}
-
-	if (!this->manaInvested)
-	{
-		this->spellCasterNpc->CreatePassivePerception(NPC_PERC_ASSESSCASTER, NULL, NULL);
-
-		this->manaTimer += this->manaInvestTime;
-	}
-	else
-	{
-		this->manaTimer += ztimer.frameTimeFloat;
-	}
-
-	if (this->manaTimer >= this->manaInvestTime)
-	{
-		this->manaTimer -= this->manaInvestTime;
-
-		if (this->spellStatus == SPL_STATUS_CANINVEST || this->spellStatus == SPL_STATUS_CANINVEST_NO_MANADEC)
-		{
-			if (this->spellCasterNpc && manaLeft > 0)
-			{
-				this->CallScriptInvestedMana();
-
-				if (this->spellStatus == SPL_STATUS_CAST || this->spellStatus == SPL_STATUS_CANINVEST || this->spellStatus == SPL_STATUS_CANINVEST_NO_MANADEC || this->spellStatus == SPL_STATUS_NEXTLEVEL)
-				{
-					if (this->manaInvested && this->spellStatus == SPL_STATUS_CANINVEST)
-					{
-						this->spellCasterNpc->attribute[this->spellEnergy]--;
-					}
-
-					this->manaInvested++;
-				}
-				else if (this->spellStatus & SPL_STATUS_FORCEINVEST)
-				{
-					this->manaInvested = this->spellStatus - SPL_STATUS_FORCEINVEST;
-					this->spellStatus = SPL_STATUS_CANINVEST;
-
-					this->spellCasterNpc->attribute[this->spellEnergy] -= this->manaInvested;
-				}
-
-				if (this->spellStatus == SPL_STATUS_CAST)
-				{
-					return TRUE;
-				}
-
-				if (this->spellStatus == SPL_STATUS_STOP)
-				{
-					return TRUE;
-				}
-
-				if (this->spellStatus == SPL_STATUS_NEXTLEVEL)
-				{
-					this->spellStatus = SPL_STATUS_CANINVEST;
-					this->spellLevel++;
-
-					if (this->effect) this->effect->InvestNext();
-				}
-
-				return TRUE;
-			}
-		}
-	}
-
-	return FALSE;
-}
-
-bool hSpell::IsInvestSpell()
-{
-	switch (this->spellID)
-	{
-	case SPL_PYROKINESIS:
-	case SPL_CHAINLIGHTNING:
-	case SPL_HEAL:
-		return TRUE;
-
-		break;
-	default:
-		return FALSE;
-
-		break;
-	}
-}
-
-bool hSpell::CastSpecificSpell()
-{
-	int rV = this->oCSpell::CastSpecificSpell();
-
-	if (this->spellID == SPL_CONTROL)
-	{
-		if (this->spellTargetNpc)
-		{
-			if (this->saveNpc)
-			{
-				this->saveNpc->Release();
-
-				this->saveNpc = NULL;
-			}
-
-			this->saveNpc = this->spellCasterNpc;
-			this->saveNpc->refCtr++;
-
-			this->spellCasterNpc->ModifyBodyState(BS_MOD_CONTROLLING, 0);
-
-			this->spellTargetNpc->anictrl->SearchStandAni(0);
-			this->spellTargetNpc->SetAsPlayer();
-			this->spellTargetNpc->SetBodyStateModifier(BS_MOD_CONTROLLED);
-
-			oCMsgWeapon *msgWeapon = oCMsgWeapon::_CreateNewInstance();
-			msgWeapon->subType = 3;
-
-			// Hopefully this works ...
-			this->spellCasterNpc->GetEM(FALSE)->OnMessage(msgWeapon, this->spellCasterNpc);
-
-			this->spellTargetNpc->state.StartAIState(zSTRING("ZS_CONTROLLED"), FALSE, 0, 0.0f, FALSE);
-
-			this->spellTargetNpc->InsertActiveSpell(this);
-			this->canBeDeleted = FALSE;
-
-			return FALSE;
-		}
-	}
-
-	return rV;
-}
-
-void hSpell::EndTimedEffect()
-{
-	this->oCSpell::EndTimedEffect();
-
-	if (this->spellID == SPL_CONTROL)
-	{
-		if (this->saveNpc && this->spellTargetNpc)
-		{
-			this->saveNpc->SetAsPlayer();
-			this->saveNpc->ModifyBodyState(0, BS_MOD_CONTROLLING);
-
-			this->spellTargetNpc->state.EndCurrentState();
-
-			this->saveNpc->state.ClearAIState();
-			this->saveNpc->StandUp(FALSE, TRUE);
-			this->saveNpc->SetSleeping(FALSE);
-
-			if (this->controlWarnFX)
-			{
-				this->controlWarnFX->Stop(TRUE);
-
-				if (this->controlWarnFX)
-				{
-					this->controlWarnFX->Release();
-
-					this->controlWarnFX = NULL;
-				}
-
-				this->effect = this->CreateEffect();
-				this->effect->Init(this->saveNpc, NULL, NULL);
-				this->effect->SetSpellTargetTypes(this->targetCollectType);
-				this->effect->Cast(TRUE);
-
-				if (this->effect)
-				{
-					this->effect->Release();
-
-					this->effect = NULL;
-				}
-			}
-		}
-	}
-}
-
-void hSpell::DoTimedEffect()
-{
-	this->oCSpell::DoTimedEffect();
-
-	if (this->spellID == SPL_CONTROL)
-	{
-		if (this->saveNpc && this->spellTargetNpc)
-		{
-			if (this->spellTargetNpc->attribute[0] <= 0
-				|| this->spellTargetNpc->GetDistanceToVob2(*this->saveNpc) >= 4000.0f * 4000.0f)
-			{
-				this->canBeDeleted = TRUE;
-
-				this->EndTimedEffect();
-			}
-			else if (this->spellTargetNpc->GetDistanceToVob2(*this->saveNpc) >= 3500.0f * 3500.0f)
-			{
-				if (!this->controlWarnFX)
-				{
-					this->controlWarnFX = oCVisualFX::CreateAndPlay(zSTRING("CONTROL_LEAVERANGEFX"), this->spellTargetNpc->trafoObjToWorld.GetTranslation(), NULL, 1, 0, 0, FALSE);
-				}
-			}
-			else if (this->controlWarnFX)
-			{
-				this->controlWarnFX->Stop(TRUE);
-
-				if (this->controlWarnFX)
-				{
-					controlWarnFX->Release();
-
-					controlWarnFX = NULL;
-				}
-			}
-		}
-	}
-}
-
-bool hSpell::IsValidTarget(zCVob *v)
-{
-	bool rV = oCSpell::IsValidTarget(v);
-
-	if (rV)
-	{
-		zCClassDef *classDef = v->_GetClassDef();
-
-		if (this->spellID == SPL_TELEKINESIS)
-		{
-			if (!zCObject::CheckInheritance(&oCItem::classDef, classDef) && !zCObject::CheckInheritance(&oCMOB::classDef, classDef) ||
-				(zCObject::CheckInheritance(&oCMOB::classDef, classDef) && !((oCMOB *)v)->IsMovable())) // do we need to allow MOBs to be moved?
-			{
-				this->spellStatus = SPL_STATUS_DONTINVEST;
-				return FALSE;
-			}
-		}
-		if (this->spellID == SPL_TELEKINESIS2) // TODO: Check for oCNpc, what is IsMovable()
-		{
-			if (!zCObject::CheckInheritance(&oCNpc::classDef, classDef))
-			{
-				this->spellStatus = SPL_STATUS_DONTINVEST;
-				return FALSE;
-			}
-		}
-	}
-
-	return rV;
-}
-
-void hSpell::StopTargetEffects(zCVob *vob)
-{
-	if (this->spellID == SPL_TELEKINESIS || this->spellID == SPL_TELEKINESIS2)
-	{
-		if (vob && vob->homeWorld)
-		{
-			zVEC3 positionWorld = vob->trafoObjToWorld.GetTranslation();
-			zVEC3 groundVec;
-
-			groundVec.n[0] = 0.0f;
-			groundVec.n[1] = -(positionWorld.n[1] - vob->bbox3D.mins.n[1]) - 1.0f;
-			groundVec.n[2] = 0.0f;
-
-			if (!vob->homeWorld->TraceRayNearestHit(positionWorld, groundVec, vob, 2049))
-			{
-				zVEC3 velocity;
-
-				velocity.n[0] = 0.0f;
-				velocity.n[1] = -100.0f;
-				velocity.n[2] = 0.0f;
-
-				vob->SetPhysicsEnabled(TRUE);
-				vob->rigidBody->gravityOn = TRUE;
-				vob->SetSleeping(FALSE);
-				vob->rigidBody->SetVelocity(velocity);
-			}
-		}
-	}
-}
-
-ASM(oCSpell_Setup_Hook)
-{
-	__asm
-	{
-		mov ecx, [ebp + 0x38]
-		push ecx
-		mov ecx, ebp
-		call hSpell::StopTargetEffects
-	}
-
-	RET(0x00484AE6);
-}
-
-ASM(oCSpell_Cast_Hook)
-{
-	__asm
-	{
-		mov ecx, [esi + 0x38]
-		push ecx
-		mov ecx, esi
-		call hSpell::StopTargetEffects
-	}
-
-	RET(0x00485481);
-}
-
-ASM(oCSpell_Stop_Hook)
-{
-	__asm
-	{
-		mov ecx, [ebp + 0x38]
-		push ecx
-		mov ecx, ebp
-		call hSpell::StopTargetEffects
-	}
-
-	RET(0x004856B1);
-}
-
-ASM(oCSpell_Kill_Hook)
-{
-	__asm
-	{
-		mov ecx, [esi + 0x38]
-		push ecx
-		mov ecx, esi
-		call hSpell::StopTargetEffects
-	}
-
-	RET(0x00485841);
+	return this->guildTrue == NPC_GIL_SKELETON || this->guildTrue == NPC_GIL_SUMMONED_SKELETON || this->guildTrue == NPC_GIL_SKELETON_MAGE;
 }
 
 static int DAM_CRITICAL_MULTIPLIER = -1;
 static int NPC_MINIMAL_DAMAGE = -1;
 
-#define printf(x, ...)
-
-void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
+void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 {
-	// this->oCNpc::OnDamage_Hit(descDamage);
-
-	// return;
-
 	if (DAM_CRITICAL_MULTIPLIER == -1)
 	{
 		zCPar_Symbol *pSymbol = parser.GetSymbol("DAM_CRITICAL_MULTIPLIER");
@@ -628,14 +100,8 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 	{
 		zCPar_Symbol *pSymbol = parser.GetSymbol("NPC_MINIMAL_DAMAGE");
 		if (pSymbol) pSymbol->GetValue(NPC_MINIMAL_DAMAGE, 0);
-		else NPC_MINIMAL_DAMAGE = 10; // default value
+		else NPC_MINIMAL_DAMAGE = 1; // default value
 	}
-
-	printf("descDamage:\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
 
 	oCNpc *pNpcAttacker = descDamage.pNpcAttacker;
 
@@ -650,21 +116,14 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 
 		if (talentNr != NPC_TAL_INVALID)
 		{
-			printf("talentNr != NPC_TAL_INVALID:\n");
-
 			int nChance = pNpcAttacker->GetTalentValue(talentNr);
-			printf("nChance: %d\n", nChance);
 
 			int nPercentage = zRand(100) + 1;
-			printf("nPercentage: %d\n", nPercentage);
 
 			if (nPercentage <= nChance)
 			{
 				descDamage.fDamageMultiplier *= DAM_CRITICAL_MULTIPLIER;
 			}
-
-			printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-			printf("\n");
 		}
 	}
 
@@ -678,12 +137,6 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 		descDamage.fDamageTotal *= descDamage.fDamageMultiplier;
 	}
 
-	printf("descDamage.fDamageMultiplier != 1.0f\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
-
 	int nDamageTotal = 0;
 
 	for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)
@@ -693,13 +146,6 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 			nDamageTotal += descDamage.aryDamage[nIndex];
 		}
 	}
-
-	printf("for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("nDamageTotal: %d, %d\n", nDamageTotal, !nDamageTotal);
-	printf("\n");
 
 	bool bDivideTotalDamage = !nDamageTotal;
 	bool bIsSemiHuman = pNpcAttacker && pNpcAttacker->IsSemiHuman();
@@ -719,12 +165,6 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 		descDamage.fDamageTotal = (float)nDamageTotal;
 	}
 
-	printf("bDivideTotalDamage\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
-
 	if (pNpcAttacker && bIsSemiHuman)
 	{
 		for (int nIndex = 0; nIndex < oEDamageIndex_MAX; nIndex++)
@@ -732,12 +172,6 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 			descDamage.aryDamage[nIndex] += pNpcAttacker->damage[nIndex];
 		}
 	}
-
-	printf("pNpcAttacker && bIsSemiHuman\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
 
 	if (pNpcAttacker)
 	{
@@ -769,12 +203,6 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 		}
 	}
 
-	printf("bBlunt || bEdge || bPoint\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
-
 	int nDamageEffective = 0;
 	int nDamageApplied = 0;
 	int nDamageCurrent = 0;
@@ -794,7 +222,7 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 			if (canBeImmortalByProtection && nProtectionCurrent < 0) immortalByProtection = TRUE;
 
 			nProtectionTotal += nProtectionCurrent;
-			nDamageApplied = (nDamageCurrent - nProtectionCurrent);
+			nDamageApplied = nDamageCurrent - nProtectionCurrent;
 			if (nDamageApplied < 0) nDamageApplied = 0;
 			nDamageEffective += nDamageApplied;
 			descDamage.aryDamageEffective[nDamageIndex] = nDamageApplied;
@@ -805,13 +233,6 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 		}
 	}
 
-	printf("int nDamageIndex = 0; nDamageIndex < oEDamageIndex_MAX; nDamageIndex++\n");
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("aryDamageEffective Edge: %d\n", descDamage.aryDamageEffective[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
-
 	descDamage.fDamageTotal = (float)nDamageEffective;
 
 	if (this->HasFlag(NPC_FLAG_IMMORTAL) || immortalByProtection) descDamage.fDamageTotal = 0.0f;
@@ -821,17 +242,7 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 	if (descDamage.fDamageEffective < 0.0f) descDamage.fDamageEffective = 0.0f;
 
 	descDamage.fDamageReal = descDamage.fDamageEffective;
-	int nDamage = (int)descDamage.fDamageEffective;
-
-	printf("NPC_FLAG_IMMORTAL\n");
-	printf("this->HasFlag(NPC_FLAG_IMMORTAL) || immortalByProtection: %d\n", this->HasFlag(NPC_FLAG_IMMORTAL) || immortalByProtection);
-	printf("aryDamage Edge: %d\n", descDamage.aryDamage[oEDamageIndex_Edge]);
-	printf("aryDamageEffective Edge: %d\n", descDamage.aryDamageEffective[oEDamageIndex_Edge]);
-	printf("fDamageTotal: %f\n", descDamage.fDamageTotal);
-	printf("fDamageMultiplier: %f\n", descDamage.fDamageMultiplier);
-	printf("\n");
-
-	// zERR_FAULT("X: Dealing " + zSTRING(nDamage) + " damage!");
+	int nDamage = (int)descDamage.fDamageReal;
 
 	bool bBarrier = this->HasFlag(descDamage.enuModeDamage, oEDamageType_Barrier);
 	bool bDeathByBarrier = FALSE;
@@ -845,7 +256,9 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 			bDeathByBarrier = bInWater;
 		}
 
-		if (bDeathByBarrier || bForceBarrierDeath) nDamage = this->attribute[NPC_ATR_HITPOINTS];
+		// if (bDeathByBarrier || bForceBarrierDeath) nDamage = this->attribute[NPC_ATR_HITPOINTS];
+		if (bForceBarrierDeath) nDamage = this->attribute[NPC_ATR_HITPOINTS] - 1;
+		if (bDeathByBarrier) nDamage = this->attribute[NPC_ATR_HITPOINTS];
 	}
 
 	if (this->IsSelfPlayer() && nDamage <= 0)
@@ -860,63 +273,9 @@ void hNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 
 	this->hpHeal = this->attribute[NPC_ATR_REGENERATEHP] * 1000.0f;
 	this->manaHeal = this->attribute[NPC_ATR_REGENERATEMANA] * 1000.0f;
-
-	printf("\n");
 }
 
-#undef printf
-
-void hVisualFX::SetCollisionEnabled(bool en)
-{
-	if (this->collDetectionDynamic || this->collDetectionStatic)
-	{
-		this->emCheckCollision = TRUE;
-
-		return;
-	}
-
-	this->emCheckCollision = en;
-
-	this->collDetectionStatic = en && this->emActionCollDyn != TACTION_COLL_NONE;
-	this->collDetectionDynamic = en && this->emActionCollDyn != TACTION_COLL_NONE;
-
-	if (!this->visual) return;
-	if (!this->emCheckCollision) return;
-
-	if (this->bIsProjectile)
-	{
-		this->SetCollisionClass(&zCCollObjectProjectile::s_oCollObjClass);
-
-		return;
-	}
-
-	switch (this->spellType)
-	{
-	case SPL_FIREBALL:
-	case SPL_WINDFIST:
-	case SPL_DESTROYUNDEAD:
-	case SPL_FIREBOLT:
-	case SPL_THUNDERBOLT:
-	case SPL_THUNDERBALL:
-	case SPL_ICECUBE:
-	case SPL_BREATHOFDEATH:
-	case SPL_NEW1:
-		this->SetCollisionClass(&zCCollObjectProjectile::s_oCollObjClass);
-
-		break;
-	case SPL_FIRESTORM:
-		if (this->visName_S.Contains("_SPREAD")) this->SetCollisionClass(&zCCollObjectBoxPassThrough::s_oCollObjClass);
-		else this->SetCollisionClass(&zCCollObjectProjectile::s_oCollObjClass);
-
-		break;
-	default:
-		this->SetCollisionClass(&zCCollObjectBoxPassThrough::s_oCollObjClass);
-
-		break;
-	}
-}
-
-void hSkyControler_Outdoor::ReadFogColorsFromINI()
+void hCSkyControler_Outdoor::ReadFogColorsFromINI()
 {
 	zVEC3 defaultCol0;
 	zVEC3 defaultCol1;
@@ -1003,43 +362,146 @@ const char *NotEnoughOre = "Nicht genug Erz um den Gegenstand zu kaufen.";
 const char *NoSound = "NEWGAME";
 const char *SectorName = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-#define zPARTICLE_MAX_GLOBAL 65536
-
-void PatchSpells(void)
+void PatchGothic1(void)
 {
-	// Does this even work? No way to check currently ...
-	InjectHook(0x006665BF, &hNpc::OnDamage_Events); // oCNpc::OnDamage()
-	InjectHook(0x004854CF, &hSpell::CastSpecificSpell); // oCSpell::Cast()
-	InjectHook(0x0043BEB0, &hSpell::EndTimedEffect); // oCTriggerChangeLevel::TriggerTarget()
-	InjectHook(0x0047214D, &hSpell::EndTimedEffect); // oCAIHuman::CheckActiveSpells()
-	InjectHook(0x004872BB, &hSpell::EndTimedEffect); // oCSpell::DoTimedEffect()
-	InjectHook(0x0073D1F9, &hSpell::DoTimedEffect); // oCNpc::DoActiveSpells()
-	InjectHook(0x00484C04, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484C22, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484C4D, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484CCB, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00484E48, &hSpell::IsValidTarget); // oCSpell::Setup()
-	InjectHook(0x00733FEC, &hSpell::IsValidTarget); // oCNpc::CollectFocusVob()
-	InjectHook(0x00473154, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
-	InjectHook(0x00473303, &hSpell::IsInvestSpell); // oCAIHuman::MagicMode()
-	InjectHook(0x0047668E, &hSpell::Invest); // oCMag_Book::Spell_Invest()
+	// Fix App Title
+	Patch(0x0089D9AC, Gothic1AppName); // APP_NAME
 
-	// Hooks for hSpell::StopTargetEffects
-	InjectHook(0x00484A77, oCSpell_Setup_Hook, PATCH_JUMP); // oCSpell::Setup()
-	InjectHook(0x00485417, oCSpell_Cast_Hook, PATCH_JUMP); // oCSpell::Cast()
-	InjectHook(0x00485626, oCSpell_Stop_Hook, PATCH_JUMP); // oCSpell::Stop()
-	InjectHook(0x004857D7, oCSpell_Kill_Hook, PATCH_JUMP); // oCSpell::Kill()
+	// New game starts WORLD.ZEN
+	Patch(0x00429A23 + 1, Gothic1WorldZen); // CGameManager::Menu()
+	Patch(0x00429A52 + 1, Gothic1WorldZen); // CGameManager::Menu()
 
-	// oCVisualFX::SetCollisionEnabled()
-	Patch(0x00830374, &hVisualFX::SetCollisionEnabled); // oCVisualFX::`vftable'
-	Patch(0x0083060C, &hVisualFX::SetCollisionEnabled); // oCVisFX_MultiTarget::`vftable'
+	// Currency
+	Patch(0x00704931 + 1, ItMiNugget); // oCItemContainer::GetCurrencyInstanceName()
+	Patch(0x0070493C + 1, ItMiNugget); // oCItemContainer::GetCurrencyInstanceName()
 
-	// Remove unneeded (?) collsion enabling in oCVisualFX::InitEffect()
-	PatchJump(0x00494B56, 0x00494BAC); // oCVisualFX::InitEffect()
+	Patch(0x0070DB01 + 1, Erz); // _GetCategorySelfPlayerPrefix()
+	Patch(0x0070DB0C + 1, Erz); // _GetCategorySelfPlayerPrefix()
+
+	Patch(0x0068BDC4 + 1, NotEnoughOre); // oCViewDialogTrade::OnTransferRight()
+	Patch(0x0068BDEB + 1, NotEnoughOre); // oCViewDialogTrade::OnTransferRight()
+
+	// No GAMESTART menu "music"
+	Patch(0x004DB7EE + 1, NoSound); // zCMenu::Enter()
+	Patch(0x004DB815 + 1, NoSound); // zCMenu::Enter()
+
+	// Fix progress bar on Loading Screen
+	Patch(0x006C282B + 1, 6600); // oCGame::OpenLoadscreen()
+	Patch(0x006C2830 + 1, 6192); // oCGame::OpenLoadscreen()
+	Patch(0x006C2835 + 1, 6100); // oCGame::OpenLoadscreen()
+	Patch(0x006C283A + 1, 2000); // oCGame::OpenLoadscreen()
+
+	// Fix progress bar on Levelchange Screen
+	Patch(0x006C29CC + 1, 6600); // oCGame::OpenLoadscreen()
+	Patch(0x006C29D1 + 1, 6192); // oCGame::OpenLoadscreen()
+	Patch(0x006C29D6 + 1, 6100); // oCGame::OpenLoadscreen()
+	Patch(0x006C29DB + 1, 2000); // oCGame::OpenLoadscreen()
+
+	// Fix underwater color and farZ
+	InjectHook(0x005DFC16, zCSkyControler_Mid_Hook, PATCH_JUMP); // zCSkyControler_Mid::zCSkyControler_Mid()
+	Patch(0x005DFC3F + 3, 2500.0f); // zCSkyControler_Mid::zCSkyControler_Mid()
+
+	// Patch fogcolors to Gothic 1 fogcolors
+	InjectHook(0x005E6443, &hCSkyControler_Outdoor::ReadFogColorsFromINI); // zCSkyControler_Outdoor::zCSkyControler_Outdoor()
+
+	// No snow in NCI and NCO
+	PatchJump(0x00640811, 0x00640861); // oCZoneMusic::ProcessZoneList()
+
+	// Fix dark trees in WALD sectors
+	// very hacky - there are other lighting differences, too (see Old Mine Entrance, Abandoned Mine Entrance ...)
+	// perhaps it's better to understand how the lighting differs from G1 to G2 ...
+	InjectHook(0x005D57DA, zCRenderLightContainer_CollectLights_StatLights_Hook); // zCRenderLightContainer::CollectLights_StatLights()
+
+	// Damage calculation
+	InjectHook(0x00666513, &hCNpc::OnDamage_Hit); // oCNpc::OnDamage()
+
+	// TODO Fire in OnDamage_Anim (or not? honestly not one of the more desirable features from G1 ...)
+	// TODO Why is the water less transparent?
+	// TODO Weird sounds when swinging sword near water
+	// TODO override GetTalentValue ... Npc_SetTalentSkill doesn't set talent value, which is unnice to say the least since no NPC actually has "value" ...
 }
+
+#define PD_TA_FRAME 1
+#define PD_TA_LOOP 2
+#define PD_TA_CHECK 3
+#define PD_TA_DETAIL 4
+
+#define PD_ZS_FRAME 6
+#define PD_ZS_LOOP 7
+#define PD_ZS_CHECK 8
+#define PD_ZS_DETAIL 9
+
+#define PD_MST_FRAME 11
+#define PD_MST_LOOP 12
+#define PD_MST_CHECK 13
+#define PD_MST_DETAIL 14
+
+#define PD_ORC_FRAME 16
+#define PD_ORC_LOOP 17
+#define PD_ORC_CHECK 18
+#define PD_ORC_DETAIL 19
+
+#define PD_MISSION 21
+#define PD_CUTSCENE 22
+#define PD_SPELL 23
+#define PD_ITEM_MOBSI 24
+#define PD_MAGIC 25
+
+FILE *_PrintDebugInstCh = NULL;
+
+bool PrintDebugInstCh()
+{
+	if (!_PrintDebugInstCh)
+	{
+		char log[MAX_PATH];
+
+		strncpy(log, G12Cwd, MAX_PATH);
+		strncat(log, "\\PrintDebugInstCh.log", MAX_PATH);
+
+		_PrintDebugInstCh = fopen(log, "wb");
+
+		if (!_PrintDebugInstCh) _PrintDebugInstCh = (FILE *)-1;
+	}
+
+	zCPar_Symbol *sym = cur_parser->GetSymbol("SELF");
+
+	zCVob *self;
+	if (sym) self = (zCVob *)sym->GetInstanceAdr();
+
+	zSTRING s;
+	int ch;
+
+	cur_parser->GetParameter(s);
+	cur_parser->GetParameter(ch);
+
+	switch(ch)
+	{
+#if 0
+	case PD_MST_LOOP:
+	case PD_ZS_DETAIL:
+		break;
+#endif
+	default:
+		printf("%02d: %s\n", ch, s.ToChar());
+
+		if (_PrintDebugInstCh != (FILE *)-1)
+		{
+			fprintf(_PrintDebugInstCh, "%02d: %s\n", ch, s.ToChar());
+		}
+	}
+
+	return FALSE;
+}
+
+#define zPARTICLE_MAX_GLOBAL 65536
 
 void PatchGothic2(void)
 {
+	if (G12GetPrivateProfileBool("PrintDebugInstCh", FALSE))
+	{
+		Patch(0x006D4B1B + 1, PrintDebugInstCh); // oCGame::DefineExternals_Ulfi()
+	}
+
 	if (G12GetPrivateProfileBool("NoHardcodedThreatMusic", FALSE))
 	{
 		// No hardcoded threat music in forest
@@ -1103,73 +565,10 @@ void PatchGothic2(void)
 	{
 		// Unlike HideFocus from Systempack which is sometimes buggy and where vobs can still be focused when turning around quickly and spamming ctrl
 		// this patches CreateVobList() to the Sequel variant where a dead, empty NPC does not even end up in the focusable voblist
-		InjectHook(0x0073369B, &hNpc::CreateVobList); // oCNpc::ToggleFocusVob()
-		InjectHook(0x00733BE9, &hNpc::CreateVobList); // oCNpc::CollectFocusVob()
-		InjectHook(0x0075DC54, &hNpc::CreateVobList); // oCNpc::PerceiveAll()
-		InjectHook(0x0075DE95, &hNpc::CreateVobList); // oCNpc::PerceptionCheck()
-	}
-
-	if (G12GetPrivateProfileBool("Gothic1Mode", FALSE))
-	{
-		// Fix App Title
-		Patch(0x0089D9AC, Gothic1AppName); // APP_NAME
-
-		// New game starts WORLD.ZEN
-		Patch(0x00429A23 + 1, Gothic1WorldZen); // CGameManager::Menu()
-		Patch(0x00429A52 + 1, Gothic1WorldZen); // CGameManager::Menu()
-
-		// Currency
-		Patch(0x00704931 + 1, ItMiNugget); // oCItemContainer::GetCurrencyInstanceName()
-		Patch(0x0070493C + 1, ItMiNugget); // oCItemContainer::GetCurrencyInstanceName()
-
-		Patch(0x0070DB01 + 1, Erz); // _GetCategorySelfPlayerPrefix()
-		Patch(0x0070DB0C + 1, Erz); // _GetCategorySelfPlayerPrefix()
-
-		Patch(0x0068BDC4 + 1, NotEnoughOre); // oCViewDialogTrade::OnTransferRight()
-		Patch(0x0068BDEB + 1, NotEnoughOre); // oCViewDialogTrade::OnTransferRight()
-
-		// No GAMESTART menu "music"
-		Patch(0x004DB7EE + 1, NoSound); // zCMenu::Enter()
-		Patch(0x004DB815 + 1, NoSound); // zCMenu::Enter()
-
-		// Fix progress bar on Loading Screen
-		Patch(0x006C282B + 1, 6600); // oCGame::OpenLoadscreen()
-		Patch(0x006C2830 + 1, 6192); // oCGame::OpenLoadscreen()
-		Patch(0x006C2835 + 1, 6100); // oCGame::OpenLoadscreen()
-		Patch(0x006C283A + 1, 2000); // oCGame::OpenLoadscreen()
-
-		// Fix progress bar on Levelchange Screen
-		Patch(0x006C29CC + 1, 6600); // oCGame::OpenLoadscreen()
-		Patch(0x006C29D1 + 1, 6192); // oCGame::OpenLoadscreen()
-		Patch(0x006C29D6 + 1, 6100); // oCGame::OpenLoadscreen()
-		Patch(0x006C29DB + 1, 2000); // oCGame::OpenLoadscreen()
-
-		// Fix underwater color and farZ
-		InjectHook(0x005DFC16, zCSkyControler_Mid_Hook, PATCH_JUMP); // zCSkyControler_Mid::zCSkyControler_Mid()
-		Patch(0x005DFC3F + 3, 2500.0f); // zCSkyControler_Mid::zCSkyControler_Mid()
-
-		// Patch fogcolors to Gothic 1 fogcolors
-		InjectHook(0x005E6443, &hSkyControler_Outdoor::ReadFogColorsFromINI); // zCSkyControler_Outdoor::zCSkyControler_Outdoor()
-
-		// No snow in NCI and NCO
-		PatchJump(0x00640811, 0x00640861); // oCZoneMusic::ProcessZoneList()
-
-		// Fix dark trees in WALD sectors
-		// very hacky - there are other lighting differences, too (see Old Mine Entrance, Abandoned Mine Entrance ...)
-		// perhaps it's better to understand how the lighting differs from G1 to G2 ...
-		InjectHook(0x005D57DA, zCRenderLightContainer_CollectLights_StatLights_Hook); // zCRenderLightContainer::CollectLights_StatLights()
-
-		// Damage calculation
-		InjectHook(0x00666513, &hNpc::OnDamage_Hit); // oCNpc::OnDamage()
-
-		// TODO Fire in OnDamage_Anim
-
-		// TODO Why is the water less transparent?
-
-		// TODO override GetTalentValue ... Npc_SetTalentSkill doesn't set talent value, which is unnice to say the least since no NPC actually has "value" ...
-
-		// An attempt at reintroducing the hardcoded spells from Gothic 1 (Telekinesis, Control)
-		PatchSpells();
+		InjectHook(0x0073369B, &hCNpc::CreateVobList); // oCNpc::ToggleFocusVob()
+		InjectHook(0x00733BE9, &hCNpc::CreateVobList); // oCNpc::CollectFocusVob()
+		InjectHook(0x0075DC54, &hCNpc::CreateVobList); // oCNpc::PerceiveAll()
+		InjectHook(0x0075DE95, &hCNpc::CreateVobList); // oCNpc::PerceptionCheck()
 	}
 
 	if (G12GetPrivateProfileBool("NoGamestartMusic", FALSE))
@@ -1182,17 +581,41 @@ void PatchGothic2(void)
 	if (G12GetPrivateProfileBool("DisableAutoCalcObstruction", FALSE))
 	{
 		// Use empty function
-		InjectHook(0x004F16C6, &hActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::PlaySound3D()
-		InjectHook(0x004F2080, &hActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::PlaySound3DAmbient()
-		InjectHook(0x004F259B, &hActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::UpdateSound3D()
-		InjectHook(0x004F3275, &hActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::UpdateSoundPropsAmbient()
+		InjectHook(0x004F16C6, &hCActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::PlaySound3D()
+		InjectHook(0x004F2080, &hCActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::PlaySound3DAmbient()
+		InjectHook(0x004F259B, &hCActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::UpdateSound3D()
+		InjectHook(0x004F3275, &hCActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::UpdateSoundPropsAmbient()
 	}
 
 	if (G12GetPrivateProfileBool("FixGetDistance", TRUE))
 	{
+		// GetDistance* all don't check the last point in the list
 		Patch(0x0047405E + 2, 0x008CDF94 + sizeof(zVEC2)); // oCMagFrontier::GetDistanceNewWorld()
 		Patch(0x00474568 + 2, 0x008CDEC0 + sizeof(zVEC2)); // oCMagFrontier::GetDistanceDragonIsland()
 		Patch(0x00474728 + 2, 0x008CDE6C + sizeof(zVEC2)); // oCMagFrontier::GetDistanceAddonWorld()
+	}
+
+	if (G12GetPrivateProfileBool("FixSkeletonMageGuild", TRUE))
+	{
+		// Fix DestroyUndead
+		Patch(0x0048619B + 2, (BYTE)NPC_GIL_SKELETON_MAGE); // oCSpell::IsTargetTypeValid()
+
+		// Fix IsSkeleton()
+		Patch(0x0083D840, &hCNpc::IsSkeleton); // oCNpc::`vftable'
+	}
+
+	if (G12GetPrivateProfileBool("UseStdlibMalloc", FALSE))
+	{
+		// What option name says - not particularly useful
+		InjectHook(0x007B4460, malloc); // malloc()
+		InjectHook(0x007B4465, calloc); // calloc()
+		InjectHook(0x007B446A, realloc); // realloc()
+		InjectHook(0x007B446F, free); // free()
+	}
+
+	if (G12GetPrivateProfileBool("Gothic1Mode", FALSE))
+	{
+		PatchGothic1();
 	}
 }
 

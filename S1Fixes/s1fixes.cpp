@@ -34,7 +34,7 @@ void hWorld::Unarchive(zCArchiver &arc)
 
 void PatchSpacer(void)
 {
-	InjectHook(0x004CB600, &hMesh::LoadMSH);
+	// InjectHook(0x004CB600, &hMesh::LoadMSH);
 	// InjectHook(0x007073A2, &hWorld::Unarchive);
 }
 
