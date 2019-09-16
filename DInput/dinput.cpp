@@ -1,8 +1,4 @@
-#include <windows.h>
-#include <direct.h>
-#include <stdio.h>
-#include <stdint.h>
-#include "..\G12Dll\MemoryMgr.h"
+#include "..\G12Dll\G12Core.h"
 
 struct dinput_dll
 {

@@ -76,51 +76,65 @@ public:
 	void InitValues();
 };
 
+#define NUM_SCANNER_VOBS 3
+
 class hCFXScanner
 {
 public:
 	bool enabled;
 	byte alpha;
 	zCVob *initVob;
-	zCVob *scannerVobs[3];
+	zCVob *scannerVobs[NUM_SCANNER_VOBS];
 
 public:
 	hCFXScanner();
 	~hCFXScanner();
+
+	bool Initialized();
+	void SetAlpha(byte a) { this->alpha = a; }
+	void Enable(zCVob *orgVob);
+	void Disable();
+	bool Enabled() { return this->enabled; }
+	void Run();
 };
 
 class hCVisFX_Lightning : public oCVisualFX
 {
 public:
-	static zCClassDef &classDef;
-
 	int phase;
-	float lightRange;
+	// float lightRange;
 	bool showScanner;
 	bool investedNext;
 	bool castOnSelf;
-	zCModelNodeInst *targetNode;
+	// zCModelNodeInst *targetNode;
 
-	zCArray<zCVob *> *burnVobs;
-	zCArray<zCModelNodeInst *> *burnNodes;
-	zCArray<zCVob *> *decalVobs;
-	zCArray<oCVisualFX *> *electricFX;
+	zCArray<zCVob *> burnVobs;
+	zCArray<zCModelNodeInst *> burnNodes;
+	zCArray<zCVob *> decalVobs;
+	zCArray<oCVisualFX *> electricFX;
 
 	hCFXScanner *scanner;
 
 public:
-	// static hCVisFX_Lightning *_CreateNewInstance() { return new hCVisFX_Lightning(); }
-	// static hCVisFX_Lightning *_CreateNewInstance() { return (hCVisFX_Lightning *)oCVisualFX::_CreateNewInstance(); }
 	static hCVisFX_Lightning *_CreateNewInstance();
 
-	// void *operator new(size_t Size) { void *Memory = ::operator new(Size); zCClassDef::ObjectCreated((zCObject *)Memory, &classDef); return Memory; }
-	// void operator delete(void *Memory) { zCClassDef::ObjectDeleted((zCObject *)Memory, &classDef); ::operator delete(Memory); }
-	// void *operator new(size_t Size) { XCALL(0x006742D0); }
-	// void operator delete(void *Memory) { XCALL(0x00474E50); }
+	// fake constructor and destructor to initialise and deinitialise our values
+	void _InitValues(); // done
+	void _DeinitValues(zCVob *orgVob, bool recalcTrj); // done
 
-	hCVisFX_Lightning() { XCALL(0x00489AA0); }
-	virtual ~hCVisFX_Lightning() { XCALL(0x0048A260); }
+	// virtual overrides
+	void _OnTick(); // next
+	void _Open(); // done
+	void _Init(zCArray<zCVob *> &trajectoryVobs); // done
+	void _InvestNext(); // done
+	void _Cast(bool killAfterDone); // done
+	void _Stop(bool killAfterDone); // done
 
-	void InitValues();
-	void DeinitValues(zCVob *orgVob, bool recalcTrj); // Hooks oCVisualFX::SetOrigin()
+	bool CheckDeletion(); // done
+	void UpdateBurnVobs(); // done
+	bool UpdateBurnVobsInvestNext(); // done
+	void Draw(); // done
+	void CreateScanner(zCVob *orgVob); // done
+	void UpdateScanner() { if (this->scanner->Enabled()) this->scanner->Run(); } // done
+	void DeleteScanner() { if (this->scanner->Initialized()) this->scanner->Disable(); } // done
 };

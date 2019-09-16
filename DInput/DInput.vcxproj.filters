@@ -28,13 +28,13 @@
     <ClInclude Include="..\G12Dll\MemoryMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\G2Fixes\g2fixes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\G12Dll\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\G12Dll\G12Core.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

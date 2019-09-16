@@ -1,8 +1,4 @@
-#include <windows.h>
-#include <direct.h>
-#include <stdio.h>
-#include <stdint.h>
-#include "..\G12Dll\MemoryMgr.h"
+#include "..\G12Dll\G12Core.h"
 
 #define G12DLL_NAME "G2Fixes"
 
@@ -28,7 +24,7 @@ void hCNpc::CreateVobList(float max_dist)
 	{
 		this->ClearVobList();
 
-		this->trafoObjToWorld.GetTranslation(trafo_vec);
+		trafo_vec = this->GetPositionWorld();
 
 		bbox.maxs = trafo_vec + max_dist;
 		bbox.mins = trafo_vec - max_dist;
@@ -39,7 +35,7 @@ void hCNpc::CreateVobList(float max_dist)
 		{
 			delete_vob = FALSE;
 
-			vob = this->vobList.array[i];
+			vob = this->vobList[i];
 			classDef = vob->_GetClassDef();
 
 			if (vob == this)
@@ -148,7 +144,7 @@ void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 	}
 
 	bool bDivideTotalDamage = !nDamageTotal;
-	bool bIsSemiHuman = pNpcAttacker && pNpcAttacker->IsSemiHuman();
+	bool bIsSemiHuman = pNpcAttacker && !pNpcAttacker->IsHalfMonster();
 
 	if (bDivideTotalDamage)
 	{
@@ -277,34 +273,18 @@ void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 
 void hCSkyControler_Outdoor::ReadFogColorsFromINI()
 {
-	zVEC3 defaultCol0;
-	zVEC3 defaultCol1;
-	zVEC3 defaultCol2;
-	zVEC3 defaultCol3;
-
-	defaultCol0.n[0] = 116;
-	defaultCol0.n[1] = 89;
-	defaultCol0.n[2] = 75;
-
-	defaultCol1.n[0] = 80;
-	defaultCol1.n[1] = 90;
-	defaultCol1.n[2] = 80;
-
-	defaultCol2.n[0] = 120;
-	defaultCol2.n[1] = 140;
-	defaultCol2.n[2] = 180;
-
-	defaultCol3.n[0] = 120;
-	defaultCol3.n[1] = 140;
-	defaultCol3.n[2] = 180;
+	zVEC3 defaultCol0(116.0f, 89.0f, 75.0f);
+	zVEC3 defaultCol1(80.0f, 90.0f, 80.0f);
+	zVEC3 defaultCol2(120.0f, 140.0f, 180.0f);
+	zVEC3 defaultCol3(120.0f, 140.0f, 180.0f);
 
 	this->zCSkyControler_Outdoor::ReadFogColorsFromINI();
 
 	// Maybe actually read this from ini, but then this whole thing would be unnecessary
-	this->fogColorDayVariations.array[0] = defaultCol0;
-	this->fogColorDayVariations.array[1] = defaultCol1;
-	this->fogColorDayVariations.array[2] = defaultCol2;
-	this->fogColorDayVariations.array[3] = defaultCol3;
+	this->fogColorDayVariations[0] = defaultCol0;
+	this->fogColorDayVariations[1] = defaultCol1;
+	this->fogColorDayVariations[2] = defaultCol2;
+	this->fogColorDayVariations[3] = defaultCol3;
 }
 
 ASM(zCSkyControler_Mid_Hook)
@@ -481,12 +461,15 @@ bool PrintDebugInstCh()
 	case PD_ZS_DETAIL:
 		break;
 #endif
+	case PD_MAGIC:
 	default:
 		printf("%02d: %s\n", ch, s.ToChar());
 
 		if (_PrintDebugInstCh != (FILE *)-1)
 		{
 			fprintf(_PrintDebugInstCh, "%02d: %s\n", ch, s.ToChar());
+
+			fflush(_PrintDebugInstCh);
 		}
 	}
 

@@ -41,6 +41,9 @@
     <ClInclude Include="..\G12Dll\version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\G12Dll\G12Core.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="G101Fixes.rc">

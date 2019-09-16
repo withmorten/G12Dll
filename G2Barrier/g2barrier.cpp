@@ -1,9 +1,4 @@
-#include <windows.h>
-#include <direct.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <math.h>
-#include "..\G12Dll\MemoryMgr.h"
+#include "..\G12Dll\G12Core.h"
 
 #define G12DLL_NAME "G2Barrier"
 
@@ -15,11 +10,108 @@
 
 #define WORLD_NAME "WORLD"
 
+static bool magFrontierInited = FALSE;
+static bool pointsWorldGRM = FALSE;
+
 static char worldName[MAX_PATH] = { '\0' };
 
 #define POINTS_WORLD 38
 
 static zVEC2 newPointList[POINTS_WORLD];
+
+void hCMagFrontier::Init()
+{
+	// newPointList from Gothic 1
+	newPointList [0][0] =  57939.2f;
+	newPointList [0][1] =  1280.28f;
+	newPointList [1][0] =  55954.4f;
+	newPointList [1][1] =  5421.51f;
+	newPointList [2][0] =  52856.8f;
+	newPointList [2][1] =  10047.0f;
+	newPointList [3][0] =  49451.9f;
+	newPointList [3][1] =  14908.2f;
+	newPointList [4][0] =  44199.8f;
+	newPointList [4][1] =  20513.3f;
+	newPointList [5][0] =  37684.2f;
+	newPointList [5][1] =  26271.2f;
+	newPointList [6][0] =  30434.0f;
+	newPointList [6][1] =  31462.4f;
+	newPointList [7][0] =  25573.6f;
+	newPointList [7][1] =  32692.7f;
+	newPointList [8][0] =  21248.3f;
+	newPointList [8][1] =  35176.1f;
+	newPointList [9][0] =  19450.7f;
+	newPointList [9][1] =  35205.0f;
+	newPointList[10][0] =  16263.1f;
+	newPointList[10][1] =  32799.6f;
+	newPointList[11][0] =  10755.6f;
+	newPointList[11][1] =  34744.4f;
+	newPointList[12][0] =   9736.9f;
+	newPointList[12][1] =  37990.5f;
+	newPointList[13][0] =   8218.6f;
+	newPointList[13][1] =  38393.1f;
+	newPointList[14][0] =   4065.0f;
+	newPointList[14][1] =  39018.4f;
+	newPointList[15][0] =    839.9f;
+	newPointList[15][1] =  39079.3f;
+	newPointList[16][0] =  -9312.9f;
+	newPointList[16][1] =  38694.2f;
+	newPointList[17][0] = -19258.3f;
+	newPointList[17][1] =  40991.4f;
+	newPointList[18][0] = -29684.1f;
+	newPointList[18][1] =  40535.7f;
+	newPointList[19][0] = -39313.7f;
+	newPointList[19][1] =  36558.8f;
+	newPointList[20][0] = -49319.6f;
+	newPointList[20][1] =  31970.2f;
+	newPointList[21][0] = -54137.3f;
+	newPointList[21][1] =  26761.7f;
+	newPointList[22][0] = -62089.3f;
+	newPointList[22][1] =  21598.1f;
+	newPointList[23][0] = -66193.7f;
+	newPointList[23][1] =  12999.2f;
+	newPointList[24][0] = -66132.3f;
+	newPointList[24][1] =   6204.0f;
+	newPointList[25][0] = -63855.2f;
+	newPointList[25][1] =  -5700.8f;
+	newPointList[26][0] = -59385.1f;
+	newPointList[26][1] = -10081.5f;
+	newPointList[27][0] = -56013.8f;
+	newPointList[27][1] = -22393.4f;
+	newPointList[28][0] = -47250.3f;
+	newPointList[28][1] = -28502.0f;
+	newPointList[29][0] = -37136.5f;
+	newPointList[29][1] = -38319.2f;
+	newPointList[30][0] = -24664.7f;
+	newPointList[30][1] = -46687.9f;
+	newPointList[31][0] =  -7860.6f;
+	newPointList[31][1] = -48966.6f;
+	newPointList[32][0] =   4876.6f;
+	newPointList[32][1] = -49691.0f;
+	newPointList[33][0] =  23147.8f;
+	newPointList[33][1] = -47875.1f;
+	newPointList[34][0] =  48722.3f;
+	newPointList[34][1] = -39488.8f;
+	newPointList[35][0] =  55902.4f;
+	newPointList[35][1] = -31909.8f;
+	newPointList[36][0] =  61238.6f;
+	newPointList[36][1] = -23412.8f;
+	newPointList[37][0] =  60230.1f;
+	newPointList[37][1] =  -6641.9f;
+
+	if (pointsWorldGRM)
+	{	
+		// newPointList from GRM - different at the old mine pass
+		newPointList[17][0] = -26219.2f;
+		newPointList[17][1] =  40844.2f;
+		newPointList[18][0] = -34576.0f;
+		newPointList[18][1] =  43032.3f;
+		newPointList[19][0] = -44458.8f;
+		newPointList[19][1] =  43099.2f;
+		newPointList[20][0] = -49763.7f;
+		newPointList[20][1] =  37384.8f;
+	}
+}
 
 float hCMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 {
@@ -28,21 +120,21 @@ float hCMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 	int showLineOfDeath = ogame->world->masterFrameCtr && oCNpc::godmode;
 	dist = 10000000.0f;
 
-	pos2d.n[0] = pos.n[0];
-	pos2d.n[1] = pos.n[2];
+	pos2d[0] = pos[0];
+	pos2d[1] = pos[2];
 
-	if (pos2d.n[0] == 0.0f && pos2d.n[1] == 0.0f)
+	if (pos2d[0] == 0.0f && pos2d[1] == 0.0f)
 	{
 		return dist;
 	}
 
 	for (int x = 0; x < POINTS_WORLD - 1; x++)
 	{
-		a.n[0] = newPointList[x].n[0];
-		a.n[1] = newPointList[x].n[1];
+		a[0] = newPointList[x][0];
+		a[1] = newPointList[x][1];
 
-		b.n[0] = newPointList[x + 1].n[0];
-		b.n[1] = newPointList[x + 1].n[1];
+		b[0] = newPointList[x + 1][0];
+		b[1] = newPointList[x + 1][1];
 
 		GetNearestPointFromLineSegment2D(a, b, pos2d, nearest);
 
@@ -51,8 +143,8 @@ float hCMagFrontier::GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint)
 			DrawLineSegment2D(a, b, pos.n[1], (x & 1) ? GFX_BLUE : GFX_LBLUE);
 		}
 
-		real_dist = sqrtf((nearest.n[1] - pos2d.n[1]) * (nearest.n[1] - pos2d.n[1]) +
-							(nearest.n[0] - pos2d.n[0]) * (nearest.n[0] - pos2d.n[0]));
+		real_dist = sqrtf((nearest[1] - pos2d[1]) * (nearest[1] - pos2d[1]) +
+							(nearest[0] - pos2d[0]) * (nearest[0] - pos2d[0]));
 
 		if (real_dist < dist)
 		{
@@ -67,6 +159,13 @@ void hCMagFrontier::DoCheck()
 {
 	this->oCMagFrontier::DoCheck();
 
+	if (!magFrontierInited)
+	{
+		magFrontierInited = TRUE;
+
+		this->Init();
+	}
+
 	if (ogame && this->npc == oCNpc::player
 		&& !zCCamera::activeCam->connectedVob->homeWorld->csPlayer->GetPlayingGlobalCutscene())
 	{
@@ -79,9 +178,9 @@ void hCMagFrontier::DoCheck()
 				if (this->npc)
 				{
 					zVEC3 playerProjPos, startPoint;
-					playerProjPos.n[0] = this->npc->trafoObjToWorld.v[0].n[3];
-					playerProjPos.n[1] = this->npc->trafoObjToWorld.v[1].n[3];
-					playerProjPos.n[2] = this->npc->trafoObjToWorld.v[2].n[3];
+					playerProjPos[0] = this->npc->trafoObjToWorld[0][3];
+					playerProjPos[1] = this->npc->trafoObjToWorld[1][3];
+					playerProjPos[2] = this->npc->trafoObjToWorld[2][3];
 
 					float distToBarriere = 60000.0f;
 					this->GetDistance(playerProjPos, distToBarriere, startPoint);
@@ -117,107 +216,11 @@ void hCMagFrontier::DoCheck()
 	}
 }
 
-void MagicFrontierNewPointListInit(void)
-{
-	// newPointList from Gothic 1
-	newPointList [0].n[0] =  57939.2f;
-	newPointList [0].n[1] =  1280.28f;
-	newPointList [1].n[0] =  55954.4f;
-	newPointList [1].n[1] =  5421.51f;
-	newPointList [2].n[0] =  52856.8f;
-	newPointList [2].n[1] =  10047.0f;
-	newPointList [3].n[0] =  49451.9f;
-	newPointList [3].n[1] =  14908.2f;
-	newPointList [4].n[0] =  44199.8f;
-	newPointList [4].n[1] =  20513.3f;
-	newPointList [5].n[0] =  37684.2f;
-	newPointList [5].n[1] =  26271.2f;
-	newPointList [6].n[0] =  30434.0f;
-	newPointList [6].n[1] =  31462.4f;
-	newPointList [7].n[0] =  25573.6f;
-	newPointList [7].n[1] =  32692.7f;
-	newPointList [8].n[0] =  21248.3f;
-	newPointList [8].n[1] =  35176.1f;
-	newPointList [9].n[0] =  19450.7f;
-	newPointList [9].n[1] =  35205.0f;
-	newPointList[10].n[0] =  16263.1f;
-	newPointList[10].n[1] =  32799.6f;
-	newPointList[11].n[0] =  10755.6f;
-	newPointList[11].n[1] =  34744.4f;
-	newPointList[12].n[0] =   9736.9f;
-	newPointList[12].n[1] =  37990.5f;
-	newPointList[13].n[0] =   8218.6f;
-	newPointList[13].n[1] =  38393.1f;
-	newPointList[14].n[0] =   4065.0f;
-	newPointList[14].n[1] =  39018.4f;
-	newPointList[15].n[0] =    839.9f;
-	newPointList[15].n[1] =  39079.3f;
-	newPointList[16].n[0] =  -9312.9f;
-	newPointList[16].n[1] =  38694.2f;
-	newPointList[17].n[0] = -19258.3f;
-	newPointList[17].n[1] =  40991.4f;
-	newPointList[18].n[0] = -29684.1f;
-	newPointList[18].n[1] =  40535.7f;
-	newPointList[19].n[0] = -39313.7f;
-	newPointList[19].n[1] =  36558.8f;
-	newPointList[20].n[0] = -49319.6f;
-	newPointList[20].n[1] =  31970.2f;
-	newPointList[21].n[0] = -54137.3f;
-	newPointList[21].n[1] =  26761.7f;
-	newPointList[22].n[0] = -62089.3f;
-	newPointList[22].n[1] =  21598.1f;
-	newPointList[23].n[0] = -66193.7f;
-	newPointList[23].n[1] =  12999.2f;
-	newPointList[24].n[0] = -66132.3f;
-	newPointList[24].n[1] =   6204.0f;
-	newPointList[25].n[0] = -63855.2f;
-	newPointList[25].n[1] =  -5700.8f;
-	newPointList[26].n[0] = -59385.1f;
-	newPointList[26].n[1] = -10081.5f;
-	newPointList[27].n[0] = -56013.8f;
-	newPointList[27].n[1] = -22393.4f;
-	newPointList[28].n[0] = -47250.3f;
-	newPointList[28].n[1] = -28502.0f;
-	newPointList[29].n[0] = -37136.5f;
-	newPointList[29].n[1] = -38319.2f;
-	newPointList[30].n[0] = -24664.7f;
-	newPointList[30].n[1] = -46687.9f;
-	newPointList[31].n[0] =  -7860.6f;
-	newPointList[31].n[1] = -48966.6f;
-	newPointList[32].n[0] =   4876.6f;
-	newPointList[32].n[1] = -49691.0f;
-	newPointList[33].n[0] =  23147.8f;
-	newPointList[33].n[1] = -47875.1f;
-	newPointList[34].n[0] =  48722.3f;
-	newPointList[34].n[1] = -39488.8f;
-	newPointList[35].n[0] =  55902.4f;
-	newPointList[35].n[1] = -31909.8f;
-	newPointList[36].n[0] =  61238.6f;
-	newPointList[36].n[1] = -23412.8f;
-	newPointList[37].n[0] =  60230.1f;
-	newPointList[37].n[1] =  -6641.9f;
-}
-
-void MagicFrontierNewPointListInitGRM(void)
-{
-	// newPointList from GRM - different at the old mine pass
-	newPointList[17].n[0] = -26219.2f;
-	newPointList[17].n[1] =  40844.2f;
-	newPointList[18].n[0] = -34576.0f;
-	newPointList[18].n[1] =  43032.3f;
-	newPointList[19].n[0] = -44458.8f;
-	newPointList[19].n[1] =  43099.2f;
-	newPointList[20].n[0] = -49763.7f;
-	newPointList[20].n[1] =  37384.8f;
-}
-
 void PatchMagicFrontier(void)
 {
 	if (G12GetPrivateProfileBool("MagicFrontierEnable", FALSE))
 	{
 		if (!*worldName) G12GetPrivateProfileString("WorldName", WORLD_NAME, worldName, MAX_PATH);
-
-		MagicFrontierNewPointListInit();
 
 		InjectHook(0x0073E71B, &hCMagFrontier::DoCheck); // oCNpc::ProcessNpc()
 	}
@@ -225,9 +228,11 @@ void PatchMagicFrontier(void)
 	if (G12GetPrivateProfileBool("MagicFrontierPointsWorldGRM", FALSE))
 	{
 		// GRMFixes has some different points at the old mine pass ... just included here for now
-		MagicFrontierNewPointListInitGRM();
+		pointsWorldGRM = TRUE;
 	}
 }
+
+static float UV_SCALER = 1.0f;
 
 const int barrierEverLoomingMinOpacity = 5;
 const int barrierEverLoomingMaxOpacity = 15;
@@ -238,15 +243,15 @@ static int barrierMaxOpacity = 120;
 static bool meshLoaded = FALSE;
 static bool firstRender = TRUE;
 
-static bool isBarrierRender;
+static bool isBarrierRender = FALSE;
 
-static int earthQuakeInterval;
+static int earthQuakeInterval = 20;
 static int earthQuakeTimer = 0;
 
-static bool ignoreSkyEffectsSetting;
-static bool alwaysVisible;
-static bool tremorEnable;
-static bool earthQuakeEnable;
+static bool ignoreSkyEffectsSetting = TRUE;
+static bool alwaysVisible = FALSE;
+static bool tremorEnable = FALSE;
+static bool earthQuakeEnable = FALSE;
 
 static bool activeThunder_Sector1 = FALSE;
 static bool activeThunder_Sector2 = FALSE;
@@ -277,17 +282,13 @@ static float delayTimeSector3 = 6000.0f;
 static float delayTimeSector4 = 10000.0f;
 
 static myThunder *myThunderList = NULL;
-static int numMyThunders;
+static int numMyThunders = 0;
 
 void hCBarrier::AddTremor(zTRenderContext &renderContext)
 {
-	zVEC3 amplitude;
+	zVEC3 amplitude(0.8f, 1.5f, 0.8f);
 
-	amplitude.n[0] = 0.8f;
-	amplitude.n[1] = 1.5f;
-	amplitude.n[2] = 0.8f;
-
-	renderContext.cam->AddTremor(renderContext.cam->connectedVob->trafoObjToWorld.GetTranslation(), 4000.0f * 4000.0f, 3000.0f, amplitude);
+	renderContext.cam->AddTremor(renderContext.cam->connectedVob->GetPositionWorld(), 4000.0f * 4000.0f, 3000.0f, amplitude);
 }
 
 void hCBarrier::AddEarthQuake()
@@ -331,15 +332,10 @@ void hCBarrier::Init()
 
 			for (int j = 0; j < poly->polyNumVert; j++)
 			{
-				zVEC2 *originalTexUV = new zVEC2();
-
 				zCVertFeature *feat = poly->feature[j];
 				zCVertex *vert = poly->vertex[j];
 
-				originalTexUV->n[0] = feat->texu;
-				originalTexUV->n[1] = feat->texv;
-
-				this->originalTexUVList[texUVListCtr++] = *originalTexUV;
+				this->originalTexUVList[texUVListCtr++] = zVEC2(feat->texu * UV_SCALER, feat->texv * UV_SCALER);
 
 				float vertY = vert->position.n[1];
 
@@ -460,7 +456,7 @@ void hCBarrier::Init()
 
 		for (int k = 0; k < this->numMyVerts; k++)
 		{
-			if (this->skySphereMesh->vertList[k]->position.n[1] > height2)
+			if (this->skySphereMesh->vertList[k]->position[1] > height2)
 			{
 				startPointsTemp[count] = k;
 				count++;
@@ -473,31 +469,31 @@ void hCBarrier::Init()
 		{
 			zCVertex *vec = this->skySphereMesh->vertList[startPointsTemp[l]];
 
-			if (vec->position.n[0] <= -5008.4f && vec->position.n[2] < -5597.02f)
+			if (vec->position[0] <= -5008.4f && vec->position[2] < -5597.02f)
 			{
 				this->startPointList1[this->numStartPoints1] = startPointsTemp[l];
 				this->numStartPoints1++;
 			}
 
-			if (vec->position.n[0] > -5008.4f && vec->position.n[2] <= -5597.02f)
+			if (vec->position[0] > -5008.4f && vec->position[2] <= -5597.02f)
 			{
 				this->startPointList2[this->numStartPoints2] = startPointsTemp[l];
 				this->numStartPoints2++;
 			}
 
-			if (vec->position.n[0] > -5008.4f && vec->position.n[2] > -5597.02f)
+			if (vec->position[0] > -5008.4f && vec->position[2] > -5597.02f)
 			{
 				this->startPointList3[this->numStartPoints3] = startPointsTemp[l];
 				this->numStartPoints3++;
 			}
 
-			if (vec->position.n[0] < -5008.4f && vec->position.n[2] > -5597.02f)
+			if (vec->position[0] < -5008.4f && vec->position[2] > -5597.02f)
 			{
 				this->startPointList4[this->numStartPoints4] = startPointsTemp[l];
 				this->numStartPoints4++;
 			}
 
-			if (vec->position.n[0] == -5008.4f && vec->position.n[2] == -5597.02f)
+			if (vec->position[0] == -5008.4f && vec->position[2] == -5597.02f)
 			{
 				this->topestPoint = startPointsTemp[l];
 			}
@@ -533,7 +529,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 
 		if (nextActivation < 0)
 		{
-			nextActivation = timeToStayHidden + ((_rand() / RAND_MAX) * 5.0f * 60.0f * 1000.0f);
+			nextActivation = timeToStayHidden + ((rand() / RAND_MAX) * 5.0f * 60.0f * 1000.0f);
 			this->bFadeInOut = TRUE;
 		}
 
@@ -647,7 +643,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 		{
 			zSTRING mfxBarriereAmbient("MFX_Barriere_Ambient");
 
-			zTSound3DParams sound3DParams;
+			zCSoundSystem::zTSound3DParams sound3DParams;
 			sound3DParams.obstruction = 0.0f;
 			sound3DParams.volume = 1.0f;
 			sound3DParams.radius = -1.0f;
@@ -674,7 +670,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->AddTremor(rndContext);
 				}
 
-				::sfxHandle1 = zsound->PlaySound3D(::sfx1, zCCamera::activeCam->connectedVob, 0, &sound3DParams);
+				::sfxHandle1 = zsound->PlaySound3D(::sfx1, zCCamera::activeCam->connectedVob, zSND_SLOT_NONE, &sound3DParams);
 			}
 
 			if (!::activeThunder_Sector2 && !zsound->IsSoundActive(::sfxHandle2) &&
@@ -694,7 +690,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->AddTremor(rndContext);
 				}
 
-				::sfxHandle2 = zsound->PlaySound3D(::sfx2, zCCamera::activeCam->connectedVob, 0, &sound3DParams);
+				::sfxHandle2 = zsound->PlaySound3D(::sfx2, zCCamera::activeCam->connectedVob, zSND_SLOT_NONE, &sound3DParams);
 			}
 
 			if (!::activeThunder_Sector3 && !zsound->IsSoundActive(::sfxHandle3) &&
@@ -714,7 +710,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->AddTremor(rndContext);
 				}
 
-				::sfxHandle3 = zsound->PlaySound3D(::sfx3, zCCamera::activeCam->connectedVob, 0, &sound3DParams);
+				::sfxHandle3 = zsound->PlaySound3D(::sfx3, zCCamera::activeCam->connectedVob, zSND_SLOT_NONE, &sound3DParams);
 			}
 
 			if (!::activeThunder_Sector4 && !zsound->IsSoundActive(::sfxHandle4) &&
@@ -734,7 +730,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->AddTremor(rndContext);
 				}
 
-				::sfxHandle4 = zsound->PlaySound3D(::sfx4, zCCamera::activeCam->connectedVob, 0, &sound3DParams);
+				::sfxHandle4 = zsound->PlaySound3D(::sfx4, zCCamera::activeCam->connectedVob, zSND_SLOT_NONE, &sound3DParams);
 			}
 
 			for (int x = 0; x < this->numMyThunders; x++)
@@ -884,13 +880,13 @@ int hCBarrier::RenderThunder(myThunder *thunder, zTRenderContext &rndContext)
 			mat = zMAT4::s_identity;
 			mat = rndContext.cam->GetTransform(1);
 
-			mat.v[0].n[2] *= -1.0f;
-			mat.v[1].n[2] *= -1.0f;
-			mat.v[2].n[2] *= -1.0f;
+			mat[0][2] *= -1.0f;
+			mat[1][2] *= -1.0f;
+			mat[2][2] *= -1.0f;
 
-			mat.v[0].n[3] = thunder->originVec.n[0];
-			mat.v[1].n[3] = thunder->originVec.n[1];
-			mat.v[2].n[3] = thunder->originVec.n[2];
+			mat[0][3] = thunder->originVec[0];
+			mat[1][3] = thunder->originVec[1];
+			mat[2][3] = thunder->originVec[2];
 
 			matTemp2 = rndContext.cam->GetTransform(0);
 
@@ -997,6 +993,12 @@ void PatchBarrier(void)
 		{
 			alwaysVisible = FALSE; // set this to false for no clashing
 			barrierMinOpacity = barrierEverLoomingMinOpacity;
+		}
+
+		// option for more detailed barrier via UV scaling
+		if (G12GetPrivateProfileBool("BarrierMoreDetailed", FALSE))
+		{
+			UV_SCALER = 2.0f;
 		}
 
 		// Use our own RenderSkyPre()

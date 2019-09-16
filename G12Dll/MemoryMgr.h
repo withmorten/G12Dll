@@ -101,7 +101,7 @@ inline void PatchJump(DWORD address, DWORD to)
 
 inline void ExtractCall(void *dst, addr a)
 {
-	*(addr*)dst = (addr)(*(addr *)(a+1) + a + 5);
+	*(addr *)dst = (addr)(*(addr *)(a + 1) + a + 5);
 }
 
 template<typename T> inline void InterceptCall(void *dst, T func, addr a)

@@ -79,6 +79,7 @@
       <SDLCheck>true</SDLCheck>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StructMemberAlignment>4Bytes</StructMemberAlignment>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -98,9 +99,9 @@
     <None Include="main.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\G12Dll\G12Core.h" />
     <ClInclude Include="..\G12Dll\MemoryMgr.h" />
     <ClInclude Include="..\G12Dll\version.h" />
-    <ClInclude Include="..\G2Fixes\g2fixes.hpp" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

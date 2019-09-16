@@ -1,0 +1,10 @@
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <direct.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <float.h>
+#include <math.h>
+#include "..\G12Dll\MemoryMgr.h"

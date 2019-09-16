@@ -3,6 +3,7 @@ class hCMagFrontier : public oCMagFrontier
 public:
 	void DoCheck();
 	float GetDistance(zVEC3 &pos, float &dist, zVEC3 &nearestPoint);
+	void Init();
 };
 
 class hCBarrier : public oCBarrier

@@ -1,5 +1,8 @@
-#define bool int
-#define byte unsigned char
+typedef int _bool;
+#define bool _bool
+typedef unsigned char byte;
+typedef unsigned short word;
+typedef unsigned int dword;
 
 // first 4 bytes of each version (with debug info)
 #define BASE_ADDR (0x00401000)

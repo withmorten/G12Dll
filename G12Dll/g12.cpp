@@ -1,8 +1,4 @@
-#include <windows.h>
-#include <direct.h>
-#include <stdio.h>
-#include <stdint.h>
-#include "MemoryMgr.h"
+#include "G12Core.h"
 
 #define G12DLL_NAME "G12"
 
