@@ -24,7 +24,7 @@ typedef unsigned int dword;
 // file offset to image offset
 #define _fo(file_addr) (file_addr + BASE_ADDR)
 
-char G12Cwd[MAX_PATH];
+char G12LogPath[MAX_PATH];
 char G12IniPath[MAX_PATH];
 
 UINT G12GetPrivateProfileInt(LPCTSTR lpKeyName, INT nDefault)
@@ -51,12 +51,36 @@ FLOAT G12GetPrivateProfileFloat(LPCTSTR lpKeyName, LPCTSTR lpDefault)
 	return (FLOAT)atof(lpReturnedString);
 }
 
-FILE *conin, *conout;
+FILE *conin, *conout, *out = NULL;
+
+void G12Log(const char *format, ...)
+{
+	va_list args;
+	va_start(args, format);
+
+	printf("%s: ", G12DLL_NAME);
+	vprintf(format, args);
+
+	if (out)
+	{
+		fprintf(out, "%s.dll: ", G12DLL_NAME);
+		vfprintf(out, format, args);
+		fflush(out);
+	}
+
+	va_end(args);
+}
+
+#define printf G12Log
 
 void G12AllocConsole(void)
 {
 	// does not belong here, but whatever
-	_getcwd(G12Cwd, sizeof(G12Cwd));
+	_getcwd(G12LogPath, sizeof(G12LogPath));
+	strncat(G12LogPath, "\\G12.log", sizeof(G12LogPath));
+
+	out = fopen(G12LogPath, "wb");
+
 	_getcwd(G12IniPath, sizeof(G12IniPath));
 	strncat(G12IniPath, "\\G12.ini", sizeof(G12IniPath));
 

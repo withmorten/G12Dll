@@ -1,10 +1,10 @@
-class hMesh : public zCMesh
+class hCMesh : public zCMesh
 {
 public:
 	int LoadMSH(zCFileBIN &file, int tryToShare);
 };
 
-class hWorld : public oCWorld
+class hCWorld : public oCWorld
 {
 public:
 	void Unarchive(zCArchiver &arc);

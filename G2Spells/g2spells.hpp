@@ -71,7 +71,10 @@ class hCVisualFX : public oCVisualFX
 {
 public:
 	virtual void SetCollisionEnabled(bool en);
+
 	void _SetCollisionEnabled(bool en) { hCVisualFX::SetCollisionEnabled(en); }
+
+	void Dtor() { XCALL(0x0048A260); }
 
 	void InitValues();
 };
@@ -98,15 +101,15 @@ public:
 	void Run();
 };
 
-class hCVisFX_Lightning : public oCVisualFX
+class hCVisFX_Lightning : public hCVisualFX
 {
 public:
 	int phase;
-	// float lightRange;
+	float lightRange;
 	bool showScanner;
 	bool investedNext;
 	bool castOnSelf;
-	// zCModelNodeInst *targetNode;
+	zCModelNodeInst *targetNode;
 
 	zCArray<zCVob *> burnVobs;
 	zCArray<zCModelNodeInst *> burnNodes;
@@ -119,22 +122,31 @@ public:
 	static hCVisFX_Lightning *_CreateNewInstance();
 
 	// fake constructor and destructor to initialise and deinitialise our values
-	void _InitValues(); // done
-	void _DeinitValues(zCVob *orgVob, bool recalcTrj); // done
+	void InitValues();
+	void DeinitValues();
+
+	void _DeinitValues() { if (dScriptEnd) this->DeinitValues(); this->Dtor(); }
+
+	virtual void OnTick();
+	virtual void Open();
+	virtual void Init(zCArray<zCVob *> &trajectoryVobs);
+	virtual void InvestNext();
+	virtual void Cast(bool killAfterDone);
+	virtual void Stop(bool killAfterDone);
 
 	// virtual overrides
-	void _OnTick(); // next
-	void _Open(); // done
-	void _Init(zCArray<zCVob *> &trajectoryVobs); // done
-	void _InvestNext(); // done
-	void _Cast(bool killAfterDone); // done
-	void _Stop(bool killAfterDone); // done
+	void _OnTick() { if (this->dScriptEnd) this->hCVisFX_Lightning::OnTick(); else this->oCVisualFX::OnTick(); }
+	void _Open() { if (this->dScriptEnd) this->hCVisFX_Lightning::Open(); else this->oCVisualFX::Open(); }
+	void _Init(zCArray<zCVob *> &trajectoryVobs) { if (this->dScriptEnd) this->hCVisFX_Lightning::Init(trajectoryVobs); else this->oCVisualFX::Init(trajectoryVobs); }
+	void _InvestNext() { if (this->dScriptEnd) this->hCVisFX_Lightning::InvestNext(); else this->oCVisualFX::InvestNext(); }
+	void _Cast(bool killAfterDone) { if (this->dScriptEnd) this->hCVisFX_Lightning::Cast(killAfterDone); else this->oCVisualFX::Cast(killAfterDone); }
+	void _Stop(bool killAfterDone) { if (this->dScriptEnd) this->hCVisFX_Lightning::Stop(killAfterDone); else this->oCVisualFX::Stop(killAfterDone); }
 
-	bool CheckDeletion(); // done
-	void UpdateBurnVobs(); // done
-	bool UpdateBurnVobsInvestNext(); // done
-	void Draw(); // done
-	void CreateScanner(zCVob *orgVob); // done
-	void UpdateScanner() { if (this->scanner->Enabled()) this->scanner->Run(); } // done
-	void DeleteScanner() { if (this->scanner->Initialized()) this->scanner->Disable(); } // done
+	bool CheckDeletion();
+	void UpdateBurnVobs();
+	bool UpdateBurnVobsInvestNext();
+	void Draw();
+	void CreateScanner(zCVob *orgVob);
+	void UpdateScanner() { if (this->scanner->Enabled()) this->scanner->Run(); }
+	void DeleteScanner() { if (this->scanner->Initialized()) this->scanner->Disable(); }
 };

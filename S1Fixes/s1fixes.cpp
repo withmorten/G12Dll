@@ -8,7 +8,7 @@
 #include "..\G12Dll\S1.h"
 #include "s1fixes.hpp"
 
-int hMesh::LoadMSH(zCFileBIN &file, int tryToShare)
+int hCMesh::LoadMSH(zCFileBIN &file, int tryToShare)
 {
 	int loadOK = this->zCMesh::LoadMSH(file, tryToShare);
 
@@ -23,7 +23,7 @@ int hMesh::LoadMSH(zCFileBIN &file, int tryToShare)
 	return loadOK;
 }
 
-void hWorld::Unarchive(zCArchiver &arc)
+void hCWorld::Unarchive(zCArchiver &arc)
 {
 	this->zCWorld::Unarchive(arc);
 }

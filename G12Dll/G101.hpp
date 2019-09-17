@@ -18,7 +18,7 @@ public:
 class zSTRING
 {
 public:
-	unsigned char allocator;
+	unsigned char _Al;
 	char *_Ptr;
 	int _Len;
 	int _Res;

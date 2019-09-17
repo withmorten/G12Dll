@@ -10,9 +10,9 @@
 
 void hCNpc::CreateVobList(float max_dist)
 {
-	zCVob *vob;
-	oCMobInter *mob;
-	oCNpc *npc;
+	zCVob *vob = NULL;
+	oCMobInter *mob = NULL;
+	oCNpc *npc = NULL;
 	zVEC3 trafo_vec;
 	zTBBox3D bbox;
 	zCClassDef *classDef;
@@ -43,20 +43,20 @@ void hCNpc::CreateVobList(float max_dist)
 				delete_vob = TRUE;
 			}
 
-			if (zCObject::CheckInheritance(&oCMobInter::classDef, classDef))
-			{
-				mob = (oCMobInter *)vob;
+			mob = zDYNAMIC_CAST<oCMobInter>(vob);
 
+			if (mob)
+			{
 				if (mob->IsOccupied())
 				{
 					delete_vob = TRUE;
 				}
 			}
 
-			if (zCObject::CheckInheritance(&oCNpc::classDef, classDef))
-			{
-				npc = (oCNpc *)vob;
+			npc = zDYNAMIC_CAST<oCNpc>(vob);
 
+			if (npc)
+			{
 				if (npc->IsDead() && npc->inventory2.IsEmpty(TRUE, TRUE))
 				{
 					delete_vob = TRUE;
@@ -427,22 +427,8 @@ void PatchGothic1(void)
 #define PD_ITEM_MOBSI 24
 #define PD_MAGIC 25
 
-FILE *_PrintDebugInstCh = NULL;
-
 bool PrintDebugInstCh()
 {
-	if (!_PrintDebugInstCh)
-	{
-		char log[MAX_PATH];
-
-		strncpy(log, G12Cwd, MAX_PATH);
-		strncat(log, "\\PrintDebugInstCh.log", MAX_PATH);
-
-		_PrintDebugInstCh = fopen(log, "wb");
-
-		if (!_PrintDebugInstCh) _PrintDebugInstCh = (FILE *)-1;
-	}
-
 	zCPar_Symbol *sym = cur_parser->GetSymbol("SELF");
 
 	zCVob *self;
@@ -460,17 +446,11 @@ bool PrintDebugInstCh()
 	case PD_MST_LOOP:
 	case PD_ZS_DETAIL:
 		break;
+#else
+	case PD_MAGIC: // dummy case
 #endif
-	case PD_MAGIC:
 	default:
 		printf("%02d: %s\n", ch, s.ToChar());
-
-		if (_PrintDebugInstCh != (FILE *)-1)
-		{
-			fprintf(_PrintDebugInstCh, "%02d: %s\n", ch, s.ToChar());
-
-			fflush(_PrintDebugInstCh);
-		}
 	}
 
 	return FALSE;

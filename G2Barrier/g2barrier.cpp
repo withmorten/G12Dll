@@ -922,7 +922,7 @@ void hCSkyControler_Barrier::RenderSkyPre()
 
 	zTRenderContext rndContext;
 
-	if (zCObject::CheckInheritance(&zCSkyControler_Outdoor::classDef, this->_GetClassDef()))
+	if (zDYNAMIC_CAST<zCSkyControler_Outdoor>(this))
 	{
 		if (zCSkyControler::s_skyEffectsEnabled
 			&& this->rainFX.outdoorRainFXWeight > 0.5f

@@ -13,7 +13,7 @@ void PatchGothic108k(void)
 	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE))
 	{
 		// Ignore skyEffects setting for oCSkyControler_Barrier::RenderSkyPre
-		// Nop(0x00632152, 6);
+		Nop(0x00632152, 6);
 	}
 
 	if (G12GetPrivateProfileBool("ShowTime", FALSE))

@@ -8,7 +8,7 @@
 #include "..\G12Dll\G101.h"
 #include "g101fixes.hpp"
 
-int hMesh::LoadMSH(zCFileBIN &file)
+int hCMesh::LoadMSH(zCFileBIN &file)
 {
 	int loadOK = this->zCMesh::LoadMSH(file);
 
@@ -23,13 +23,13 @@ int hMesh::LoadMSH(zCFileBIN &file)
 	return loadOK;
 }
 
-void hWorld::GenerateStaticWorldLighting(int &lightmode, zTBBox3D *updateBBox3D)
+void hCWorld::GenerateStaticWorldLighting(int &lightmode, zTBBox3D *updateBBox3D)
 {
 	int lm = 3;
 	this->zCWorld::GenerateStaticWorldLighting(lm, updateBBox3D);
 }
 
-void hGame::LoadWorld(int slotID, zSTRING &levelpath)
+void hCGame::LoadWorld(int slotID, zSTRING &levelpath)
 {
 	this->game_testmode = TRUE;
 
@@ -43,7 +43,7 @@ void hGame::LoadWorld(int slotID, zSTRING &levelpath)
 	}
 }
 
-void hGame::LoadMatlib()
+void hCGame::LoadMatlib()
 {
 	zoptions->ChangeDir(16);
 
@@ -94,7 +94,7 @@ void hGame::LoadMatlib()
 	this->CompileWorld();
 }
 
-void hGame::LoadPML(zSTRING &matfilename)
+void hCGame::LoadPML(zSTRING &matfilename)
 {
 	zoptions->ChangeDir(16);
 	matfilename += ".pml";

@@ -89,3 +89,13 @@ zSTRING oCSpell::GetSpellInstanceName(int _spellID)
 
 	return res;
 }
+
+template<class T> T *zDYNAMIC_CAST(zCObject *pObject)
+{
+	return pObject && zCObject::CheckInheritance(T::GetStaticClassDef(), pObject->_GetClassDef()) ? (T *)pObject : NULL;
+}
+
+template<class T> T *zSTATIC_CAST(zCObject *pObject)
+{
+	return (T *)pObject;
+}

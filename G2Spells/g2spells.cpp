@@ -123,22 +123,33 @@ hCVisFX_Lightning *hCVisFX_Lightning::_CreateNewInstance()
 	hCVisFX_Lightning *vfxLightning = (hCVisFX_Lightning *)oCVisualFX::_CreateNewInstance();
 	Patch(0x0049A247 + 1, sizeof(oCVisualFX)); // oCVisualFX::_CreateNewInstance();
 
-	vfxLightning->_InitValues();
+	vfxLightning->InitValues();
 
 	return vfxLightning;
 }
 
-void hCVisFX_Lightning::_InitValues()
+void hCVisFX_Lightning::InitValues()
 {
 	printf("hCVisFX_Lightning::hCVisFX_Lightning()\n");
 
 	this->dScriptEnd = TRUE; // isLightning
 	// this->dScriptEnd = FALSE; // TODO isLightning
 
-	this->burnVobs._Init();
-	this->burnNodes._Init();
-	this->decalVobs._Init();
-	this->electricFX._Init();
+	this->burnVobs.numInArray = 0;
+	this->burnVobs.numAlloc = 0;
+	this->burnVobs.array = NULL;
+
+	this->burnNodes.numInArray = 0;
+	this->burnNodes.numAlloc = 0;
+	this->burnNodes.array = NULL;
+
+	this->decalVobs.numInArray = 0;
+	this->decalVobs.numAlloc = 0;
+	this->decalVobs.array = NULL;
+
+	this->electricFX.numInArray = 0;
+	this->electricFX.numAlloc = 0;
+	this->electricFX.array = NULL;
 
 	this->scanner = new hCFXScanner();
 
@@ -152,73 +163,66 @@ void hCVisFX_Lightning::_InitValues()
 	this->dontWriteIntoArchive = TRUE;
 }
 
-void hCVisFX_Lightning::_DeinitValues(zCVob *orgVob, bool recalcTrj)
+void hCVisFX_Lightning::DeinitValues()
 {
-	if (this->dScriptEnd) // isLightning
+	printf("hCVisFX_Lightning::~hCVisFX_Lightning()\n");
+
+	for (int i = 0; i < this->decalVobs.numInArray; i++)
 	{
-		printf("hCVisFX_Lightning::~hCVisFX_Lightning()\n");
-
-		for (int i = 0; i < this->decalVobs.numInArray; i++)
-		{
-			this->decalVobs[i]->RemoveVobFromWorld();
-			this->decalVobs[i]->Release();
-		}
-
-		for (int i = 0; i < this->electricFX.numInArray; i++)
-		{
-			this->electricFX[i]->Stop(TRUE);
-
-			if (this->electricFX[i])
-			{
-				this->electricFX[i]->Release();
-
-				this->electricFX[i] = NULL;
-			}
-		}
-
-		oCNpc *orgNpc = NULL;
-
-		if (this->origin && zCObject::CheckInheritance(&oCNpc::classDef, this->origin->_GetClassDef())) orgNpc = (oCNpc *)this->origin;
-
-		for (int i = 0; i < this->burnVobs.numInArray; i++)
-		{
-			oCNpc *burnNpc = NULL;
-
-			if (zCObject::CheckInheritance(&oCNpc::classDef, this->burnVobs[i]->_GetClassDef()))
-			{
-				burnNpc = (oCNpc *)this->burnVobs[i];
-
-				if (orgNpc && burnNpc) burnNpc->AssessStopMagic_S(orgNpc, this->spellType);
-			}
-		}
-
-		for (int i = 0; i < this->vobList.numInArray; i++)
-		{
-			if (showTarget) this->vobList[i]->drawBBox3D = FALSE;
-
-			if (this->vobList[i])
-			{
-				this->vobList[i]->Release();
-
-				this->vobList[i] = NULL;
-			}
-		}
-
-		this->burnVobs._Deinit();
-		this->burnNodes._Deinit();
-		this->decalVobs._Deinit();
-		this->electricFX._Deinit();
-
-		delete this->scanner;
+		this->decalVobs[i]->RemoveVobFromWorld();
+		this->decalVobs[i]->Release();
 	}
 
-	this->oCVisualFX::SetOrigin(orgVob, recalcTrj);
+	for (int i = 0; i < this->electricFX.numInArray; i++)
+	{
+		this->electricFX[i]->Stop(TRUE);
+
+		if (this->electricFX[i])
+		{
+			this->electricFX[i]->Release();
+
+			this->electricFX[i] = NULL;
+		}
+	}
+
+	oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+	for (int i = 0; i < this->burnVobs.numInArray; i++)
+	{
+		oCNpc *burnNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[i]);
+
+		if (orgNpc && burnNpc) burnNpc->AssessStopMagic_S(orgNpc, this->spellType);
+	}
+
+	for (int i = 0; i < this->vobList.numInArray; i++)
+	{
+		if (showTarget) this->vobList[i]->drawBBox3D = FALSE;
+
+		if (this->vobList[i])
+		{
+			this->vobList[i]->Release();
+
+			this->vobList[i] = NULL;
+		}
+	}
+
+	delete[] this->burnVobs.array;
+	this->burnVobs.array = NULL;
+
+	delete[] this->burnNodes.array;
+	this->burnNodes.array = NULL;
+
+	delete[] this->decalVobs.array;
+	this->decalVobs.array = NULL;
+
+	delete[] this->electricFX.array;
+	this->electricFX.array = NULL;
+
+	delete this->scanner;
 }
 
 bool hCVisFX_Lightning::CheckDeletion()
 {
-	// TODO broken - stack overflow
-
 	printf("hCVisFX_Lightning::CheckDeletion()\n");
 
 	if (this->shouldDelete)
@@ -234,9 +238,7 @@ bool hCVisFX_Lightning::CheckDeletion()
 	{
 		if (this->visual)
 		{
-			zCParticleFX *pfx = NULL;
-
-			if (zCObject::CheckInheritance(&zCParticleFX::classDef, this->visual->_GetClassDef())) pfx = (zCParticleFX *)this->visual;
+			zCParticleFX *pfx = zDYNAMIC_CAST<zCParticleFX>(this->visual);
 
 			if (this->visual->GetVisualDied() || pfx && pfx->CalcIsDead())
 			{
@@ -263,11 +265,8 @@ bool hCVisFX_Lightning::CheckDeletion()
 
 		if (this->deleteTime == 0.0f)
 		{
-			oCNpc *orgNpc = NULL;
-			oCNpc *infNpc = NULL;
-
-			if (zCObject::CheckInheritance(&oCNpc::classDef, this->origin->_GetClassDef())) orgNpc = (oCNpc *)this->origin;
-			if (zCObject::CheckInheritance(&oCNpc::classDef, this->inflictor->_GetClassDef())) infNpc = (oCNpc *)this->inflictor;
+			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+			oCNpc *infNpc = zDYNAMIC_CAST<oCNpc>(this->inflictor);
 
 			if (orgNpc && infNpc && this->sendAssessMagic)
 			{
@@ -276,9 +275,7 @@ bool hCVisFX_Lightning::CheckDeletion()
 
 			if (this->visual)
 			{
-				zCParticleFX *pfx = NULL;
-
-				if (zCObject::CheckInheritance(&zCParticleFX::classDef, this->visual->_GetClassDef())) pfx = (zCParticleFX *)this->visual;
+				zCParticleFX *pfx = zDYNAMIC_CAST<zCParticleFX>(this->visual);
 
 				if (pfx && pfx->emitter)
 				{
@@ -339,17 +336,14 @@ bool hCVisFX_Lightning::CheckDeletion()
 
 void hCVisFX_Lightning::UpdateBurnVobs()
 {
-	// printf("hCVisFX_Lightning::UpdateBurnVobs()\n");
+	printf("hCVisFX_Lightning::UpdateBurnVobs()\n");
 
 	for (int i = 0; i < this->burnVobs.numInArray; i++)
 	{
 		if (!this->vobList.IsInList(this->burnVobs[i]))
 		{
-			oCNpc *orgNpc = NULL;
-			oCNpc *targetNpc = NULL;
-
-			if (zCObject::CheckInheritance(&oCNpc::classDef, this->origin->_GetClassDef())) orgNpc = (oCNpc *)this->origin;
-			if (zCObject::CheckInheritance(&oCNpc::classDef, this->target->_GetClassDef())) targetNpc = (oCNpc *)this->target;
+			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+			oCNpc *targetNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[i]);
 
 			if (orgNpc && targetNpc)
 			{
@@ -357,6 +351,7 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 			}
 
 			this->burnVobs.RemoveOrderIndex(i);
+			this->burnNodes.RemoveOrderIndex(i);
 		}
 	}
 
@@ -371,9 +366,7 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 				this->burnVobs.InsertAtPos(this->vobList[i], upKey);
 
 				zCModelNodeInst *ins = NULL;
-				zCModel *mdl = NULL;
-
-				if (zCObject::CheckInheritance(&zCModel::classDef, this->vobList[i]->visual->_GetClassDef())) mdl = (zCModel *)this->vobList[i]->visual;
+				zCModel *mdl = zDYNAMIC_CAST<zCModel>(this->vobList[i]->visual);
 
 				if (mdl && !this->emTrjTargetNode_S.IsEmpty())
 				{
@@ -385,8 +378,7 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 		}
 	}
 
-	zCArray<zCVob *> trjList = this->burnVobs;
-	this->trajectory.SetByList(trjList);
+	this->trajectory.SetByList(this->burnVobs);
 }
 
 bool hCVisFX_Lightning::UpdateBurnVobsInvestNext()
@@ -440,9 +432,7 @@ bool hCVisFX_Lightning::UpdateBurnVobsInvestNext()
 		this->burnVobs.InsertEnd(nearestVob);
 
 		zCModelNodeInst *ins = NULL;
-		zCModel *mdl = NULL;
-
-		if (zCObject::CheckInheritance(&zCModel::classDef, nearestVob->_GetClassDef())) mdl = (zCModel *)nearestVob->visual;
+		zCModel *mdl = zDYNAMIC_CAST<zCModel>(nearestVob->visual);
 
 		if (mdl && !this->emTrjTargetNode_S.IsEmpty())
 		{
@@ -451,8 +441,7 @@ bool hCVisFX_Lightning::UpdateBurnVobsInvestNext()
 
 		this->burnNodes.InsertEnd(ins);
 
-		zCArray<zCVob *> trjList = this->burnVobs;
-		this->trajectory.SetByList(trjList);
+		this->trajectory.SetByList(this->burnVobs);
 
 		return TRUE;
 	}
@@ -526,7 +515,7 @@ void hCVisFX_Lightning::Draw()
 
 		if (this->burnNodes[i + 1])
 		{
-			zCModelNodeInst *xd = this->burnNodes[i];
+			zCModelNodeInst *xd = this->burnNodes[i + 1];
 
 			thisPos = this->burnVobs[i + 1]->GetTrafoModelNodeToWorld(xd).GetTranslation();
 		}
@@ -611,7 +600,7 @@ void hCVisFX_Lightning::CreateScanner(zCVob *orgVob)
 
 				scannerVob->SetTrafo(orgVob->trafoObjToWorld);
 				orgVob->homeWorld->AddVob(scannerVob);
-				scannerVob->showVisual = TRUE;
+				// scannerVob->showVisual = TRUE; // also happens in hCFXScanner::Enable()
 
 				this->scanner->scannerVobs[i] = scannerVob;
 			}
@@ -623,71 +612,48 @@ void hCVisFX_Lightning::CreateScanner(zCVob *orgVob)
 	}
 }
 
-void hCVisFX_Lightning::_OnTick()
+void hCVisFX_Lightning::OnTick()
 {
-	if (this->dScriptEnd) // isLightning
+	printf("hCVisFX_Lightning::OnTick()\n");
+
+	if (this->initialized)
 	{
-		printf("hCVisFX_Lightning::OnTick()\n");
+		bool playerPain;
 
-		if (this->initialized)
+		this->showVisual = FALSE;
+
+		this->frameTime = ztimer.frameTimeFloat;
+
+		if (!this->CheckDeletion() && this->origin && this->vobList.numInArray > 1)
 		{
-			bool playerPain;
+			this->BeginMovement();
+			this->UpdateBurnVobs();
 
-			this->showVisual = FALSE;
-
-			this->frameTime = ztimer.frameTimeFloat;
-
-			if (!this->CheckDeletion() && this->origin && this->vobList.numInArray > 1)
+			if (this->investedNext)
 			{
-				this->BeginMovement();
-				this->UpdateBurnVobs();
+				this->investedNext = FALSE;
+				playerPain = FALSE;
 
-				if (this->investedNext)
+				if (this->phase == 1)
 				{
-					this->investedNext = FALSE;
-					playerPain = FALSE;
-
-					if (this->phase == 1)
+					if (this->castOnSelf)
 					{
-						if (this->castOnSelf)
+						this->burnVobs.RemoveOrderIndex(this->burnVobs.numInArray - 1);
+						this->burnNodes.RemoveOrderIndex(this->burnNodes.numInArray - 1);
+
+						this->trajectory.SetByList(this->burnVobs);
+
+						this->castOnSelf = FALSE;
+					}
+
+					this->DeleteScanner();
+
+					if (this->vobList.numInArray >= 2)
+					{
+						if (!this->UpdateBurnVobsInvestNext())
 						{
-							this->burnVobs.RemoveOrderIndex(this->burnVobs.numInArray - 1);
-							this->burnNodes.RemoveOrderIndex(this->burnNodes.numInArray - 1);
+							this->EndMovement(TRUE); // TODO possibly FALSE
 
-							zCArray<zCVob *> trjList = this->burnVobs;
-							this->trajectory.SetByList(trjList);
-
-							this->castOnSelf = FALSE;
-						}
-
-						this->DeleteScanner();
-
-						if (this->vobList.numInArray >= 2)
-						{
-							if (!this->UpdateBurnVobsInvestNext())
-							{
-								this->EndMovement(TRUE); // TODO possibly FALSE
-
-								oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
-
-								if (newFx)
-								{
-									this->electricFX.InsertEnd(newFx);
-
-									newFx->AddRef();
-								}
-
-								this->burnVobs.InsertEnd(this->vobList[0]);
-								this->burnNodes.InsertEnd(this->targetNode);
-
-								zCArray<zCVob *> trjList = this->burnVobs;
-								this->trajectory.SetByList(trjList);
-
-								this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
-							}
-						}
-						else
-						{
 							oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
 
 							if (newFx)
@@ -697,35 +663,17 @@ void hCVisFX_Lightning::_OnTick()
 								newFx->AddRef();
 							}
 
-							this->EndMovement(TRUE); // TODO possibly FALSE
+							this->burnVobs.InsertEnd(this->vobList[0]);
+							this->burnNodes.InsertEnd(this->targetNode);
+
+							this->trajectory.SetByList(this->burnVobs);
+
 							this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
-							this->BeginMovement();
-							playerPain = TRUE;
 						}
-
-						int lastVob;
-
-						if (this->castOnSelf) lastVob = this->burnVobs.numInArray - 2;
-						else lastVob = this->burnVobs.numInArray - 1;
-
-						this->EndMovement(TRUE); // TODO possibly FALSE
-
-						this->burnVobs[lastVob]->OnDamage(this, this->origin, this->damage, this->damageType, this->burnVobs[lastVob]->GetPositionWorld());
-
+					}
+					else
+					{
 						oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
-
-						oCNpc *targetNpc = NULL;
-						oCNpc *orgNpc = NULL;
-
-						if (zCObject::CheckInheritance(&oCNpc::classDef, this->burnVobs[lastVob]->_GetClassDef())) targetNpc = (oCNpc *)this->burnVobs[lastVob];
-						if (zCObject::CheckInheritance(&oCNpc::classDef, this->origin->_GetClassDef())) orgNpc = (oCNpc *)this->origin;
-
-						if (targetNpc && orgNpc)
-						{
-							targetNpc->AssessMagic_S(orgNpc, this->spellType);
-						}
-
-						this->BeginMovement();
 
 						if (newFx)
 						{
@@ -733,252 +681,228 @@ void hCVisFX_Lightning::_OnTick()
 
 							newFx->AddRef();
 						}
+
+						this->EndMovement(TRUE); // TODO possibly FALSE
+						this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
+						this->BeginMovement();
+						playerPain = TRUE;
+					}
+
+					int lastVob;
+
+					if (this->castOnSelf) lastVob = this->burnVobs.numInArray - 2;
+					else lastVob = this->burnVobs.numInArray - 1;
+
+					this->EndMovement(TRUE); // TODO possibly FALSE
+
+					this->burnVobs[lastVob]->OnDamage(this, this->origin, this->damage, this->damageType, this->burnVobs[lastVob]->GetPositionWorld());
+
+					oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+
+					oCNpc *targetNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[lastVob]);
+					oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+					if (targetNpc && orgNpc)
+					{
+						targetNpc->AssessMagic_S(orgNpc, this->spellType);
+					}
+
+					this->BeginMovement();
+
+					if (newFx)
+					{
+						this->electricFX.InsertEnd(newFx);
+
+						newFx->AddRef();
 					}
 				}
-
-				if (this->phase == 2)
-				{
-					if (this->castOnSelf)
-					{
-						oCNpc *targetNpc = NULL;
-						oCNpc *orgNpc = NULL;
-
-						if (zCObject::CheckInheritance(&oCNpc::classDef, this->burnVobs[this->burnVobs.numInArray - 1]->_GetClassDef())) targetNpc = (oCNpc *)this->burnVobs[this->burnVobs.numInArray - 1];
-						if (zCObject::CheckInheritance(&oCNpc::classDef, this->origin->_GetClassDef())) orgNpc = (oCNpc *)this->origin;
-
-						this->burnVobs.RemoveOrderIndex(this->burnVobs.numInArray - 1);
-						this->burnNodes.RemoveOrderIndex(this->burnNodes.numInArray - 1);
-
-						if (targetNpc && orgNpc)
-						{
-							targetNpc->AssessStopMagic_S(orgNpc, this->spellType);
-						}
-
-						zCVob *delVob = this->decalVobs[this->decalVobs.numInArray - 1];
-
-						this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
-
-						if (delVob)
-						{
-							delVob->Release();
-
-							delVob = NULL;
-						}
-
-						delVob = this->decalVobs[this->decalVobs.numInArray - 1];
-
-						this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
-
-						if (delVob)
-						{
-							delVob->Release();
-
-							delVob = NULL;
-						}
-
-						zCArray<zCVob *> trjList = this->burnVobs;
-						this->trajectory.SetByList(trjList);
-
-						this->castOnSelf = FALSE;
-					}
-
-					if (this->showScanner)
-					{
-						this->showScanner = FALSE;
-
-						zCVob *last;
-
-						if (this->castOnSelf) last = this->burnVobs[this->burnVobs.numInArray - 2];
-						else last = this->burnVobs[this->burnVobs.numInArray - 1];
-
-						this->CreateScanner(last);
-					}
-
-					this->UpdateScanner();
-				}
-
-				this->Draw();
-				this->EndMovement(TRUE); // TODO possibly FALSE
 			}
+
+			if (this->phase == 2)
+			{
+				if (this->castOnSelf)
+				{
+					oCNpc *targetNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[this->burnVobs.numInArray - 1]);
+					oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+					this->burnVobs.RemoveOrderIndex(this->burnVobs.numInArray - 1);
+					this->burnNodes.RemoveOrderIndex(this->burnNodes.numInArray - 1);
+
+					if (targetNpc && orgNpc)
+					{
+						targetNpc->AssessStopMagic_S(orgNpc, this->spellType);
+					}
+
+					zCVob *delVob = this->decalVobs[this->decalVobs.numInArray - 1];
+
+					this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
+
+					if (delVob)
+					{
+						delVob->Release();
+
+						delVob = NULL;
+					}
+
+					delVob = this->decalVobs[this->decalVobs.numInArray - 1];
+
+					this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
+
+					if (delVob)
+					{
+						delVob->Release();
+
+						delVob = NULL;
+					}
+
+					this->trajectory.SetByList(this->burnVobs);
+
+					this->castOnSelf = FALSE;
+				}
+
+				if (this->showScanner)
+				{
+					this->showScanner = FALSE;
+
+					zCVob *last;
+
+					if (this->castOnSelf) last = this->burnVobs[this->burnVobs.numInArray - 2];
+					else last = this->burnVobs[this->burnVobs.numInArray - 1];
+
+					this->CreateScanner(last);
+				}
+
+				this->UpdateScanner();
+			}
+
+			this->Draw();
+			this->EndMovement(TRUE); // TODO possibly FALSE
 		}
-	}
-	else
-	{
-		this->oCVisualFX::OnTick();
 	}
 }
 
-void hCVisFX_Lightning::_Open()
+void hCVisFX_Lightning::Open()
 {
-	if (this->dScriptEnd) // isLightning
+	printf("hCVisFX_Lightning::Open()\n");
+
+	this->oCVisualFX::Open();
+
+	if (this->light)
 	{
-		printf("hCVisFX_Lightning::Open()\n");
+		this->lightRange = this->light->lightData.range;
 
-		this->oCVisualFX::Open();
-
-		if (this->light)
-		{
-			this->lightRange = this->light->lightData.range;
-
-			this->light->SetRange(0.0f, TRUE);
-		}
-	}
-	else
-	{
-		this->oCVisualFX::Open();
+		this->light->SetRange(0.0f, TRUE);
 	}
 }
 
-void hCVisFX_Lightning::_Init(zCArray<zCVob *> &trajectoryVobs)
+void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 {
-	if (this->dScriptEnd) // isLightning
-	{
-		printf("hCVisFX_Lightning::Init()\n");
+	printf("hCVisFX_Lightning::Init()\n");
 
+	if (this->origin)
+	{
 		if (this->origin)
 		{
-			if (this->origin)
-			{
-				this->origin->Release();
+			this->origin->Release();
 
-				this->origin = NULL;
-			}
-
-			for (int nr = 0; nr < this->vobList.numInArray; nr++)
-			{
-				if (showTarget) this->vobList[nr]->drawBBox3D = FALSE;
-
-				if (this->vobList[nr])
-				{
-					this->vobList[nr]->Release();
-
-					this->vobList[nr] = NULL;
-				}
-			}
-
-			this->vobList.DeleteList();
+			this->origin = NULL;
 		}
-
-		this->oCVisualFX::Init(trajectoryVobs[0], NULL, NULL);
-
-		this->vobList = trajectoryVobs;
-
-		printf("%d trjVobs\n", this->vobList.numInArray);
 
 		for (int nr = 1; nr < this->vobList.numInArray; nr++)
 		{
-			if (showTarget && nr == 1) this->vobList[nr]->drawBBox3D = TRUE;
+			if (showTarget) this->vobList[nr]->drawBBox3D = FALSE;
 
-			this->vobList[nr]->AddRef();
-		}
-
-		zCModel *mdl = NULL;
-
-		if (zCObject::CheckInheritance(&zCModel::classDef, this->origin->visual->_GetClassDef())) mdl = (zCModel *)this->origin->visual;
-
-		if (mdl && !this->emTrjOriginNode_S.IsEmpty())
-		{
-			this->orgNode = mdl->SearchNode(this->emTrjOriginNode_S);
-			this->targetNode = mdl->SearchNode(this->emTrjTargetNode_S);
-
-			printf("Setting org and target node ...\n");
-		}
-
-		if (this->initialized) printf("Already initialized ...\n");
-
-		if (this->initialized && this->sfx)
-		{
-			this->sfxHnd = zsound->PlaySound3D(this->sfx, this, zSND_SLOT_NONE, NULL);
-
-			printf("Already initialized but no sfx ...\n");
-		}
-
-		this->initialized = TRUE;
-	}
-	else
-	{
-		this->oCVisualFX::Init(trajectoryVobs);
-	}
-}
-
-void hCVisFX_Lightning::_InvestNext()
-{
-	if (this->dScriptEnd) // isLightning
-	{
-		printf("hCVisFX_Lightning::InvestNext()\n");
-
-		if (this->initialized)
-		{
-			this->oCVisualFX::InvestNext();
-
-			this->phase++;
-
-			if (this->phase == 3) this->phase = 1;
-
-			if (this->light) this->light->SetRange(this->lightRange, TRUE);
-
-			this->investedNext = TRUE;
-			this->showScanner = TRUE;
-		}
-	}
-	else
-	{
-		this->oCVisualFX::InvestNext();
-	}
-}
-
-void hCVisFX_Lightning::_Cast(bool killAfterDone)
-{
-	if (this->dScriptEnd) // isLightning
-	{
-		printf("hCVisFX_Lightning::Cast()\n");
-
-		this->oCVisualFX::Stop(killAfterDone);
-	}
-	else
-	{
-		this->oCVisualFX::Cast(killAfterDone);
-	}
-}
-
-void hCVisFX_Lightning::_Stop(bool killAfterDone)
-{
-	if (this->dScriptEnd) // isLightning
-	{
-		printf("hCVisFX_Lightning::Stop()\n");
-
-		oCNpc *orgNpc = NULL;
-
-		if (zCObject::CheckInheritance(&oCNpc::classDef, this->origin->_GetClassDef())) orgNpc = (oCNpc *)this->origin;
-
-		for (int i = 0; i < this->burnVobs.numInArray; i++)
-		{
-			oCNpc *burnNpc = NULL;
-
-			if (zCObject::CheckInheritance(&oCNpc::classDef, this->burnVobs[i]->_GetClassDef()))
+			if (this->vobList[nr])
 			{
-				burnNpc = (oCNpc *)this->burnVobs[i];
+				this->vobList[nr]->Release();
 
-				if (orgNpc && burnNpc) burnNpc->AssessStopMagic_S(orgNpc, this->spellType);
+				this->vobList[nr] = NULL;
 			}
 		}
 
-		for (int i = 0; i < this->decalVobs.numInArray; i++)
-		{
-			this->decalVobs[i]->RemoveVobFromWorld();
-			this->decalVobs[i]->Release();
-		}
-
-		this->decalVobs.DeleteList(); // GEngine
-
-		this->DeleteScanner(); // GEngine
-
-		this->oCVisualFX::Stop(TRUE);
+		this->vobList.DeleteList();
 	}
-	else
+
+	this->oCVisualFX::Init(trajectoryVobs[0], NULL, NULL);
+
+	this->vobList = trajectoryVobs;
+
+	printf("hCVisFX_Lightning::Init(): %d trjVobs\n", this->vobList.numInArray);
+
+	for (int nr = 1; nr < this->vobList.numInArray; nr++)
 	{
-		this->oCVisualFX::Stop(killAfterDone);
+		if (showTarget && nr == 1) this->vobList[1]->drawBBox3D = TRUE;
+
+		this->vobList[nr]->AddRef();
 	}
+
+	zCModel *mdl = zDYNAMIC_CAST<zCModel>(this->origin->visual);
+
+	if (mdl && !this->emTrjOriginNode_S.IsEmpty())
+	{
+		this->orgNode = mdl->SearchNode(this->emTrjOriginNode_S);
+		this->targetNode = mdl->SearchNode(this->emTrjTargetNode_S);
+
+		printf("hCVisFX_Lightning::Init(): Setting org and target node ...\n");
+	}
+
+	if (this->initialized && this->sfx)
+	{
+		this->sfxHnd = zsound->PlaySound3D(this->sfx, this, zSND_SLOT_NONE, NULL);
+
+		printf("hCVisFX_Lightning::Init(): Already initialized but no sfx ...\n");
+	}
+
+	this->initialized = TRUE;
+}
+
+void hCVisFX_Lightning::InvestNext()
+{
+	printf("hCVisFX_Lightning::InvestNext()\n");
+
+	if (this->initialized)
+	{
+		this->oCVisualFX::InvestNext();
+
+		this->phase++;
+
+		if (this->phase == 3) this->phase = 1;
+
+		if (this->light) this->light->SetRange(this->lightRange, TRUE);
+
+		this->investedNext = TRUE;
+		this->showScanner = TRUE;
+	}
+}
+
+void hCVisFX_Lightning::Cast(bool killAfterDone)
+{
+	this->oCVisualFX::Stop(killAfterDone);
+}
+
+void hCVisFX_Lightning::Stop(bool killAfterDone)
+{
+	oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+	for (int i = 0; i < this->burnVobs.numInArray; i++)
+	{
+		oCNpc *burnNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[i]);
+
+		if (orgNpc && burnNpc) burnNpc->AssessStopMagic_S(orgNpc, this->spellType);
+	}
+
+	// GEngine
+	for (int i = 0; i < this->decalVobs.numInArray; i++)
+	{
+		this->decalVobs[i]->RemoveVobFromWorld();
+
+		this->decalVobs[i]->Release();
+	}
+
+	this->decalVobs.DeleteList(); // GEngine
+	this->DeleteScanner(); // GEngine
+
+	this->oCVisualFX::Stop(TRUE); // killAfterDone
 }
 
 void hCVisualFX::InitValues()
@@ -1410,18 +1334,20 @@ bool hCSpell::IsValidTarget(zCVob *v)
 
 		if (this->spellID == SPL_TELEKINESIS)
 		{
-			if (!zCObject::CheckInheritance(&oCItem::classDef, classDef) && !zCObject::CheckInheritance(&oCMOB::classDef, classDef) ||
-				(zCObject::CheckInheritance(&oCMOB::classDef, classDef) && !((oCMOB *)v)->IsMovable())) // do we need to allow MOBs to be moved?
+			if (!zDYNAMIC_CAST<oCItem>(v) && !zDYNAMIC_CAST<oCMOB>(v) ||
+				(zDYNAMIC_CAST<oCMOB>(v) && !((oCMOB *)v)->IsMoveable())) // do we need to allow MOBs to be moved?
 			{
 				this->spellStatus = SPL_STATUS_DONTINVEST;
+
 				return FALSE;
 			}
 		}
 		if (this->spellID == SPL_TELEKINESIS2) // TODO: Check for oCNpc, what is IsMovable()
 		{
-			if (!zCObject::CheckInheritance(&oCNpc::classDef, classDef))
+			if (!zDYNAMIC_CAST<oCNpc>(v))
 			{
 				this->spellStatus = SPL_STATUS_DONTINVEST;
+
 				return FALSE;
 			}
 		}
@@ -1636,7 +1562,7 @@ void PatchSpells(void)
 	InjectHook(0x00489EFD, &hCVisualFX::InitValues); // oCVisualFX::oCVisualFX()
 
 	// Destroy lightning stuff if lightning
-	InjectHook(0x0048A704, &hCVisFX_Lightning::_DeinitValues); // oCVisualFX::~oCVisualFX()
+	InjectHook(0x0048A1F3, &hCVisFX_Lightning::_DeinitValues); // oCVisualFX::`scalar deleting destructor'()
 
 	// Overwrite some virtuals for hCVisFX_Lightning
 	Patch(0x008302C8, &hCVisFX_Lightning::_OnTick); // oCVisualFX::`vftable'
