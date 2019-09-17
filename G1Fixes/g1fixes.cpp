@@ -90,13 +90,9 @@ void hCFXScanner::Run()
 
 bool hCVisFX_Lightning::CheckDeletion()
 {
-	printf("hCVisFX_Lightning::CheckDeletion()\n");
-
 	if (this->shouldDelete)
 	{
 		this->ai->delete_it = TRUE;
-
-		printf("hCVisFX_Lightning::CheckDeletion(): should delete\n");
 
 		return TRUE;
 	}
@@ -128,8 +124,6 @@ bool hCVisFX_Lightning::CheckDeletion()
 
 	if (this->isDeleted)
 	{
-		printf("hCVisFX_Lightning::CheckDeletion(): isDeleted\n");
-
 		if (this->deleteTime == 0.0f)
 		{
 			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
@@ -203,8 +197,6 @@ bool hCVisFX_Lightning::CheckDeletion()
 
 void hCVisFX_Lightning::UpdateBurnVobs()
 {
-	printf("hCVisFX_Lightning::UpdateBurnVobs()\n");
-
 	for (int i = 0; i < this->burnVobs.numInArray; i++)
 	{
 		if (!this->vobList.IsInList(this->burnVobs[i]))
@@ -228,8 +220,6 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 		{
 			int upKey = this->trajectory.VobCross(this->vobList[i]);
 
-			printf("upKey: %d\n", upKey);
-
 			if (upKey != -1)
 			{
 				this->burnVobs.InsertAtPos(this->vobList[i], upKey);
@@ -247,10 +237,322 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 		}
 	}
 
-	printf("numBurnVobs: %d\n", this->burnVobs.numInArray);
-	printf("numBurnNodes: %d\n", this->burnNodes.numInArray);
+	this->trajectory.SetByList(this->burnVobs);
+}
+
+bool hCVisFX_Lightning::UpdateBurnVobsInvestNext()
+{
+	zCVob *nearestVob = NULL;
+
+	if (!this->burnVobs.numInArray)
+	{
+		this->burnVobs.InsertEnd(this->origin);
+		this->burnNodes.InsertEnd(this->orgNode);
+
+		if (this->vobList.numInArray < 2) return FALSE;
+
+		nearestVob = this->vobList[1];
+	}
+	else
+	{
+		float minDist = FLT_MAX;
+		zCVob *orgVob = this->burnVobs[this->burnVobs.numInArray - 1];
+
+		for (int i = 1; i < this->vobList.numInArray; i++)
+		{
+			zCVob *vob = this->vobList[i];
+
+			if (this->burnVobs.IsInList(vob)) continue;
+
+			zVEC3 orgPos = orgVob->GetPositionWorld();
+			zVEC3 targetPos = vob->GetPositionWorld();
+
+			float dist = (targetPos - orgPos).Length2();
+
+			if (minDist <= dist) continue;
+
+			if (this->origin->homeWorld->TraceRayFirstHit(orgPos, targetPos - orgPos, &this->vobList, zTRACERAY_STAT_POLY)) continue;
+
+			nearestVob = vob;
+			minDist = dist;
+		}
+	}
+
+	if (!nearestVob) return FALSE;
+
+	this->burnVobs.InsertEnd(nearestVob);
+
+	zCModel *mdl = zDYNAMIC_CAST<zCModel>(nearestVob->visual);
+
+	if (mdl && !this->emTrjTargetNode_S.IsEmpty()) this->burnNodes.InsertEnd(mdl->SearchNode(this->emTrjTargetNode_S));
+	else this->burnNodes.InsertEnd(NULL);
 
 	this->trajectory.SetByList(this->burnVobs);
+
+	return TRUE;
+
+#if 0
+	zCVob *nearestVob = NULL;
+	bool firstBurnVob = FALSE;
+	zCVob *last = NULL;
+	float minDist = FLT_MAX;
+
+	if (this->burnVobs.numInArray)
+	{
+		last = this->burnVobs[this->burnVobs.numInArray - 1];
+	}
+	else
+	{
+		this->burnVobs.InsertEnd(this->origin);
+		this->burnNodes.InsertEnd(this->orgNode);
+
+		if (this->vobList.numInArray >= 2) nearestVob = this->vobList[1];
+
+		last = this->origin;
+		firstBurnVob = TRUE;
+	}
+
+	if (!firstBurnVob)
+	{
+		float dist;
+
+		for (int i = 1; i < this->vobList.numInArray; i++)
+		{
+			if (this->burnVobs.IsInList(this->vobList[i]))
+			{
+				dist = (last->GetPositionWorld() - this->vobList[i]->GetPositionWorld()).Length2();
+
+				if (dist < minDist)
+				{
+					if (!this->origin->homeWorld->TraceRayFirstHit(last->GetPositionWorld(), last->GetPositionWorld() - this->vobList[i]->GetPositionWorld(), &this->vobList, zTRACERAY_STAT_POLY))
+					{
+						nearestVob = this->vobList[i];
+						minDist = dist;
+					}
+				}
+			}
+		}
+	}
+
+	if (nearestVob)
+	{
+		this->burnVobs.InsertEnd(nearestVob);
+
+		zCModelNodeInst *ins = NULL;
+		zCModel *mdl = zDYNAMIC_CAST<zCModel>(nearestVob->visual);
+
+		if (mdl && !this->emTrjTargetNode_S.IsEmpty())
+		{
+			ins = mdl->SearchNode(this->emTrjTargetNode_S);
+		}
+
+		this->burnNodes.InsertEnd(ins);
+
+		this->trajectory.SetByList(this->burnVobs);
+
+		return TRUE;
+	}
+
+	return FALSE;
+#endif
+}
+
+void hCVisFX_Lightning::Draw()
+{
+#if 1
+	if (this->burnVobs.numInArray - 1 > this->decalVobs.numInArray)
+	{
+		for (int i = this->burnVobs.numInArray - 1 - this->decalVobs.numInArray; i > 0; i--)
+		{
+			zCVob *decalVob = zCVob::_CreateNewInstance();
+
+			decalVob->SetVobName(this->fxName + "decal Vob");
+			decalVob->SetSleeping(FALSE);
+			decalVob->SetPhysicsEnabled(FALSE);
+			decalVob->SetAI(NULL);
+			decalVob->SetVisual(this->visName_S);
+			decalVob->dontWriteIntoArchive = TRUE;
+			decalVob->visualCamAlign = zVISUAL_CAMALIGN_NONE;
+
+			zCDecal *dc = zSTATIC_CAST<zCDecal>(decalVob->visual);
+
+			if (dc)
+			{
+				dc->SetDecalDim(this->visSize[0], this->visSize[1]);
+				dc->decal2Sided = TRUE;
+				dc->decalMaterial->rndAlphaBlendFunc = zrenderer->AlphaBlendFuncStringToType(this->visAlphaBlendFunc_S);
+				dc->decalMaterial->color = zCOLOR(255, 255, 255, (byte)(this->visAlpha * 255.0f));
+				dc->decalMaterial->texAniCtrl.aniFPS = this->visTexAniFPS / 1000.0f;
+				dc->decalMaterial->texAniCtrl.bOneShotAni = !this->visTexAniIsLooping;
+			}
+
+			this->origin->homeWorld->AddVob(decalVob);
+
+			this->decalVobs.InsertEnd(decalVob);
+		}
+	}
+	else if ((this->decalVobs.numInArray > 0) && (this->decalVobs.numInArray > this->burnVobs.numInArray - 1))
+	{
+		for (int i = this->decalVobs.numInArray - this->burnVobs.numInArray - 1; i > 0; i--)
+		{
+			zCVob *decalVob = this->decalVobs[this->decalVobs.numInArray - 1];
+			this->decalVobs.RemoveIndex(this->decalVobs.numInArray - 1);
+
+			decalVob->RemoveVobFromWorld();
+
+			if (decalVob)
+			{
+				decalVob->Release();
+
+				decalVob = NULL;
+			}
+		}
+	}
+
+	for (int i = 0; i < this->decalVobs.numInArray; i++)
+	{
+		zVEC3 vp1, vp2;
+
+		if (this->burnNodes[i + 1]) vp2 = this->burnVobs[i + 1]->GetTrafoModelNodeToWorld(this->burnNodes[i]).GetTranslation();
+		else vp2 = this->burnVobs[i + 1]->GetPositionWorld();
+
+		if (this->burnNodes[i]) vp1 = this->burnVobs[i]->GetTrafoModelNodeToWorld(this->burnNodes[i]).GetTranslation();
+		else vp1 = this->burnVobs[i]->GetPositionWorld();
+
+		zVEC3 vd = (vp2 - vp1) * 0.5f;
+		zVEC3 vpos = vp1 + vd;
+		zVEC3 vright = (-vd).Normalize();
+		zVEC3 vup = ((zCCamera::activeCam->connectedVob->GetPositionWorld() - vpos) ^ vright).Normalize();
+		zVEC3 vat = (vup ^ vright).Normalize();
+
+		zMAT4 m = Alg_Identity3D();
+		m.SetTranslation(vpos);
+		m.SetAtVector(vat);
+		m.SetRightVector(vright);
+		m.SetUpVector(vup);
+
+		zCVob *decalVob = this->decalVobs[i];
+
+		zCDecal *dc = zSTATIC_CAST<zCDecal>(decalVob->visual);
+
+		if (dc)
+		{
+			dc->SetDecalDim(vd.Length() * 0.5f, vd.Length() * 0.2f);
+		}
+
+		decalVob->visualCamAlign = zVISUAL_CAMALIGN_NONE;
+		decalVob->UpdateVisualDependencies();
+		decalVob->SetTrafo(m);
+	}
+#else
+	if (this->burnVobs.numInArray - 1 <= this->decalVobs.numInArray)
+	{
+		if (this->decalVobs.numInArray > 0 && this->decalVobs.numInArray >= this->burnVobs.numInArray)
+		{
+			int numDecRemove = this->decalVobs.numInArray - this->burnVobs.numInArray;
+
+			for (int j = 0; j < numDecRemove; j++)
+			{
+				zCVob *delVob = this->decalVobs[this->decalVobs.numInArray - 1];
+
+				this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
+
+				delVob->RemoveVobFromWorld();
+
+				if (delVob)
+				{
+					delVob->Release();
+
+					delVob = NULL;
+				}
+			}
+		}
+	}
+	else
+	{
+		int numDecals = this->burnVobs.numInArray - this->decalVobs.numInArray - 1;
+
+		for (int k = 0; k < numDecals; k++)
+		{
+			zCVob *decalVob = zCVob::_CreateNewInstance();
+
+			decalVob->SetVobName(this->fxName + " decal Vob");
+			decalVob->SetSleeping(FALSE);
+			decalVob->SetPhysicsEnabled(FALSE);
+			decalVob->SetAI(NULL);
+			decalVob->dontWriteIntoArchive = TRUE;
+			decalVob->SetVisual(this->visName_S);
+			decalVob->visualCamAlign = zVISUAL_CAMALIGN_NONE;
+
+			zCDecal *dc = (zCDecal *)decalVob->visual;
+
+			if (dc)
+			{
+				dc->SetDecalDim(this->visSize[0], this->visSize[1]);
+				dc->decal2Sided = TRUE;
+				dc->decalMaterial->rndAlphaBlendFunc = zrenderer->AlphaBlendFuncStringToType(this->visAlphaBlendFunc_S);
+				dc->decalMaterial->color = zCOLOR(255, 255, 255, (byte)(this->visAlpha * 255.0f));
+				dc->decalMaterial->texAniCtrl.aniFPS = this->visTexAniFPS / 1000.0f;
+				dc->decalMaterial->texAniCtrl.bOneShotAni = !this->visTexAniIsLooping;
+			}
+
+			this->origin->homeWorld->AddVob(decalVob);
+
+			this->decalVobs.InsertEnd(decalVob);
+		}
+	}
+
+	for (int i = 0; i < this->decalVobs.numInArray; i++)
+	{
+		zVEC3 lastPos, thisPos;
+
+		if (this->burnNodes[i + 1])
+		{
+			thisPos = this->burnVobs[i + 1]->GetTrafoModelNodeToWorld(this->burnNodes[i]).GetTranslation();
+		}
+		else
+		{
+			thisPos = this->burnVobs[i + 1]->GetPositionWorld();
+		}
+
+		if (this->burnNodes[i])
+		{
+			lastPos = this->burnVobs[i]->GetTrafoModelNodeToWorld(this->burnNodes[i]).GetTranslation();
+		}
+		else
+		{
+			lastPos = this->burnVobs[i]->GetPositionWorld();
+		}
+
+		zVEC3 head, newPos, right, at, up;
+		zMAT4 trafo;
+
+		head = thisPos - lastPos;
+		newPos = lastPos + (head * 0.5f);
+
+		right = (-head).Normalize();
+
+		up = (right ^ (zCCamera::activeCam->connectedVob->GetPositionWorld() - newPos)).Normalize();
+		at = (up ^ right).Normalize();
+
+		trafo = Alg_Identity3D();
+		trafo.SetTranslation(newPos);
+		trafo.SetAtVector(at);
+		trafo.SetRightVector(right);
+		trafo.SetUpVector(up);
+
+		zCDecal *dc = (zCDecal *)this->decalVobs[i];
+
+		if (dc)
+		{
+			dc->SetDecalDim(head.Length() * 0.5f, head.Length() * 0.2f);
+		}
+
+		this->decalVobs[i]->visualCamAlign = zVISUAL_CAMALIGN_NONE;
+		this->decalVobs[i]->UpdateVisualDependencies();
+		this->decalVobs[i]->SetTrafo(trafo);
+	}
+#endif
 }
 
 void hCVisFX_Lightning::CreateScanner(zCVob *orgVob)
@@ -299,10 +601,310 @@ void hCVisFX_Lightning::CreateScanner(zCVob *orgVob)
 	}
 }
 
+void hCVisFX_Lightning::OnTick()
+{
+#if 1
+	if (!this->initialized) return;
+
+	this->showVisual = FALSE;
+
+	this->frameTime = ztimer.frameTimeFloat / 1000.0f;
+
+	if (this->CheckDeletion() || !this->origin || (this->vobList.numInArray <= 1)) return;
+
+	this->BeginMovement();
+	this->UpdateBurnVobs();
+
+	if (this->investedNext)
+	{
+		this->investedNext = FALSE;
+
+		if (this->phase == 1)
+		{
+			if (this->castOnSelf)
+			{
+				this->burnVobs.RemoveIndex(this->burnVobs.numInArray - 1);
+				this->burnNodes.RemoveIndex(this->burnNodes.numInArray - 1);
+
+				this->trajectory.SetByList(this->burnVobs);
+
+				this->castOnSelf = FALSE;
+			}
+
+			this->DeleteScanner();
+
+			if (this->vobList.numInArray < 2)
+			{
+				oCVisualFX *fx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+
+				if (fx) this->electricFX.InsertEnd(fx);
+
+				this->EndMovement();
+
+				this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
+
+				this->BeginMovement();
+			}
+			else if (!this->UpdateBurnVobsInvestNext())
+			{
+				this->EndMovement();
+
+				oCVisualFX *fx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+
+				if (fx) this->electricFX.InsertEnd(fx);
+
+				this->burnVobs.InsertEnd(this->vobList[0]);
+				this->burnNodes.InsertEnd(this->targetNode);
+
+				this->trajectory.SetByList(this->burnVobs);
+
+				this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
+
+				this->BeginMovement();
+
+				this->castOnSelf = TRUE;
+				this->investedNext = TRUE;
+			}
+
+			this->EndMovement();
+
+			zCVob *vob = this->burnVobs[this->burnVobs.numInArray - (this->castOnSelf ? 2 : 1)];
+
+			vob->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, vob->GetPositionWorld());
+
+			oCVisualFX *fx = this->CreateAndCastFX("FX_ELECTRIC", vob, this->origin);
+
+			oCNpc *npc = zDYNAMIC_CAST<oCNpc>(vob);
+			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+			if (npc && orgNpc) npc->AssessMagic_S(orgNpc, this->spellType);
+
+			this->BeginMovement();
+
+			if (fx) this->electricFX.InsertEnd(fx);
+		}
+	}
+
+	if (this->phase == 2)
+	{
+		if (this->castOnSelf)
+		{
+			oCNpc *npc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[this->burnVobs.numInArray - 1]);
+
+			this->burnVobs.RemoveIndex(this->burnVobs.numInArray - 1);
+			this->burnNodes.RemoveIndex(this->burnNodes.numInArray - 1);
+
+			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+			if (npc && orgNpc) npc->AssessStopMagic_S(orgNpc, this->spellType);
+
+			if (this->decalVobs[this->decalVobs.numInArray - 1])
+			{
+				this->decalVobs[this->decalVobs.numInArray - 1]->Release();
+
+				this->decalVobs[this->decalVobs.numInArray - 1] = NULL;
+			}
+
+			this->decalVobs.RemoveIndex(this->decalVobs.numInArray - 1);
+
+			if (this->decalVobs[this->decalVobs.numInArray - 1])
+			{
+				this->decalVobs[this->decalVobs.numInArray - 1]->Release();
+
+				this->decalVobs[this->decalVobs.numInArray - 1] = NULL;
+			}
+
+			this->decalVobs.RemoveIndex(this->decalVobs.numInArray - 1);
+
+			this->trajectory.SetByList(this->burnVobs);
+
+			this->castOnSelf = FALSE;
+		}
+
+		if (this->investedNext)
+		{
+			this->investedNext = FALSE;
+
+			this->CreateScanner(this->burnVobs[this->burnVobs.numInArray - (this->castOnSelf ? 2 : 1)]);
+		}
+
+		this->UpdateScanner();
+	}
+
+	this->unknown = 0;
+
+	this->Draw();
+
+	this->EndMovement();
+#else
+	if (this->initialized)
+	{
+		bool playerPain;
+
+		this->showVisual = FALSE;
+
+		this->frameTime = ztimer.frameTimeFloat;
+
+		if (!this->CheckDeletion() && this->origin && this->vobList.numInArray > 1)
+		{
+			this->BeginMovement();
+			this->UpdateBurnVobs();
+
+			if (this->investedNext)
+			{
+				this->investedNext = FALSE;
+				playerPain = FALSE;
+
+				if (this->phase == 1)
+				{
+					if (this->castOnSelf)
+					{
+						this->burnVobs.RemoveOrderIndex(this->burnVobs.numInArray - 1);
+						this->burnNodes.RemoveOrderIndex(this->burnNodes.numInArray - 1);
+
+						this->trajectory.SetByList(this->burnVobs);
+
+						this->castOnSelf = FALSE;
+					}
+
+					this->DeleteScanner();
+
+					if (this->vobList.numInArray >= 2)
+					{
+						if (!this->UpdateBurnVobsInvestNext())
+						{
+							this->EndMovement(); // TODO possibly FALSE
+
+							oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+
+							if (newFx)
+							{
+								this->electricFX.InsertEnd(newFx);
+
+								newFx->AddRef();
+							}
+
+							this->burnVobs.InsertEnd(this->vobList[0]);
+							this->burnNodes.InsertEnd(this->targetNode);
+
+							this->trajectory.SetByList(this->burnVobs);
+
+							this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
+						}
+					}
+					else
+					{
+						oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+
+						if (newFx)
+						{
+							this->electricFX.InsertEnd(newFx);
+
+							newFx->AddRef();
+						}
+
+						this->EndMovement(); // TODO possibly FALSE
+						this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
+						this->BeginMovement();
+						playerPain = TRUE;
+					}
+
+					int lastVob;
+
+					if (this->castOnSelf) lastVob = this->burnVobs.numInArray - 2;
+					else lastVob = this->burnVobs.numInArray - 1;
+
+					this->EndMovement(); // TODO possibly FALSE
+
+					this->burnVobs[lastVob]->OnDamage(this, this->origin, this->damage, this->damageType, this->burnVobs[lastVob]->GetPositionWorld());
+
+					oCVisualFX *newFx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+
+					oCNpc *targetNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[lastVob]);
+					oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+					if (targetNpc && orgNpc)
+					{
+						targetNpc->AssessMagic_S(orgNpc, this->spellType);
+					}
+
+					this->BeginMovement();
+
+					if (newFx)
+					{
+						this->electricFX.InsertEnd(newFx);
+
+						newFx->AddRef();
+					}
+				}
+			}
+
+			if (this->phase == 2)
+			{
+				if (this->castOnSelf)
+				{
+					oCNpc *targetNpc = zDYNAMIC_CAST<oCNpc>(this->burnVobs[this->burnVobs.numInArray - 1]);
+					oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
+
+					this->burnVobs.RemoveOrderIndex(this->burnVobs.numInArray - 1);
+					this->burnNodes.RemoveOrderIndex(this->burnNodes.numInArray - 1);
+
+					if (targetNpc && orgNpc)
+					{
+						targetNpc->AssessStopMagic_S(orgNpc, this->spellType);
+					}
+
+					zCVob *delVob = this->decalVobs[this->decalVobs.numInArray - 1];
+
+					this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
+
+					if (delVob)
+					{
+						delVob->Release();
+
+						delVob = NULL;
+					}
+
+					delVob = this->decalVobs[this->decalVobs.numInArray - 1];
+
+					this->decalVobs.RemoveOrderIndex(this->decalVobs.numInArray - 1);
+
+					if (delVob)
+					{
+						delVob->Release();
+
+						delVob = NULL;
+					}
+
+					this->trajectory.SetByList(this->burnVobs);
+
+					this->castOnSelf = FALSE;
+				}
+
+				if (this->showScanner)
+				{
+					this->showScanner = FALSE;
+
+					zCVob *last;
+
+					if (this->castOnSelf) last = this->burnVobs[this->burnVobs.numInArray - 2];
+					else last = this->burnVobs[this->burnVobs.numInArray - 1];
+
+					this->CreateScanner(last);
+				}
+
+				this->UpdateScanner();
+			}
+
+			this->Draw();
+			this->EndMovement(); // TODO possibly FALSE
+		}
+	}
+#endif
+}
+
 void hCVisFX_Lightning::Open()
 {
-	printf("hCVisFX_Lightning::Open()\n");
-
 	this->oCVisualFX::Open();
 
 	if (this->light)
@@ -315,8 +917,6 @@ void hCVisFX_Lightning::Open()
 
 void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 {
-	printf("hCVisFX_Lightning::Init()\n");
-
 	if (this->origin)
 	{
 		this->SetOrigin(NULL);
@@ -340,8 +940,6 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 
 	this->vobList = trajectoryVobs;
 
-	printf("hCVisFX_Lightning::Init(): %d trjVobs\n", this->vobList.numInArray);
-
 	for (int nr = 1; nr < this->vobList.numInArray; nr++)
 	{
 		if (showTarget && nr == 1) this->vobList[1]->drawBBox3D = TRUE;
@@ -355,15 +953,11 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 	{
 		this->orgNode = mdl->SearchNode(this->emTrjOriginNode_S);
 		this->targetNode = mdl->SearchNode(this->emTrjTargetNode_S);
-
-		printf("hCVisFX_Lightning::Init(): Setting org and target node ...\n");
 	}
 
 	if (this->initialized && this->sfx)
 	{
 		this->sfxHnd = zsound->PlaySound3D(this->sfx, this, zSND_SLOT_NONE, NULL);
-
-		printf("hCVisFX_Lightning::Init(): Already initialized but no sfx ...\n");
 	}
 
 	this->initialized = TRUE;
@@ -371,8 +965,6 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 
 void hCVisFX_Lightning::InvestNext()
 {
-	printf("hCVisFX_Lightning::InvestNext()\n");
-
 	if (this->initialized)
 	{
 		this->oCVisualFX::InvestNext();
@@ -425,11 +1017,12 @@ void PatchGothic(void)
 		InjectHook(0x0049557A, &hCFXScanner::Initialized); // oCVisFX_Lightning::OnTick()
 		InjectHook(0x00495585, &hCFXScanner::Disable); // oCVisFX_Lightning::OnTick()
 		InjectHook(0x00495CFC, &hCFXScanner::Run); // oCVisFX_Lightning::OnTick()
-		InjectHook(0x00496E80, &hCFXScanner::Run); // oCVisFX_Lightning::UpdateScanner()
 
 		InjectHook(0x00495CE7, &hCVisFX_Lightning::CreateScanner); // oCVisFX_Lightning::OnTick()
 		InjectHook(0x004953C5, &hCVisFX_Lightning::CheckDeletion); // oCVisFX_Lightning::OnTick()
 		InjectHook(0x004953F8, &hCVisFX_Lightning::UpdateBurnVobs); // oCVisFX_Lightning::OnTick()
+		InjectHook(0x004956E8, &hCVisFX_Lightning::UpdateBurnVobsInvestNext); // oCVisFX_Lightning::OnTick()
+		InjectHook(0x00495D09, &hCVisFX_Lightning::Draw); // oCVisFX_Lightning::OnTick()
 
 		Patch(0x007D2378, &hCVisFX_Lightning::_OnTick); // oCVisFX_Lightning::`vftable'
 		Patch(0x007D23BC, &hCVisFX_Lightning::_Open); // oCVisFX_Lightning::`vftable'

@@ -8,6 +8,7 @@ void PatchGothic107(void)
 {
 	PatchJump(0x0044A6F7, 0x0044A70C); // SendMessageA
 }
+
 void PatchGothic108k(void)
 {
 	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE))
@@ -45,7 +46,7 @@ void PatchSpacer150(void)
 		Patch(0x0079E4E0, (BYTE)0xEB);
 	}
 
-	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE))
+	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE) || TRUE)
 	{
 		// Ignore skyEffects setting in oCSkyControler_Barrier::RenderSkyPre()
 		Nop(0x0065B932, 6);

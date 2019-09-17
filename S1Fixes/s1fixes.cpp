@@ -30,8 +30,8 @@ void hCWorld::Unarchive(zCArchiver &arc)
 
 void PatchSpacer(void)
 {
-	// InjectHook(0x004CB600, &hMesh::LoadMSH);
-	// InjectHook(0x007073A2, &hWorld::Unarchive);
+	// InjectHook(0x004CB600, &hCMesh::LoadMSH);
+	// InjectHook(0x007073A2, &hCWorld::Unarchive);
 }
 
 void Init(void)

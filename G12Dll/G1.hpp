@@ -930,17 +930,20 @@ public:
 	static zCCollisionObjectDef &s_oCollObjClass;
 };
 
-enum zTVobCharClass
-{
-	zVOB_CHAR_CLASS_NONE,
-	zVOB_CHAR_CLASS_PC,
-	zVOB_CHAR_CLASS_NPC
-};
-
-enum zTMovementMode { };
-
 class zCVob : public zCObject
 {
+public:
+	enum zTDynShadowType { };
+
+	enum zTMovementMode { };
+
+	enum zTVobCharClass
+	{
+		zVOB_CHAR_CLASS_NONE,
+		zVOB_CHAR_CLASS_PC,
+		zVOB_CHAR_CLASS_NPC
+	};
+
 public:
 	zCTree<zCVob> *globalVobTreeNode;
 	int lastTimeDrawn;
@@ -981,20 +984,19 @@ public:
 	byte ignoredByTraceRay : 1;
 	byte collDetectionStatic : 1;
 	byte collDetectionDynamic : 1;
-
-	byte castDynShadow : 2;
+	byte castDynShadow : 2; // zTDynShadowType
 	byte lightColorStatDirty : 1;
 	byte lightColorDynDirty : 1;
 
 	zTMovementMode isInMovementMode : 2;
-	zTVobSleepingMode sleepingMode : 2;
 
+	zTVobSleepingMode sleepingMode : 2;
 	byte mbHintTrafoLocalConst : 1;
 	byte mbInsideEndMovementMethod : 1;
+
 	zTVisualCamAlign visualCamAlign : 2;
 
-	byte collButNoMove : 4;
-
+	byte collButNoMove : 8;
 	byte dontWriteIntoArchive : 1;
 
 	zCCollisionObjectDef *m_poCollisionObjectClass;

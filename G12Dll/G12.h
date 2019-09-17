@@ -65,7 +65,7 @@ void G12Log(const char *format, ...)
 	{
 		fprintf(out, "%s.dll: ", G12DLL_NAME);
 		vfprintf(out, format, args);
-		fflush(out);
+		_fflush_nolock(out);
 	}
 
 	va_end(args);

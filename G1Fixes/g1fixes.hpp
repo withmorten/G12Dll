@@ -31,7 +31,7 @@ public:
 	hCFXScanner scanner;
 
 public:
-	virtual void OnTick() { XCALL(0x00495370); }
+	virtual void OnTick(); // { XCALL(0x00495370); }
 	virtual void Open(); // { XCALL(0x004949B0); }
 	virtual void Init(zCArray<zCVob *> &trajectoryVobs); // { XCALL(0x004949E0); }
 	virtual void InvestNext(); // { XCALL(0x00494BC0); }
