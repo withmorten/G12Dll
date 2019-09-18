@@ -160,7 +160,7 @@ void Init(void)
 		G12AllocConsole();
 		PatchGothic107();
 	}
-	else if (GOTHIC108KM)
+	else if (GOTHIC108KMOD)
 	{
 		G12AllocConsole();
 		PatchGothic108k();
@@ -170,12 +170,12 @@ void Init(void)
 		G12AllocConsole();
 		PatchSpacer150();
 	}
-	else if (GOTHIC26)
+	else if (GOTHIC26FIX)
 	{
 		G12AllocConsole();
 		PatchGothic26();
 	}
-	else if (SPACER26)
+	else if (SPACER26MOD)
 	{
 		G12AllocConsole();
 		PatchSpacer26();

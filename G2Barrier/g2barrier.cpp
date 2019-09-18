@@ -1017,7 +1017,7 @@ void PatchGothic2(void)
 
 void Init(void)
 {
-	if (GOTHIC26)
+	if (GOTHIC26FIX)
 	{
 		G12AllocConsole();
 		PatchGothic2();

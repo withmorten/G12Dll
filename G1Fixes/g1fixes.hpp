@@ -9,7 +9,7 @@ public:
 	void Run();
 };
 
-class hCVisFX_Lightning : public oCVisualFX // : public oCVisFX_Lightning
+class hCVisFX_Lightning : public oCVisualFX
 {
 public:
 	int phase;
@@ -19,7 +19,7 @@ public:
 	bool investedNext;
 	bool castOnSelf;
 
-	int unknown;
+	int unknown; // this value is unused and its name unknown
 
 	zCModelNodeInst *targetNode;
 

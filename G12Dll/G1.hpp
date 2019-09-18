@@ -3092,6 +3092,11 @@ public:
 	zCArray<oCVisualFX *> electricFX;
 
 	oCFXScanner scanner;
+
+public:
+	void Draw() { XCALL(0x004960E0); }
+	void UpdateBurnVobs() { XCALL(0x00495D50); }
+	bool UpdateBurnVobsInvestNext() { XCALL(0x00496800); }
 };
 
 class zCTimer

@@ -7,19 +7,35 @@ typedef unsigned int dword;
 // first 4 bytes of each version (with debug info)
 #define BASE_ADDR (0x00401000)
 
-#define GOTHIC101E		(*(unsigned int *)BASE_ADDR == 0x7F36E4A1) // Gothic.exe  1.01e_christmas_edition
-#define GOTHIC104D		(*(unsigned int *)BASE_ADDR == 0x7D76B4A1) // Gothic.exe  1.04d
-#define GOTHIC107C		(*(unsigned int *)BASE_ADDR == 0x7F06D4A1) // Gothic.exe  1.07c
-#define GOTHIC108J		(*(unsigned int *)BASE_ADDR == 0x7F66D4A1) // Gothic.exe  1.08j
-#define GOTHIC108K		(*(unsigned int *)BASE_ADDR == 0x7F56E4A1) // Gothic.exe  1.08k
-#define GOTHIC108KM		(*(unsigned int *)BASE_ADDR == 0xE0EC05C7) // Gothic.exe  1.08k_mod
-#define GOTHIC112F		(*(unsigned int *)BASE_ADDR == 0x8136D4A1) // Gothic.exe  1.12f
-#define GOTHIC130		(*(unsigned int *)BASE_ADDR == 0x385C05C7) // Gothic2.exe 1.30
-#define GOTHIC26		(*(unsigned int *)BASE_ADDR == 0x1E1405C7) // Gothic2.exe 2.6
-#define SPACER141		(*(unsigned int *)BASE_ADDR == 0x8C3064A1) // Spacer.exe  1.41
-#define SPACER142G		(*(unsigned int *)BASE_ADDR == 0x8DB064A1) // Spacer.exe  1.42g
-#define SPACER150		(*(unsigned int *)BASE_ADDR == 0x8C4064A1) // Spacer.exe  1.50
-#define SPACER26		(*(unsigned int *)BASE_ADDR == 0xF6E805C7) // Spacer2.exe 2.6
+#define GOTHIC101D_VER		"1.01d_christmas_edition"
+#define GOTHIC101E_VER		"1.01e_christmas_edition"
+#define GOTHIC104D_VER		"1.04d"
+#define GOTHIC107C_VER		"1.07c"
+#define GOTHIC108J_VER		"1.08j"
+#define GOTHIC108K_VER		"1.08k"
+#define GOTHIC108KMOD_VER	"1.08k_mod"
+#define GOTHIC112F_VER		"1.12f"
+#define GOTHIC130FIX_VER	"1.30 (fix)"
+#define GOTHIC26FIX_VER		"2.6 (fix)"
+#define SPACER141_VER		"1.41"
+#define SPACER142G_VER		"1.42g"
+#define SPACER150_VER		"1.5"
+#define SPACER26MOD_VER		"2.6 (mod)"
+
+#define GOTHIC101D		(!memcmp((void *)0x008C36D8, GOTHIC101D_VER, sizeof(GOTHIC101D_VER)))			// Gothic.exe  1.01d_christmas_edition
+#define GOTHIC101E		(!memcmp((void *)0x00856014, GOTHIC101E_VER, sizeof(GOTHIC101E_VER)))			// Gothic.exe  1.01e_christmas_edition
+#define GOTHIC104D		(!memcmp((void *)0x0083ED94, GOTHIC104D_VER, sizeof(GOTHIC104D_VER)))			// Gothic.exe  1.04d
+#define GOTHIC107C		(!memcmp((void *)0x0085A2CC, GOTHIC107C_VER, sizeof(GOTHIC107C_VER)))			// Gothic.exe  1.07c
+#define GOTHIC108J		(!memcmp((void *)0x0086088C, GOTHIC108J_VER, sizeof(GOTHIC108J_VER)))			// Gothic.exe  1.08j
+#define GOTHIC108K		(!memcmp((void *)0x0086088C, GOTHIC108K_VER, sizeof(GOTHIC108K_VER)))			// Gothic.exe  1.08k
+#define GOTHIC108KMOD	(!memcmp((void *)0x00839D18, GOTHIC108KMOD_VER, sizeof(GOTHIC108KMOD_VER)))		// Gothic.exe  1.08k_mod
+#define GOTHIC112F		(!memcmp((void *)0x0087F910, GOTHIC112F_VER, sizeof(GOTHIC112F_VER)))			// Gothic.exe  1.12f
+#define GOTHIC130FIX	(!memcmp((void *)0x0088F84C, GOTHIC130FIX_VER, sizeof(GOTHIC130FIX_VER)))		// Gothic2.exe 1.30 (fix)
+#define GOTHIC26FIX		(!memcmp((void *)0x0089DA98, GOTHIC26FIX_VER, sizeof(GOTHIC26FIX_VER)))			// Gothic2.exe 2.6 (fix)
+#define SPACER141		(!memcmp((void *)0x00945870, SPACER141_VER, sizeof(SPACER141_VER)))				// Spacer.exe  1.41
+#define SPACER142G		(!memcmp((void *)0x0095D83C, SPACER142G_VER, sizeof(SPACER142G_VER)))			// Spacer.exe  1.42g
+#define SPACER150		(!memcmp((void *)0x00946880, SPACER150_VER, sizeof(SPACER150_VER)))				// Spacer.exe  1.50
+#define SPACER26MOD		(!memcmp((void *)0x00966990, SPACER26MOD_VER, sizeof(SPACER26MOD_VER)))			// Spacer2.exe 2.6 (mod)
 
 // file offset to image offset
 #define _fo(file_addr) (file_addr + BASE_ADDR)

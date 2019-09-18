@@ -74,7 +74,7 @@ public:
 
 	void _SetCollisionEnabled(bool en) { hCVisualFX::SetCollisionEnabled(en); }
 
-	void Dtor() { XCALL(0x0048A260); }
+	void _DeinitValues() { XCALL(0x0048A260); }
 
 	void InitValues();
 };
@@ -90,8 +90,9 @@ public:
 	zCVob *scannerVobs[NUM_SCANNER_VOBS];
 
 public:
-	hCFXScanner();
-	~hCFXScanner();
+	// fake constructor and destructor to initialise and deinitialise our values
+	void InitValues();
+	void DeinitValues();
 
 	bool Initialized();
 	void SetAlpha(byte a) { this->alpha = a; }
@@ -106,17 +107,21 @@ class hCVisFX_Lightning : public hCVisualFX
 public:
 	int phase;
 	float lightRange;
+
 	bool showScanner;
 	bool investedNext;
 	bool castOnSelf;
+
 	zCModelNodeInst *targetNode;
+
+	// int unknown; // this value is unused and its name unknown
 
 	zCArray<zCVob *> burnVobs;
 	zCArray<zCModelNodeInst *> burnNodes;
 	zCArray<zCVob *> decalVobs;
 	zCArray<oCVisualFX *> electricFX;
 
-	hCFXScanner *scanner;
+	hCFXScanner scanner;
 
 public:
 	static hCVisFX_Lightning *_CreateNewInstance();
@@ -125,7 +130,7 @@ public:
 	void InitValues();
 	void DeinitValues();
 
-	void _DeinitValues() { if (dScriptEnd) this->DeinitValues(); this->Dtor(); }
+	void _DeinitValues() { if (dScriptEnd) this->DeinitValues(); else this->hCVisualFX::_DeinitValues(); }
 
 	virtual void OnTick();
 	virtual void Open();
@@ -147,6 +152,6 @@ public:
 	bool UpdateBurnVobsInvestNext();
 	void Draw();
 	void CreateScanner(zCVob *orgVob);
-	void UpdateScanner() { if (this->scanner->Enabled()) this->scanner->Run(); }
-	void DeleteScanner() { if (this->scanner->Initialized()) this->scanner->Disable(); }
+	void UpdateScanner() { if (this->scanner.Enabled()) this->scanner.Run(); }
+	void DeleteScanner() { if (this->scanner.Initialized()) this->scanner.Disable(); }
 };
