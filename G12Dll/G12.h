@@ -34,7 +34,7 @@ typedef unsigned int dword;
 #define GOTHIC26FIX		(!memcmp((void *)0x0089DA98, GOTHIC26FIX_VER, sizeof(GOTHIC26FIX_VER)))			// Gothic2.exe 2.6 (fix)
 #define SPACER141		(!memcmp((void *)0x00945870, SPACER141_VER, sizeof(SPACER141_VER)))				// Spacer.exe  1.41
 #define SPACER142G		(!memcmp((void *)0x0095D83C, SPACER142G_VER, sizeof(SPACER142G_VER)))			// Spacer.exe  1.42g
-#define SPACER150		(!memcmp((void *)0x00946880, SPACER150_VER, sizeof(SPACER150_VER)))				// Spacer.exe  1.50
+#define SPACER150		(!memcmp((void *)0x00946880, SPACER150_VER, sizeof(SPACER150_VER)))				// Spacer.exe  1.5
 #define SPACER26MOD		(!memcmp((void *)0x00966990, SPACER26MOD_VER, sizeof(SPACER26MOD_VER)))			// Spacer2.exe 2.6 (mod)
 
 // file offset to image offset

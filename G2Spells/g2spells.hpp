@@ -74,7 +74,7 @@ public:
 
 	void _SetCollisionEnabled(bool en) { hCVisualFX::SetCollisionEnabled(en); }
 
-	void _DeinitValues() { XCALL(0x0048A260); }
+	void Destructor() { XCALL(0x0048A260); }
 
 	void InitValues();
 };
@@ -127,10 +127,8 @@ public:
 	static hCVisFX_Lightning *_CreateNewInstance();
 
 	// fake constructor and destructor to initialise and deinitialise our values
-	void InitValues();
-	void DeinitValues();
-
-	void _DeinitValues() { if (dScriptEnd) this->DeinitValues(); else this->hCVisualFX::_DeinitValues(); }
+	void Constructor();
+	void Destructor();
 
 	virtual void OnTick();
 	virtual void Open();

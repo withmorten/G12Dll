@@ -3164,6 +3164,7 @@ public:
 
 	void InitValues() { XCALL(0x0048B820); }
 	oCVisualFX *CreateAndCastFX(const zSTRING &id, zCVob *org, zCVob *inflictor) { XCALL(0x0048EE80); }
+	void StopInvestFX() { XCALL(0x00491830); }
 };
 
 class oCVisFX_MultiTarget : public oCVisualFX

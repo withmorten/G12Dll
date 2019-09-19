@@ -588,6 +588,11 @@ void hCVisFX_Lightning::Open()
 
 void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 {
+	for (int i = 0; i < trajectoryVobs.numInArray; i++)
+	{
+		printf("%d: %s\n", i, trajectoryVobs[i]->objectName.ToChar());
+	}
+
 	if (this->origin)
 	{
 		this->SetOrigin(NULL);

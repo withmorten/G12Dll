@@ -54,7 +54,7 @@ void hCFXScanner::Enable(zCVob *orgVob)
 
 	for (int i = 0; i < NUM_SCANNER_VOBS; i++)
 	{
-		zCDecal *dc = (zCDecal *)this->scannerVobs[i]->visual;
+		zCDecal *dc = zSTATIC_CAST<zCDecal>(this->scannerVobs[i]->visual);
 
 		if (dc) dc->decalMaterial->color = zCOLOR(255, 255, 255, this->alpha);
 
@@ -71,7 +71,7 @@ void hCFXScanner::Disable()
 
 	for (int i = 0; i < NUM_SCANNER_VOBS; i++)
 	{
-		zCDecal *dc = (zCDecal *)this->scannerVobs[i]->visual;
+		zCDecal *dc = zSTATIC_CAST<zCDecal>(this->scannerVobs[i]->visual);
 
 		if (dc) dc->decalMaterial->color.alpha = 0;
 
@@ -102,7 +102,7 @@ void hCFXScanner::Run()
 		trafo.SetRightVector(right);
 		trafo.SetUpVector(up);
 
-		zCDecal *dc = (zCDecal *)scannerVob->visual;
+		zCDecal *dc = zSTATIC_CAST<zCDecal>(scannerVob->visual);
 
 		if (dc) dc->SetDecalDim(SCANNER_DIM_Y, SCANNER_DIM_X);
 
@@ -123,12 +123,12 @@ hCVisFX_Lightning *hCVisFX_Lightning::_CreateNewInstance()
 	hCVisFX_Lightning *vfxLightning = (hCVisFX_Lightning *)oCVisualFX::_CreateNewInstance();
 	Patch(0x0049A247 + 1, sizeof(oCVisualFX)); // oCVisualFX::_CreateNewInstance();
 
-	vfxLightning->InitValues();
+	vfxLightning->Constructor();
 
 	return vfxLightning;
 }
 
-void hCVisFX_Lightning::InitValues()
+void hCVisFX_Lightning::Constructor()
 {
 	// printf("hCVisFX_Lightning::hCVisFX_Lightning()\n");
 
@@ -163,10 +163,11 @@ void hCVisFX_Lightning::InitValues()
 	this->dontWriteIntoArchive = TRUE;
 }
 
-void hCVisFX_Lightning::DeinitValues()
+void hCVisFX_Lightning::Destructor()
 {
 	// printf("hCVisFX_Lightning::~hCVisFX_Lightning()\n");
 
+#if 0
 	for (int i = 0; i < this->decalVobs.numInArray; i++)
 	{
 		this->decalVobs[i]->RemoveVobFromWorld();
@@ -206,6 +207,8 @@ void hCVisFX_Lightning::DeinitValues()
 		}
 	}
 
+	this->vobList.DeleteList();
+
 	delete[] this->burnVobs.array;
 	this->burnVobs.array = NULL;
 
@@ -219,6 +222,7 @@ void hCVisFX_Lightning::DeinitValues()
 	this->electricFX.array = NULL;
 
 	this->scanner.DeinitValues();
+#endif
 }
 
 bool hCVisFX_Lightning::CheckDeletion()
@@ -474,7 +478,7 @@ void hCVisFX_Lightning::Draw()
 			decalVob->SetVisual(this->visName_S);
 			decalVob->visualCamAlign = zVISUAL_CAMALIGN_NONE;
 
-			zCDecal *dc = (zCDecal *)decalVob->visual;
+			zCDecal *dc = zSTATIC_CAST<zCDecal>(decalVob->visual);
 
 			if (dc)
 			{
@@ -554,7 +558,7 @@ void hCVisFX_Lightning::CreateScanner(zCVob *orgVob)
 				scannerVob->SetVisual(this->visName_S);
 				scannerVob->visualCamAlign = zVISUAL_CAMALIGN_NONE;
 
-				zCDecal *dc = (zCDecal *)scannerVob->visual;
+				zCDecal *dc = zSTATIC_CAST<zCDecal>(scannerVob->visual);
 
 				if (dc)
 				{
@@ -739,6 +743,11 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 {
 	// printf("hCVisFX_Lightning::Init()\n");
 
+	for (int i = 0; i < trajectoryVobs.numInArray; i++)
+	{
+		printf("%d: %s\n", i, trajectoryVobs[i]->objectName.ToChar());
+	}
+
 	if (this->origin)
 	{
 		this->SetOrigin(NULL, TRUE);
@@ -758,8 +767,12 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 		this->vobList.DeleteList();
 	}
 
+#if 1
 	this->oCVisualFX::Init(trajectoryVobs[0], NULL, NULL);
+#endif
 
+#if 1
+	// this crashes
 	this->vobList = trajectoryVobs;
 
 	for (int nr = 1; nr < this->vobList.numInArray; nr++)
@@ -768,6 +781,7 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 
 		this->vobList[nr]->AddRef();
 	}
+#endif
 
 	zCModel *mdl = zDYNAMIC_CAST<zCModel>(this->origin->visual);
 
@@ -841,7 +855,7 @@ void hCVisualFX::InitValues()
 	this->dScriptEnd = FALSE; // isLightning
 }
 
-void hCNpc::OnDamage_Events(oSDamageDescriptor & descDamage)
+void hCNpc::OnDamage_Events(oSDamageDescriptor &descDamage)
 {
 	this->oCNpc::OnDamage_Events(descDamage);
 
@@ -851,7 +865,7 @@ void hCNpc::OnDamage_Events(oSDamageDescriptor & descDamage)
 
 	if (npcAttacker)
 	{
-		spell = (hCSpell *)npcAttacker->IsSpellActive(SPL_CONTROL);
+		spell = zSTATIC_CAST<hCSpell>(npcAttacker->IsSpellActive(SPL_CONTROL));
 		npcTarget = spell ? spell->spellTargetNpc : NULL;
 	}
 
@@ -862,7 +876,7 @@ void hCNpc::OnDamage_Events(oSDamageDescriptor & descDamage)
 
 	if (this->HasBodyStateModifier(BS_MOD_CONTROLLING))
 	{
-		spell = (hCSpell *)npcAttacker->IsSpellActive(SPL_CONTROL);
+		spell = zSTATIC_CAST<hCSpell>(npcAttacker->IsSpellActive(SPL_CONTROL));
 
 		if (spell)
 		{
@@ -1177,7 +1191,7 @@ bool hCSpell::IsValidTarget(zCVob *v)
 		if (this->spellID == SPL_TELEKINESIS)
 		{
 			if (!zDYNAMIC_CAST<oCItem>(v) && !zDYNAMIC_CAST<oCMOB>(v) ||
-				(zDYNAMIC_CAST<oCMOB>(v) && !((oCMOB *)v)->IsMoveable())) // do we need to allow MOBs to be moved?
+				(zDYNAMIC_CAST<oCMOB>(v) && !(zSTATIC_CAST<oCMOB>(v)->IsMoveable()))) // do we need to allow MOBs to be moved?
 			{
 				this->spellStatus = SPL_STATUS_DONTINVEST;
 
@@ -1283,7 +1297,7 @@ void hCVisualFX::SetCollisionEnabled(bool en)
 
 	this->emCheckCollision = en;
 
-	this->collDetectionStatic = en && this->emActionCollDyn != TACTION_COLL_NONE;
+	this->collDetectionStatic = en && this->emActionCollStat != TACTION_COLL_NONE;
 	this->collDetectionDynamic = en && this->emActionCollDyn != TACTION_COLL_NONE;
 
 	if (!this->visual) return;
@@ -1362,9 +1376,32 @@ ASM(oCSpell_EndTimedEffect_Hook)
 	RET(0x00487114);
 }
 
+void PatchChainLightning(void)
+{
+	// oCSpell::CreateEffect()
+	// For some reason the game compiler did something really weird here and just kinda expects certain registers are intact
+	// Modern VS creates the function differently, so we have to push and pop the register before and after the function call via asm
+	InjectHook(0x00484729, oCSpell_InitByScript_Hook, PATCH_JUMP); // oCSpell::InitByScript()
+	InjectHook(0x0048710F, oCSpell_EndTimedEffect_Hook, PATCH_JUMP); // oCSpell::EndTimedEffect()
+
+	// Init dScriptEnd to FALSE
+	InjectHook(0x00489EFD, &hCVisualFX::InitValues); // oCVisualFX::oCVisualFX()
+
+	// Destroy lightning stuff if lightning
+	InjectHook(0x0048A1F3, &hCVisFX_Lightning::Destructor); // oCVisualFX::`scalar deleting destructor'()
+
+	// Overwrite some virtuals for hCVisFX_Lightning
+	Patch(0x008302C8, &hCVisFX_Lightning::_OnTick); // oCVisualFX::`vftable'
+	Patch(0x0083030C, &hCVisFX_Lightning::_Open); // oCVisualFX::`vftable'
+	Patch(0x0083032C, &hCVisFX_Lightning::_Init); // oCVisualFX::`vftable'
+	Patch(0x00830338, &hCVisFX_Lightning::_InvestNext); // oCVisualFX::`vftable'
+	Patch(0x00830344, &hCVisFX_Lightning::_Cast); // oCVisualFX::`vftable'
+	Patch(0x00830348, &hCVisFX_Lightning::_Stop); // oCVisualFX::`vftable'
+}
+
 void PatchSpells(void)
 {
-	// Does this even work? No way to check currently ...
+	// Patch necessary functions for Telekinesis and Control
 	InjectHook(0x006665BF, &hCNpc::OnDamage_Events); // oCNpc::OnDamage()
 	InjectHook(0x004854CF, &hCSpell::CastSpecificSpell); // oCSpell::Cast()
 	InjectHook(0x0043BEB0, &hCSpell::EndTimedEffect); // oCTriggerChangeLevel::TriggerTarget()
@@ -1394,25 +1431,7 @@ void PatchSpells(void)
 	// Remove unneeded (?) collsion enabling in oCVisualFX::InitEffect()
 	PatchJump(0x00494B56, 0x00494BAC); // oCVisualFX::InitEffect()
 
-	// oCSpell::CreateEffect()
-	// For some reason the game compiler did something really weird here and just kinda expects certain registers are intact
-	// Modern VS creates the function differently, so we have to push and pop the register before and after the function call via asm
-	InjectHook(0x00484729, oCSpell_InitByScript_Hook, PATCH_JUMP); // oCSpell::InitByScript()
-	InjectHook(0x0048710F, oCSpell_EndTimedEffect_Hook, PATCH_JUMP); // oCSpell::EndTimedEffect()
-
-	// Init dScriptEnd to FALSE
-	InjectHook(0x00489EFD, &hCVisualFX::InitValues); // oCVisualFX::oCVisualFX()
-
-	// Destroy lightning stuff if lightning
-	InjectHook(0x0048A1F3, &hCVisFX_Lightning::_DeinitValues); // oCVisualFX::`scalar deleting destructor'()
-
-	// Overwrite some virtuals for hCVisFX_Lightning
-	Patch(0x008302C8, &hCVisFX_Lightning::_OnTick); // oCVisualFX::`vftable'
-	Patch(0x0083030C, &hCVisFX_Lightning::_Open); // oCVisualFX::`vftable'
-	Patch(0x0083032C, &hCVisFX_Lightning::_Init); // oCVisualFX::`vftable'
-	Patch(0x00830338, &hCVisFX_Lightning::_InvestNext); // oCVisualFX::`vftable'
-	Patch(0x00830344, &hCVisFX_Lightning::_Cast); // oCVisualFX::`vftable'
-	Patch(0x00830348, &hCVisFX_Lightning::_Stop); // oCVisualFX::`vftable'
+	PatchChainLightning();
 }
 
 void PatchGothic2(void)
