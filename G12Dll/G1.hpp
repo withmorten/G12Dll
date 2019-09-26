@@ -661,6 +661,8 @@ public:
 	int Release() { XCALL(0x0042AC30); }
 };
 
+#define zRELEASE(obj) { if (obj) { obj->Release(); obj = NULL; } }
+
 class zCAIBase : public zCObject { };
 
 class oCVisualFXAI : public zCAIBase
@@ -2655,6 +2657,23 @@ public:
 #define SPL_STATUS_STOP 3
 #define SPL_STATUS_NEXTLEVEL 4
 
+#define TARGET_COLLECT_NONE 0
+#define TARGET_COLLECT_CASTER 1
+#define TARGET_COLLECT_FOCUS 2
+#define TARGET_COLLECT_ALL 3
+#define TARGET_COLLECT_FOCUS_FALLBACK_NONE 4
+#define TARGET_COLLECT_FOCUS_FALLBACK_CASTER 5
+#define TARGET_COLLECT_ALL_FALLBACK_NONE 6
+#define TARGET_COLLECT_ALL_FALLBACK_CASTER 7
+
+#define TARGET_FLAG_NONE 0
+#define TARGET_FLAG_ALL 1
+#define TARGET_FLAG_ITEMS 2
+#define TARGET_FLAG_NPCS 4
+#define TARGET_FLAG_ORCS 8
+#define TARGET_FLAG_HUMANS 16
+#define TARGET_FLAG_UNDEAD 32
+
 #define SPL_LIGHT 0
 #define SPL_FIREBALL 1
 #define SPL_TRANSFORM 2
@@ -2819,6 +2838,69 @@ public:
 public:
 	void SetByList(zCArray<zCVob *> vobList) { XCALL(0x004810D0); }
 	int VobCross(zCVob *vob) { XCALL(0x00481260); }
+};
+
+class oCEmitterKey
+{
+public:
+	zSTRING visName_S;
+	float visSizeScale;
+	float scaleDuration;
+
+	float pfx_ppsValue;
+	bool pfx_ppsIsSmoothChg;
+	bool pfx_ppsIsLoopingChg;
+
+	float pfx_scTime;
+	zSTRING pfx_flyGravity_S;
+
+	zSTRING pfx_shpDim_S;
+	bool pfx_shpIsVolumeChg;
+	float pfx_shpScaleFPS;
+	float pfx_shpDistribWalkSpeed;
+	zSTRING pfx_shpOffsetVec_S;
+	zSTRING pfx_shpDistribType_S;
+	zSTRING pfx_dirMode_S;
+	zSTRING pfx_dirFOR_S;
+	zSTRING pfx_dirModeTargetFOR_S;
+	zSTRING pfx_dirModeTargetPos_S;
+	float pfx_velAvg;
+	float pfx_lspPartAvg;
+	float pfx_visAlphaStart;
+
+	zSTRING lightPresetName;
+	float lightRange;
+	zSTRING sfxID;
+	bool sfxIsAmbient;
+
+	zSTRING emCreateFXID;
+	float emFlyGravity;
+	zSTRING emSelfRotVel_S;
+	zSTRING emTrjMode_S;
+	float emTrjEaseVel;
+	bool emCheckCollision;
+	float emFXLifeSpan;
+
+	byte dScriptEnd;
+
+	zVEC3 pfx_flyGravity;
+	zVEC3 pfx_shpOffsetVec;
+	zTPFX_DistribType pfx_shpDistribType;
+	zTPFX_EmitterDirMode pfx_dirMode;
+	zTPFX_EmitterFOR pfx_dirFOR;
+	zTPFX_EmitterFOR pfx_dirModeTargetFOR;
+	zVEC3 pfx_dirModeTargetPos;
+
+	zVEC3 emSelfRotVel;
+	int emTrjMode;
+
+	zSTRING name;
+
+	zCVob *vob;
+	zVEC3 targetPos;
+
+	zCSoundFX *sfx;
+	zTSoundHandle sxfHnd;
 };
 
 #define VFX_NUM_USERSTRINGS 3

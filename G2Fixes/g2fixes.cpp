@@ -69,7 +69,7 @@ void hCNpc::CreateVobList(float max_dist)
 			}
 			else
 			{
-				vob->refCtr++;
+				vob->AddRef();
 			}
 		}
 	}
@@ -567,13 +567,13 @@ void PatchGothic2(void)
 		Patch(0x0083D840, &hCNpc::IsSkeleton); // oCNpc::`vftable'
 	}
 
-	if (G12GetPrivateProfileBool("UseStdlibMalloc", FALSE))
+	if (G12GetPrivateProfileBool("ClassSizeFixes", TRUE))
 	{
-		// What option name says - not particularly useful
-		InjectHook(0x007B4460, malloc); // malloc()
-		InjectHook(0x007B4465, calloc); // calloc()
-		InjectHook(0x007B446A, realloc); // realloc()
-		InjectHook(0x007B446F, free); // free()
+		// Don't instantiate an oCEmitterKey object for checking ScriptClassSize
+		PatchJump(0x0048B6DD, 0x0048B6EF); // oCVisualFX::InitParser()
+
+		// Don't instantiate an oCVisualFX object ScriptClassSize
+		PatchJump(0x0048B73A, 0x0048B782); // oCVisualFX::InitParser()
 	}
 
 	if (G12GetPrivateProfileBool("Gothic1Mode", FALSE))

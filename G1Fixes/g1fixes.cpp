@@ -308,12 +308,7 @@ void hCVisFX_Lightning::Draw()
 
 				delVob->RemoveVobFromWorld();
 
-				if (delVob)
-				{
-					delVob->Release();
-
-					delVob = NULL;
-				}
+				zRELEASE(delVob);
 			}
 		}
 	}
@@ -470,11 +465,11 @@ void hCVisFX_Lightning::OnTick()
 
 			if (this->vobList.numInArray < 2)
 			{
-				oCVisualFX *fx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+				oCVisualFX *newFX = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
 
-				if (fx) this->electricFX.InsertEnd(fx);
+				if (newFX) this->electricFX.InsertEnd(newFX);
 
-				this->EndMovement();
+				this->EndMovement(); // TODO possibly FALSE
 
 				this->origin->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, this->origin->GetPositionWorld());
 
@@ -482,11 +477,11 @@ void hCVisFX_Lightning::OnTick()
 			}
 			else if (!this->UpdateBurnVobsInvestNext())
 			{
-				this->EndMovement();
+				this->EndMovement(); // TODO possibly FALSE
 
-				oCVisualFX *fx = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
+				oCVisualFX *newFX = this->CreateAndCastFX("FX_ELECTRIC", this->origin, this->origin);
 
-				if (fx) this->electricFX.InsertEnd(fx);
+				if (newFX) this->electricFX.InsertEnd(newFX);
 
 				this->burnVobs.InsertEnd(this->vobList[0]);
 				this->burnNodes.InsertEnd(this->targetNode);
@@ -501,13 +496,15 @@ void hCVisFX_Lightning::OnTick()
 				this->showScanner = TRUE;
 			}
 
-			this->EndMovement();
+			this->EndMovement(); // TODO possibly FALSE
 
 			zCVob *vob = this->burnVobs[this->burnVobs.numInArray - (this->castOnSelf ? 2 : 1)];
 
 			vob->GetEM(FALSE)->OnDamage(this, this->origin, this->damage, this->damageType, vob->GetPositionWorld());
 
-			oCVisualFX *fx = this->CreateAndCastFX("FX_ELECTRIC", vob, this->origin);
+			oCVisualFX *newFX = this->CreateAndCastFX("FX_ELECTRIC", vob, this->origin);
+
+			if (newFX) this->electricFX.InsertEnd(newFX);
 
 			oCNpc *npc = zDYNAMIC_CAST<oCNpc>(vob);
 			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
@@ -515,8 +512,6 @@ void hCVisFX_Lightning::OnTick()
 			if (npc && orgNpc) npc->AssessMagic_S(orgNpc, this->spellType);
 
 			this->BeginMovement();
-
-			if (fx) this->electricFX.InsertEnd(fx);
 		}
 	}
 
@@ -532,27 +527,6 @@ void hCVisFX_Lightning::OnTick()
 			oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
 
 			if (npc && orgNpc) npc->AssessStopMagic_S(orgNpc, this->spellType);
-
-			// GEngine doesn't do this (but clears this in Stop())
-#if 0
-			if (this->decalVobs[this->decalVobs.numInArray - 1])
-			{
-				this->decalVobs[this->decalVobs.numInArray - 1]->Release();
-
-				this->decalVobs[this->decalVobs.numInArray - 1] = NULL;
-			}
-
-			this->decalVobs.RemoveIndex(this->decalVobs.numInArray - 1);
-
-			if (this->decalVobs[this->decalVobs.numInArray - 1])
-			{
-				this->decalVobs[this->decalVobs.numInArray - 1]->Release();
-
-				this->decalVobs[this->decalVobs.numInArray - 1] = NULL;
-			}
-
-			this->decalVobs.RemoveIndex(this->decalVobs.numInArray - 1);
-#endif
 
 			this->trajectory.SetByList(this->burnVobs);
 
@@ -571,7 +545,7 @@ void hCVisFX_Lightning::OnTick()
 
 	this->Draw();
 
-	this->EndMovement();
+	this->EndMovement(); // TODO possibly FALSE
 }
 
 void hCVisFX_Lightning::Open()
@@ -588,25 +562,15 @@ void hCVisFX_Lightning::Open()
 
 void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 {
-	for (int i = 0; i < trajectoryVobs.numInArray; i++)
-	{
-		printf("%d: %s\n", i, trajectoryVobs[i]->objectName.ToChar());
-	}
-
 	if (this->origin)
 	{
 		this->SetOrigin(NULL);
 
 		for (int nr = 1; nr < this->vobList.numInArray; nr++)
 		{
-			if (showTarget) this->vobList[nr]->drawBBox3D = FALSE;
+			if (showTarget && nr >= 1) this->vobList[nr]->drawBBox3D = FALSE;
 
-			if (this->vobList[nr])
-			{
-				this->vobList[nr]->Release();
-
-				this->vobList[nr] = NULL;
-			}
+			zRELEASE(this->vobList[nr]);
 		}
 
 		this->vobList.DeleteList();
@@ -618,7 +582,7 @@ void hCVisFX_Lightning::Init(zCArray<zCVob *> &trajectoryVobs)
 
 	for (int nr = 1; nr < this->vobList.numInArray; nr++)
 	{
-		if (showTarget && nr == 1) this->vobList[1]->drawBBox3D = TRUE;
+		if (showTarget && nr >= 1) this->vobList[1]->drawBBox3D = TRUE;
 
 		this->vobList[nr]->AddRef();
 	}
@@ -677,7 +641,7 @@ void hCVisFX_Lightning::Stop(bool killAfterDone)
 	{
 		this->decalVobs[i]->RemoveVobFromWorld();
 
-		this->decalVobs[i]->Release();
+		zRELEASE(this->decalVobs[i]);
 	}
 
 	this->decalVobs.DeleteList(); // GEngine
@@ -690,8 +654,6 @@ void PatchGothic(void)
 {
 	if (G12GetPrivateProfileBool("ChainLightning", FALSE))
 	{
-		// TODO NOT DONE!!!! Check GEngine code instead of G1 decompiled
-
 		Patch(0x007D2378, &hCVisFX_Lightning::_OnTick); // oCVisFX_Lightning::`vftable'
 		Patch(0x007D23BC, &hCVisFX_Lightning::_Open); // oCVisFX_Lightning::`vftable'
 		Patch(0x007D23DC, &hCVisFX_Lightning::_Init); // oCVisFX_Lightning::`vftable'

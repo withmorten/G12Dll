@@ -4,6 +4,8 @@ typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
 
+#define DEBUG_BREAK() { if (IsDebuggerPresent()) __asm int 3 }
+
 // first 4 bytes of each version (with debug info)
 #define BASE_ADDR (0x00401000)
 

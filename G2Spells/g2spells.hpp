@@ -1,3 +1,4 @@
+#pragma warning(disable : 4005) // disable macro redefinition warning
 // SPL_* should probably be read from INI, just using hardcoded values for now - same as the game does it :)
 #define SPL_TELEPORT5 13 // Sumpflager
 #define SPL_TELEPORT1 14 // Feuermagier
@@ -46,6 +47,7 @@
 #define SPL_HEAL 68
 #define SPL_FIRESTORM  69
 #define SPL_STORMFIST 72
+#pragma warning(default : 4005) // restore macro redefinition warning
 
 class hCNpc : public oCNpc
 {
@@ -65,6 +67,8 @@ public:
 	void DoTimedEffect();
 	bool Invest();
 	oCVisualFX *CreateEffect();
+	void InitValues(int _spellID);
+	void InitByScript(const zSTRING &name) { this->oCSpell::InitByScript(name); this->spellLevel = 0; }
 };
 
 class hCVisualFX : public oCVisualFX
@@ -72,11 +76,10 @@ class hCVisualFX : public oCVisualFX
 public:
 	virtual void SetCollisionEnabled(bool en);
 
-	void _SetCollisionEnabled(bool en) { hCVisualFX::SetCollisionEnabled(en); }
+	void _SetCollisionEnabled(bool en) { this->hCVisualFX::SetCollisionEnabled(en); }
 
-	void Destructor() { XCALL(0x0048A260); }
-
-	void InitValues();
+	void InitValues() { this->oCVisualFX::InitValues(); this->level = 0; }
+	void InitInvestFX() { if (this->level >= 1) this->oCVisualFX::InitInvestFX(); }
 };
 
 #define NUM_SCANNER_VOBS 3
@@ -90,9 +93,8 @@ public:
 	zCVob *scannerVobs[NUM_SCANNER_VOBS];
 
 public:
-	// fake constructor and destructor to initialise and deinitialise our values
-	void InitValues();
-	void DeinitValues();
+	hCFXScanner *Constructor();
+	void Destructor();
 
 	bool Initialized();
 	void SetAlpha(byte a) { this->alpha = a; }
@@ -105,16 +107,16 @@ public:
 class hCVisFX_Lightning : public hCVisualFX
 {
 public:
+	static zCClassDef &hCVisFX_Lightning::classDef; // oCVisFX_MultiTarget::classDef
+
 	int phase;
-	float lightRange;
+	// float lightRange;
 
 	bool showScanner;
 	bool investedNext;
 	bool castOnSelf;
 
-	zCModelNodeInst *targetNode;
-
-	// int unknown; // this value is unused and its name unknown
+	// zCModelNodeInst *targetNode;
 
 	zCArray<zCVob *> burnVobs;
 	zCArray<zCModelNodeInst *> burnNodes;
@@ -124,10 +126,9 @@ public:
 	hCFXScanner scanner;
 
 public:
-	static hCVisFX_Lightning *_CreateNewInstance();
+	static hCVisFX_Lightning *_CreateNewInstance() { XCALL(0x0049F750); } // oCVisFX_MultiTarget::_CreateNewInstance()
 
-	// fake constructor and destructor to initialise and deinitialise our values
-	void Constructor();
+	hCVisFX_Lightning *Constructor();
 	void Destructor();
 
 	virtual void OnTick();
@@ -136,14 +137,14 @@ public:
 	virtual void InvestNext();
 	virtual void Cast(bool killAfterDone);
 	virtual void Stop(bool killAfterDone);
-
+	
 	// virtual overrides
-	void _OnTick() { if (this->dScriptEnd) this->hCVisFX_Lightning::OnTick(); else this->oCVisualFX::OnTick(); }
-	void _Open() { if (this->dScriptEnd) this->hCVisFX_Lightning::Open(); else this->oCVisualFX::Open(); }
-	void _Init(zCArray<zCVob *> &trajectoryVobs) { if (this->dScriptEnd) this->hCVisFX_Lightning::Init(trajectoryVobs); else this->oCVisualFX::Init(trajectoryVobs); }
-	void _InvestNext() { if (this->dScriptEnd) this->hCVisFX_Lightning::InvestNext(); else this->oCVisualFX::InvestNext(); }
-	void _Cast(bool killAfterDone) { if (this->dScriptEnd) this->hCVisFX_Lightning::Cast(killAfterDone); else this->oCVisualFX::Cast(killAfterDone); }
-	void _Stop(bool killAfterDone) { if (this->dScriptEnd) this->hCVisFX_Lightning::Stop(killAfterDone); else this->oCVisualFX::Stop(killAfterDone); }
+	void _OnTick() { this->hCVisFX_Lightning::OnTick(); }
+	void _Open() { this->hCVisFX_Lightning::Open(); }
+	void _Init_3(zCArray<zCVob *> &trajectoryVobs) { this->hCVisFX_Lightning::Init(trajectoryVobs); }
+	void _InvestNext() { this->hCVisFX_Lightning::InvestNext(); }
+	void _Cast(bool killAfterDone) { this->hCVisFX_Lightning::Cast(killAfterDone); }
+	void _Stop(bool killAfterDone) { this->hCVisFX_Lightning::Stop(killAfterDone); }
 
 	bool CheckDeletion();
 	void UpdateBurnVobs();

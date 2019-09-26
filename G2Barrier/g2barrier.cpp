@@ -295,12 +295,7 @@ void hCBarrier::AddEarthQuake()
 {
 	oCVisualFX *vfx = oCVisualFX::CreateAndPlay(zSTRING("FX_EarthQuake"), oCNpc::player, oCNpc::player, 0, 0, 0, FALSE);
 
-	if (vfx)
-	{
-		vfx->Release();
-
-		vfx = NULL;
-	}
+	zRELEASE(vfx);
 }
 
 void hCBarrier::Init()

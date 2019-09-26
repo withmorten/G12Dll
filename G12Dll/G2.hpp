@@ -678,6 +678,8 @@ public:
 	int Release() { XCALL(0x0040C310); }
 };
 
+#define zRELEASE(obj) { if (obj) { obj->Release(); obj = NULL; } }
+
 class zCAIBase : public zCObject { };
 
 class oCVisualFXAI : public zCAIBase
@@ -1072,7 +1074,11 @@ public:
 	static zCVob *_CreateNewInstance() { XCALL(0x005FD940); }
 
 	zCVob() { XCALL(0x005FE1E0); }
-	~zCVob() { XCALL(0x005FE470); }
+
+	virtual zCClassDef *_GetClassDef() { XCALL(0x0043CCB0); }
+	virtual void Archive(zCArchiver &arc) { XCALL(0x005FF140); }
+	virtual void Unarchive(zCArchiver &arc) { XCALL(0x005FFC70); }
+	virtual ~zCVob() { XCALL(0x005FE470); }
 
 	virtual void OnTrigger(zCVob *otherVob, zCVob *vobInstigator) { }
 	virtual void OnUntrigger(zCVob *otherVob, zCVob *vobInstigator) { }
@@ -1413,7 +1419,7 @@ public:
 	virtual bool GetZBufferWriteEnabled() = 0;
 	virtual void SetZBufferWriteEnabled(bool flag) = 0;
 
-	zTRnd_AlphaBlendFunc AlphaBlendFuncStringToType(const zSTRING &s) { XCALL(0x0048C72C); }
+	zTRnd_AlphaBlendFunc AlphaBlendFuncStringToType(const zSTRING &s) { XCALL(0x005D38B0); }
 };
 
 class zCRnd_D3D : public zCRenderer
@@ -2816,6 +2822,126 @@ public:
 #define SPL_STATUS_CANINVEST_NO_MANADEC 8
 #define SPL_STATUS_FORCEINVEST (1 << 16)
 
+#define TARGET_COLLECT_NONE 0
+#define TARGET_COLLECT_CASTER 1
+#define TARGET_COLLECT_FOCUS 2
+#define TARGET_COLLECT_ALL 3
+#define TARGET_COLLECT_FOCUS_FALLBACK_NONE 4
+#define TARGET_COLLECT_FOCUS_FALLBACK_CASTER 5
+#define TARGET_COLLECT_ALL_FALLBACK_NONE 6
+#define TARGET_COLLECT_ALL_FALLBACK_CASTER 7
+
+#define TARGET_FLAG_NONE 0
+#define TARGET_FLAG_ALL 1
+#define TARGET_FLAG_ITEMS 2
+#define TARGET_FLAG_NPCS 4
+#define TARGET_FLAG_ORCS 8
+#define TARGET_FLAG_HUMANS 16
+#define TARGET_FLAG_UNDEAD 32
+#define TARGET_FLAG_LIVING 64
+
+#define SPL_PALLIGHT 0
+#define SPL_PALLIGHTHEAL 1
+#define SPL_PALHOLYBOLT 2
+#define SPL_PALMEDIUMHEAL 3
+#define SPL_PALREPELEVIL 4
+#define SPL_PALFULLHEAL 5
+#define SPL_PALDESTROYEVIL 6
+#define SPL_PALTELEPORTSECRET 7
+#define SPL_TELEPORTSEAPORT 8
+#define SPL_TELEPORTMONASTERY 9
+#define SPL_TELEPORTFARM 10
+#define SPL_TELEPORTXARDAS 11
+#define SPL_TELEPORTPASSNW 12
+#define SPL_TELEPORTPASSOW 13
+#define SPL_TELEPORTOC 14
+#define SPL_TELEPORT_1 15
+#define SPL_TELEPORT_2 16
+#define SPL_TELEPORT_3 17
+#define SPL_LIGHT 18
+#define SPL_FIREBOLT 19
+#define SPL_ICEBOLT 20
+#define SPL_LIGHTHEAL 21
+#define SPL_SUMMONGOBLINSKELETON 22
+#define SPL_INSTANTFIREBALL 23
+#define SPL_ZAP 24
+#define SPL_SUMMONWOLF 25
+#define SPL_WINDFIST 26
+#define SPL_SLEEP 27
+#define SPL_MEDIUMHEAL 28
+#define SPL_LIGHTNINGFLASH 29
+#define SPL_CHARGEFIREBALL 30
+#define SPL_SUMMONSKELETON 31
+#define SPL_FEAR 32
+#define SPL_ICECUBE 33
+#define SPL_THUNDERBALL 34
+#define SPL_SUMMONGOLEM 35
+#define SPL_DESTROYUNDEAD 36
+#define SPL_PYROKINESIS 37
+#define SPL_FIRESTORM 38
+#define SPL_ICEWAVE 39
+#define SPL_SUMMONDEMON 40
+#define SPL_FULLHEAL 41
+#define SPL_FIRERAIN 42
+#define SPL_BREATHOFDEATH 43
+#define SPL_MASSDEATH 44
+#define SPL_ARMYOFDARKNESS 45
+#define SPL_SHRINK 46
+#define SPL_TRFSHEEP 47
+#define SPL_TRFSCAVENGER 48
+#define SPL_TRFGIANTRAT 49
+#define SPL_TRFGIANTBUG 50
+#define SPL_TRFWOLF 51
+#define SPL_TRFWARAN 52
+#define SPL_TRFSNAPPER 53
+#define SPL_TRFWARG 54
+#define SPL_TRFFIREWARAN 55
+#define SPL_TRFLURKER 56
+#define SPL_TRFSHADOWBEAST 57
+#define SPL_TRFDRAGONSNAPPER 58
+#define SPL_CHARM 59
+#define SPL_MASTEROFDESASTER 60
+#define SPL_DEATHBOLT 61
+#define SPL_DEATHBALL 62
+#define SPL_CONCUSSIONBOLT 63
+#define SPL_RESERVED_64 64
+#define SPL_RESERVED_65 65
+#define SPL_RESERVED_66 66
+#define SPL_RESERVED_67 67
+#define SPL_RESERVED_68 68
+#define SPL_RESERVED_69 69
+#define SPL_THUNDERSTORM 70
+#define SPL_WHIRLWIND 71
+#define SPL_WATERFIST 72
+#define SPL_ICELANCE 73
+#define SPL_INFLATE 74
+#define SPL_GEYSER 75
+#define SPL_WATERWALL 76
+#define SPL_RESERVED_77 77
+#define SPL_RESERVED_78 78
+#define SPL_RESERVED_79 79
+#define SPL_PLAGUE 80
+#define SPL_SUMMONSWARM 81
+#define SPL_GREENTENTACLE 82
+#define SPL_EARTHQUAKE 83
+#define SPL_SUMMONGUARDIAN 84
+#define SPL_BELIARSRAGE 85
+#define SPL_SUCKENERGY 86
+#define SPL_SKULL 87
+#define SPL_SUMMONZOMBIE 88
+#define SPL_RESERVED_89 89
+#define SPL_RESERVED_90 90
+#define SPL_RESERVED_91 91
+#define SPL_RESERVED_92 92
+#define SPL_RESERVED_93 93
+#define SPL_RESERVED_94 94
+#define SPL_RESERVED_95 95
+#define SPL_RESERVED_96 96
+#define SPL_RESERVED_97 97
+#define SPL_RESERVED_98 98
+#define SPL_RESERVED_99 99
+#define SPL_MAX_SPELL 100
+
 class oCSpell : public zCObject
 {
 public:
@@ -2872,6 +2998,7 @@ public:
 	void SetReleaseStatus() { XCALL(0x00486670); }
 	void CallScriptInvestedMana() { XCALL(0x00485D30); }
 	zSTRING GetSpellInstanceName(int _spellID);
+	void InitByScript(const zSTRING &name) { XCALL(0x00484550); }
 };
 
 class oCMOB : public oCVob
@@ -2919,6 +3046,69 @@ public:
 public:
 	void SetByList(zCArray<zCVob *> vobList) { XCALL(0x00488AB0); }
 	int VobCross(zCVob *vob) { XCALL(0x00488C20); }
+};
+
+class oCEmitterKey
+{
+public:
+	zSTRING visName_S;
+	float visSizeScale;
+	float scaleDuration;
+
+	float pfx_ppsValue;
+	bool pfx_ppsIsSmoothChg;
+	bool pfx_ppsIsLoopingChg;
+
+	float pfx_scTime;
+	zSTRING pfx_flyGravity_S;
+
+	zSTRING pfx_shpDim_S;
+	bool pfx_shpIsVolumeChg;
+	float pfx_shpScaleFPS;
+	float pfx_shpDistribWalkSpeed;
+	zSTRING pfx_shpOffsetVec_S;
+	zSTRING pfx_shpDistribType_S;
+	zSTRING pfx_dirMode_S;
+	zSTRING pfx_dirFOR_S;
+	zSTRING pfx_dirModeTargetFOR_S;
+	zSTRING pfx_dirModeTargetPos_S;
+	float pfx_velAvg;
+	float pfx_lspPartAvg;
+	float pfx_visAlphaStart;
+
+	zSTRING lightPresetName;
+	float lightRange;
+	zSTRING sfxID;
+	bool sfxIsAmbient;
+
+	zSTRING emCreateFXID;
+	float emFlyGravity;
+	zSTRING emSelfRotVel_S;
+	zSTRING emTrjMode_S;
+	float emTrjEaseVel;
+	bool emCheckCollision;
+	float emFXLifeSpan;
+
+	byte dScriptEnd;
+
+	zVEC3 pfx_flyGravity;
+	zVEC3 pfx_shpOffsetVec;
+	zTPFX_DistribType pfx_shpDistribType;
+	zTPFX_EmitterDirMode pfx_dirMode;
+	zTPFX_EmitterFOR pfx_dirFOR;
+	zTPFX_EmitterFOR pfx_dirModeTargetFOR;
+	zVEC3 pfx_dirModeTargetPos;
+
+	zVEC3 emSelfRotVel;
+	int emTrjMode;
+
+	zSTRING name;
+
+	zCVob *vob;
+	zVEC3 targetPos;
+
+	zCSoundFX *sfx;
+	zTSoundHandle sxfHnd;
 };
 
 #define VFX_NUM_USERSTRINGS 5
@@ -2990,7 +3180,7 @@ public:
 	bool sendAssessMagic;
 	float secsPerDamage;
 
-	byte dScriptEnd; // isLightning
+	byte dScriptEnd;
 
 	zVEC3 visSize;
 	int emTrjMode;
@@ -3165,6 +3355,7 @@ public:
 	void InitValues() { XCALL(0x0048B820); }
 	oCVisualFX *CreateAndCastFX(const zSTRING &id, zCVob *org, zCVob *inflictor) { XCALL(0x0048EE80); }
 	void StopInvestFX() { XCALL(0x00491830); }
+	void InitInvestFX() { XCALL(0x00491690); }
 };
 
 class oCVisFX_MultiTarget : public oCVisualFX
