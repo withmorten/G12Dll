@@ -325,9 +325,9 @@ public:
 		this->array[this->numInArray++] = ins;
 	}
 
-	void InsertFront(const T &ins) { InsertAtPos(ins, 0); }
+	void InsertFront(const T &ins) { this->InsertAtPos(ins, 0); }
 
-	void Insert(const T &ins) { InsertEnd(ins); }
+	void Insert(const T &ins) { this->InsertEnd(ins); }
 
 	void InsertAtPos(const T &ins, int pos)
 	{
@@ -912,6 +912,26 @@ public:
 
 class oCMsgWeapon : public oCNpcMessage
 {
+public:
+	enum TWeaponSubType
+	{
+		EV_DRAWWEAPON,
+		EV_DRAWWEAPON1,
+		EV_DRAWWEAPON2,
+		EV_REMOVEWEAPON,
+		EV_REMOVEWEAPON1,
+		EV_REMOVEWEAPON2,
+		EV_CHOOSEWEAPON,
+		EV_FORCEREMOVEWEAPON,
+		EV_ATTACK,
+		EV_EQUIPBESTWEAPON,
+		EV_EQUIPBESTARMOR,
+		EV_UNEQUIPWEAPONS,
+		EV_UNEQUIPARMOR,
+		EV_EQUIPARMOR,
+		EV_WEAPON_MAX
+	};
+
 public:
 	int targetMode;
 	bool duringRun : 1;
@@ -1928,6 +1948,8 @@ public:
 
 public:
 	static zCClassDef *GetStaticClassDef() { return &classDef; }
+
+	bool MultiSlot() { XCALL(0x007125A0); }
 };
 
 class oCWorld : public zCWorld
@@ -2588,6 +2610,7 @@ public:
 	void ChangeAttribute(int nr, int value) { XCALL(0x0072FF60); }
 	bool AssessMagic_S(oCNpc *other, int spellType) { XCALL(0x0075CC30); }
 	bool AssessStopMagic_S(oCNpc *other, int spellType) { XCALL(0x0075CF30); }
+	oCItem *RemoveFromInv(oCItem *item, int num) { XCALL(0x007495A0); }
 };
 
 enum zTPFX_EmitterShape { };
@@ -2812,6 +2835,13 @@ public:
 	void SearchStandAni(bool forceStartAni) { XCALL(0x006A4D20); }
 	int GetWaterLevel() { XCALL(0x006B89D0); }
 	bool IsInWater() { return this->GetWaterLevel() > 0; }
+};
+
+class oCMag_Book
+{
+public:
+	oCSpell *GetSelectedSpell() { XCALL(0x00477780); }
+	oCItem *GetSpellItem(oCSpell *spell) { XCALL(0x00479C00); }
 };
 
 #define SPL_STATUS_DONTINVEST 0

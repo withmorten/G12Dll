@@ -1,5 +1,9 @@
 #include "..\G12Dll\G12Core.h"
 
+#define G12DLL_NAME "DInput"
+
+#include "..\G12Dll\G12.h"
+
 struct dinput_dll
 {
 	HMODULE dll;
@@ -28,7 +32,6 @@ void DInput(HINSTANCE hInst)
 	strcat_s(DInputDllPath, "\\System32\\dinput.dll");
 
 	dinput.dll = LoadLibrary(DInputDllPath);
-
 	dinput.DirectInputCreateA = GetProcAddress(dinput.dll, "DirectInputCreateA");
 	dinput.DirectInputCreateEx = GetProcAddress(dinput.dll, "DirectInputCreateEx");
 	dinput.DirectInputCreateW = GetProcAddress(dinput.dll, "DirectInputCreateW");
@@ -41,6 +44,7 @@ void DInput(HINSTANCE hInst)
 void Init(void)
 {
 	char path[MAX_PATH];
+	char full_path[MAX_PATH];
 	char *p;
 
 	FILE *f = fopen("g12.cfg", "r");
@@ -58,7 +62,11 @@ void Init(void)
 					if (*p == '\n') *p = '\0';
 				}
 
-				LoadLibrary(path);
+				strncpy(full_path, G12Cwd, sizeof(full_path));
+				strncat(full_path, "\\", 1);
+				strncat(full_path, path, sizeof(full_path));
+
+				LoadLibrary(full_path);
 			}
 		}
 
@@ -70,8 +78,8 @@ BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID)
 {
 	if (reason == DLL_PROCESS_ATTACH)
 	{
+		G12AllocConsole();
 		DInput(hInst);
-
 		Init();
 	}
 

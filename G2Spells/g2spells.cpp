@@ -743,7 +743,7 @@ void hCVisFX_Lightning::InvestNext()
 {
 	if (this->initialized)
 	{
-		this->oCVisualFX::InvestNext(); // TODO rewrite this! or add level check somehow
+		this->oCVisualFX::InvestNext();
 
 		this->phase++;
 
@@ -865,7 +865,7 @@ void PatchChainLightning(void)
 	Patch(0x00830670, 0x007D0F3E); // oCVisFX_MultiTarget::`vftable', __purecall
 
 	// oCSpell::CreateEffect()
-	// For some reason the game compiler did something really weird here and just kinda expects certain registers are intact
+	// For some reason the game compiler did something really weird here and just kinda expects certain registers are intact after returning
 	// Modern VS creates the function differently, so we have to push and pop the register before and after the function call via asm
 	InjectHook(0x00484729, oCSpell_InitByScript_Hook, PATCH_JUMP); // oCSpell::InitByScript()
 	InjectHook(0x0048710F, oCSpell_EndTimedEffect_Hook, PATCH_JUMP); // oCSpell::EndTimedEffect()
@@ -885,7 +885,7 @@ void hCNpc::OnDamage_Events(oSDamageDescriptor &descDamage)
 		npcTarget = spell ? spell->spellTargetNpc : NULL;
 	}
 
-	if (spell && npcTarget && this->attribute[NPC_ATR_HITPOINTS] <= 0)
+	if (spell && npcTarget && this->IsDead())
 	{
 		spell->EndTimedEffect();
 	}
@@ -900,6 +900,8 @@ void hCNpc::OnDamage_Events(oSDamageDescriptor &descDamage)
 		}
 	}
 }
+
+bool bTelekinesisManaTaken = FALSE;
 
 void hCSpell::DoLogicInvestEffect()
 {
@@ -918,6 +920,14 @@ void hCSpell::DoLogicInvestEffect()
 		if (!this->spellCasterNpc->GetModel()->IsAniActive(zSTRING("S_TELSHOOT")))
 		{
 			return;
+		}
+
+		// Hacks
+		if (!bTelekinesisManaTaken)
+		{
+			bTelekinesisManaTaken = TRUE;
+
+			this->spellCasterNpc->ChangeAttribute(this->spellEnergy, -1);
 		}
 
 		zVEC3 move, add, right, tmp, pos, curPos;
@@ -1063,6 +1073,8 @@ bool hCSpell::IsInvestSpell()
 	case SPL_PYROKINESIS:
 	case SPL_CHAINLIGHTNING:
 	case SPL_HEAL:
+	// case SPL_TELEKINESIS:
+	case SPL_TELEKINESIS2:
 		return TRUE;
 
 		break;
@@ -1093,7 +1105,7 @@ bool hCSpell::CastSpecificSpell()
 			this->spellTargetNpc->SetBodyStateModifier(BS_MOD_CONTROLLED);
 
 			oCMsgWeapon *msgWeapon = oCMsgWeapon::_CreateNewInstance();
-			msgWeapon->subType = 3;
+			msgWeapon->subType = oCMsgWeapon::EV_REMOVEWEAPON;
 
 			// Hopefully this works ...
 			this->spellCasterNpc->GetEM(FALSE)->OnMessage(msgWeapon, this->spellCasterNpc);
@@ -1214,6 +1226,9 @@ void hCSpell::StopTargetEffects(zCVob *vob)
 	{
 		if (vob && vob->homeWorld)
 		{
+			// Hacks
+			bTelekinesisManaTaken = FALSE;
+
 			zVEC3 positionWorld = vob->GetPositionWorld();
 			zVEC3 groundVec(0.0f, -(positionWorld[1] - vob->bbox3D.mins[1]) - 1.0f, 0.0f);
 

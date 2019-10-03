@@ -970,7 +970,7 @@ void PatchBarrier(void)
 		G12GetPrivateProfileString("WorldName", WORLD_NAME, worldName, sizeof(worldName));
 
 		alwaysVisible = G12GetPrivateProfileBool("BarrierAlwaysOn", FALSE);
-		ignoreSkyEffectsSetting = G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE);
+		ignoreSkyEffectsSetting = G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", TRUE);
 
 		timeToStayVisible = (float)(G12GetPrivateProfileInt("BarrierTimeOn", 25) * 1000);
 
@@ -999,7 +999,7 @@ void PatchBarrier(void)
 		// Use our own RenderSkyPre()
 		Patch(0x0083C178, &hCSkyControler_Barrier::RenderSkyPre); // oCSkyControler_Barrier::`vftable'
 
-		// Use a slightly moddified AddThunderSub()
+		// Use a slightly modified AddThunderSub()
 		InjectHook(0x006BB376, &hCBarrier::AddThunderSub); // oCBarrier::AddThunder()
 	}
 }

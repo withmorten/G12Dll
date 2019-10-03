@@ -325,9 +325,9 @@ public:
 		this->array[this->numInArray++] = ins;
 	}
 
-	void InsertFront(const T &ins) { InsertAtPos(ins, 0); }
+	void InsertFront(const T &ins) { this->InsertAtPos(ins, 0); }
 
-	void Insert(const T &ins) { InsertEnd(ins); }
+	void Insert(const T &ins) { this->InsertEnd(ins); }
 
 	void InsertAtPos(const T &ins, int pos)
 	{

@@ -42,6 +42,7 @@ typedef unsigned int dword;
 // file offset to image offset
 #define _fo(file_addr) (file_addr + BASE_ADDR)
 
+char G12Cwd[MAX_PATH];
 char G12LogPath[MAX_PATH];
 char G12IniPath[MAX_PATH];
 
@@ -69,7 +70,7 @@ FLOAT G12GetPrivateProfileFloat(LPCTSTR lpKeyName, LPCTSTR lpDefault)
 	return (FLOAT)atof(lpReturnedString);
 }
 
-FILE *conin, *conout, *out = NULL;
+FILE *conin, *conout, *fileout = NULL;
 
 void G12Log(const char *format, ...)
 {
@@ -79,11 +80,11 @@ void G12Log(const char *format, ...)
 	printf("%s: ", G12DLL_NAME);
 	vprintf(format, args);
 
-	if (out)
+	if (fileout)
 	{
-		fprintf(out, "%s.dll: ", G12DLL_NAME);
-		vfprintf(out, format, args);
-		_fflush_nolock(out);
+		fprintf(fileout, "%s.dll: ", G12DLL_NAME);
+		vfprintf(fileout, format, args);
+		_fflush_nolock(fileout);
 	}
 
 	va_end(args);
@@ -94,12 +95,14 @@ void G12Log(const char *format, ...)
 void G12AllocConsole(void)
 {
 	// does not belong here, but whatever
-	_getcwd(G12LogPath, sizeof(G12LogPath));
+	_getcwd(G12Cwd, sizeof(G12Cwd));
+
+	strncpy(G12LogPath, G12Cwd, sizeof(G12LogPath));
 	strncat(G12LogPath, "\\G12.log", sizeof(G12LogPath));
 
-	out = fopen(G12LogPath, "wb");
+	fileout = fopen(G12LogPath, "wb");
 
-	_getcwd(G12IniPath, sizeof(G12IniPath));
+	strncpy(G12IniPath, G12Cwd, sizeof(G12IniPath));
 	strncat(G12IniPath, "\\G12.ini", sizeof(G12IniPath));
 
 	if (G12GetPrivateProfileBool("AllocConsole", FALSE))
