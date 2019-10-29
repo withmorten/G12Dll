@@ -234,8 +234,8 @@ void PatchMagicFrontier(void)
 
 static float UV_SCALER = 1.0f;
 
-const int barrierEverLoomingMinOpacity = 5;
-const int barrierEverLoomingMaxOpacity = 15;
+static int barrierEverLoomingMinOpacity = 5;
+static int barrierEverLoomingMaxOpacity = 15;
 
 static int barrierMinOpacity = 0;
 static int barrierMaxOpacity = 120;
@@ -300,7 +300,7 @@ void hCBarrier::AddEarthQuake()
 
 void hCBarrier::Init()
 {
-	this->originalTexUVList = 0;
+	this->originalTexUVList = NULL;
 
 	this->skySphereMesh = zCMesh::Load(zSTRING("Magicfrontier_Out.3ds"), TRUE);
 
@@ -986,7 +986,11 @@ void PatchBarrier(void)
 		// ever looming barrier (idea from "F a w k e s" here https://forum.worldofplayers.de/forum/threads/1541239-G1-Barrier-ever-looming-threat)
 		if (G12GetPrivateProfileBool("BarrierEverLooming", FALSE))
 		{
-			alwaysVisible = FALSE; // set this to false for no clashing
+			alwaysVisible = FALSE; // set this to false to avoid clashing
+
+			barrierEverLoomingMinOpacity = G12GetPrivateProfileInt("BarrierEverLoomingMinOpacity", barrierEverLoomingMinOpacity);
+			barrierEverLoomingMaxOpacity = G12GetPrivateProfileInt("BarrierEverLoomingMaxOpacity", barrierEverLoomingMaxOpacity);
+
 			barrierMinOpacity = barrierEverLoomingMinOpacity;
 		}
 

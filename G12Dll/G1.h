@@ -6,6 +6,7 @@ oCGame *&ogame = *(oCGame **)0x008DA6BC;
 zCParser &parser = *(zCParser *)0x008DCE08;
 zCParser *&cur_parser = *(zCParser **)0x008DDFD4;
 zERROR &zerr = *(zERROR *)0x008699D8;
+zCView *&screen = *(zCView **)0x008DE1BC;
 
 zMAT4 &zMAT4::s_identity = *(zMAT4 *)0x0086F868;
 
@@ -69,6 +70,16 @@ zMAT4 Alg_Identity3D()
 	);
 }
 
+zVEC3 operator*(zMAT4 &m, zVEC3 &v)
+{
+	return zVEC3
+	(
+		m[0][VX] * v[VX] + m[0][VY] * v[VY] + m[0][VZ] * v[VZ] + m[0][VW],
+		m[1][VX] * v[VX] + m[1][VY] * v[VY] + m[1][VZ] * v[VZ] + m[1][VW],
+		m[2][VX] * v[VX] + m[2][VY] * v[VY] + m[2][VZ] * v[VZ] + m[2][VW]
+	);
+}
+
 bool zCModel::IsAniActive(zSTRING &aniName)
 {
 	return this->IsAniActive(this->GetAniFromAniID(this->GetAniIDFromAniName(aniName)));
@@ -95,4 +106,54 @@ template<class T> T *zDYNAMIC_CAST(zCObject *pObject)
 template<class T> T *zSTATIC_CAST(zCObject *pObject)
 {
 	return (T *)pObject;
+}
+
+void GetNearestPointFromLineSegment2D(zVEC2 &a, zVEC2 &b, zVEC2 &c, zVEC2 &nearest)
+{
+	int dotA, dotB;
+
+	dotA = (int)((c[VX] - a[VX]) * (b[VX] - a[VX]) + (c[VY] - a[VY]) * (b[VY] - a[VY]));
+
+	if (dotA <= 0)
+	{
+		nearest[VX] = a[VX];
+		nearest[VY] = a[VY];
+
+		return;
+	}
+
+	dotB = (int)((c[VX] - b[VX]) * (a[VX] - b[VX]) + (c[VY] - b[VY]) * (a[VY] - b[VY]));
+
+	if (dotB <= 0)
+	{
+		nearest[VX] = b[VX];
+		nearest[VY] = b[VY];
+
+		return;
+	}
+
+	nearest[VX] = a[VX] + ((b[VX] - a[VX]) * dotA) / (dotA + dotB);
+	nearest[VY] = a[VY] + ((b[VY] - a[VY]) * dotA) / (dotA + dotB);
+}
+
+void Alg_ClipAtZ0(zVEC3 &p1, zVEC3 &p2)
+{
+	if ((p1[VZ] >= 0) && (p2[VZ] >= 0))	return;
+
+	if ((p1[VZ] <= 0) && (p2[VZ] <= 0))	return;
+
+	zVEC3 p;
+	float t;
+	zVEC3 d = p2 - p1;
+
+	if (d[VZ] == 0) return;
+
+	t = -p1[VZ] / d[VZ];
+
+	p[VX] = p1[VX] + t * d[VX];
+	p[VY] = p1[VY] + t * d[VY];
+	p[VZ] = 10.0F;
+
+	if (p1[VZ] < 0)	p1 = p;
+	else p2 = p;
 }

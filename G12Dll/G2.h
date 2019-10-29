@@ -6,6 +6,7 @@ oCGame *&ogame = *(oCGame **)0x00AB0884;
 zCParser &parser = *(zCParser *)0x00AB40C0;
 zCParser *&cur_parser = *(zCParser **)0x00AB628C;
 zERROR &zerr = *(zERROR *)0x008CDCD0;
+zCView *&screen = *(zCView **)0x00AB6468;
 
 zMAT4 &zMAT4::s_identity = *(zMAT4 *)0x008D45E8;
 
@@ -69,6 +70,16 @@ zMAT4 Alg_Identity3D()
 		zVEC4(0.0, 1.0, 0.0, 0.0),
 		zVEC4(0.0, 0.0, 1.0, 0.0),
 		zVEC4(0.0, 0.0, 0.0, 1.0)
+	);
+}
+
+zVEC3 operator*(zMAT4 &m, zVEC3 &v)
+{
+	return zVEC3
+	(
+		m[0][VX] * v[VX] + m[0][VY] * v[VY] + m[0][VZ] * v[VZ] + m[0][VW],
+		m[1][VX] * v[VX] + m[1][VY] * v[VY] + m[1][VZ] * v[VZ] + m[1][VW],
+		m[2][VX] * v[VX] + m[2][VY] * v[VY] + m[2][VZ] * v[VZ] + m[2][VW]
 	);
 }
 

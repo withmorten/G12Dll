@@ -38,6 +38,11 @@ struct zTRnd_DeviceInfo;
 struct zTRnd_VidModeInfo;
 struct zTMaterial;
 
+class zVEC2;
+class zVEC3;
+class zVEC4;
+class zMAT3;
+class zMAT4;
 class zCLightMap;
 class zCMaterial;
 class zCTexture;
@@ -189,6 +194,7 @@ public:
 	friend zVEC3 operator-(zVEC3 &a, zVEC3 &b) { return zVEC3(a[VX] - b[VX], a[VY] - b[VY], a[VZ] - b[VZ]); }
 	friend zVEC3 operator*(zVEC3 &v, float f) { return zVEC3(v[VX] * f, v[VY] * f, v[VZ] * f); }
 	friend float operator*(zVEC3 &a, zVEC3 &b) { return a[VX] * b[VX] + a[VY] * b[VY] + a[VZ] * b[VZ]; }
+	friend zVEC3 operator*(zMAT4 &m, zVEC3 &v);
 	friend zVEC3 operator^(zVEC3 &a, zVEC3 &b) { return zVEC3(a[VY] * b[VZ] - a[VZ] * b[VY], a[VZ] * b[VX] - a[VX] * b[VZ], a[VX] * b[VY] - a[VY] * b[VX]); }
 
 	float Length() { return sqrtf(this->Length2()); }
@@ -1209,7 +1215,7 @@ public:
 	zTPlane frustumplanes[6];
 	BYTE signbits[6];
 
-	zTViewPortData vpdata;
+	zTViewPortData vpData;
 	zCViewBase *targetView;
 
 	zMAT4 camMatrix;
@@ -3487,4 +3493,20 @@ public:
 	virtual ~zERROR() { XCALL(0x0044C650); }
 
 	int Report(int xLevel, int xId, const zSTRING &xMessage, char level, unsigned int flag, int line, char *file, char *function) { XCALL(0x0044C8D0); }
+};
+
+class zCViewBase
+{
+public:
+	virtual int anx(int x) { return 0; }
+	virtual int any(int y) { return 0; }
+	virtual int nax(int x) { return 0; }
+	virtual int nay(int y) { return 0; }
+
+	virtual int ClipLine(int &x0, int &y0, int &x1, int &y1) { return 0; }
+};
+
+class zCView : public zCViewBase
+{
+
 };
