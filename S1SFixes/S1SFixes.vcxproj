@@ -14,7 +14,7 @@
     <XPDeprecationWarning>false</XPDeprecationWarning>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{6E5137D3-D31C-4637-BAAC-D56E38F58B25}</ProjectGuid>
+    <ProjectGuid>{00000000-0000-0000-0000-000000000007}</ProjectGuid>
     <RootNamespace>S1SFixes</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
