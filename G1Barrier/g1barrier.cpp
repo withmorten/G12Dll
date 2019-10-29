@@ -1,12 +1,12 @@
 #include "..\G12Dll\G12Core.h"
 
-#define G12DLL_NAME "G1Fixes"
+#define G12DLL_NAME "G1Barrier"
 
 #include "..\G12Dll\G12.h"
 
 #include "..\G12Dll\G1.hpp"
 #include "..\G12Dll\G1.h"
-#include "g1fixes.hpp"
+#include "g1barrier.hpp"
 
 void PatchGothic(void)
 {

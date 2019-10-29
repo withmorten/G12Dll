@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by G2Spells.rc
+// Used by G1Barrier.rc
 
 // Next default values for new objects
 // 

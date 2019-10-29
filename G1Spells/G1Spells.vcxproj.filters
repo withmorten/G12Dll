@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="g1fixes.cpp">
+    <ClCompile Include="g1spells.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,7 +32,7 @@
     <ClInclude Include="..\G12Dll\G1.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="g1fixes.hpp">
+    <ClInclude Include="g1spells.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
@@ -46,7 +46,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="G1Fixes.rc">
+    <ResourceCompile Include="G1Spells.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

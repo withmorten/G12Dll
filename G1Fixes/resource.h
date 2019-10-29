@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by S1Fixes.rc
+// Used by G1Fixes.rc
 
 // Next default values for new objects
 // 
