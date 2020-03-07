@@ -12,7 +12,7 @@ public:
 	void Init();
 	void AddTremor(zTRenderContext &renderContext);
 	void AddEarthQuake();
-	bool Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible);
+	void Render(zTRenderContext &rndContext);
 };
 
 class hCSkyControler_Barrier : public oCSkyControler_Barrier

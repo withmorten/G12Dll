@@ -33,6 +33,12 @@ void PatchGothic108k(void)
 	// Patch(0x009D987C, TRUE);
 }
 
+void PatchGothic112f(void)
+{
+	// Fix Fps
+	Nop(0x005ED341, 7);
+}
+
 const char *SpacerAppName = "Spacer 1.50";
 const char *SpacerAppVersion = "1.50";
 const float SpacerFarClipping = 3.9f; // ??? 4.0f
@@ -164,6 +170,11 @@ void Init(void)
 	{
 		G12AllocConsole();
 		PatchGothic108k();
+	}
+	else if (GOTHIC112F)
+	{
+		G12AllocConsole();
+		PatchGothic112f();
 	}
 	else if (SPACER150)
 	{

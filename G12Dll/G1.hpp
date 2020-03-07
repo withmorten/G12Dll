@@ -138,6 +138,8 @@ class oCSpawnManager;
 class oCVisualFXAI;
 class oCEmitterKey;
 
+class TMobOptPos;
+
 enum zTRnd_AlphaBlendFunc
 {
 	zRND_ALPHA_FUNC_MAT_DEFAULT,
@@ -400,7 +402,7 @@ public:
 		return -1;
 	}
 
-	bool IsInList(const T &data)
+	bool32 IsInList(const T &data)
 	{
 		for (int i = 0; i < this->numInArray; i++) if (this->array[i] == data) return TRUE;
 
@@ -477,8 +479,8 @@ public:
 	int Search(const zSTRING &substr, unsigned int num = 1) { return this->Search(0, substr.ToChar(), num); }
 	int Search(const char *substr, unsigned int num = 1) { return this->Search(0, substr, num); }
 
-	bool Contains(char *substr) { return this->Search(0, substr, 1) != -1; }
-	bool Contains(const zSTRING &substr) { return Search(0, substr.ToChar(), 1) != -1; }
+	bool32 Contains(char *substr) { return this->Search(0, substr, 1) != -1; }
+	bool32 Contains(const zSTRING &substr) { return Search(0, substr.ToChar(), 1) != -1; }
 
 	friend zSTRING operator+(const zSTRING &xStr1, const zSTRING &xStr2) { XCALL(0x00404480); }
 	friend zSTRING operator+(const zSTRING &xStr1, const char *pstring) { XCALL(0x00404740); }
@@ -486,13 +488,13 @@ public:
 	friend zSTRING operator+(const char *pstring, const zSTRING &xStr2) { XCALL(0x004045D0); }
 	friend zSTRING operator+(const char ch, const zSTRING &xStr2) { XCALL(0x00445E60); }
 
-	friend bool operator==(const zSTRING &xStr1, const zSTRING &xStr2) { XCALL(0x0073F450); }
-	friend bool operator==(const zSTRING &xStr1, const char *xStr2) { XCALL(0x00644FA0); }
-	friend bool operator==(const char *xStr1, const zSTRING &xStr2) { return xStr2 == xStr1; }
+	friend bool32 operator==(const zSTRING &xStr1, const zSTRING &xStr2) { XCALL(0x0073F450); }
+	friend bool32 operator==(const zSTRING &xStr1, const char *xStr2) { XCALL(0x00644FA0); }
+	friend bool32 operator==(const char *xStr1, const zSTRING &xStr2) { return xStr2 == xStr1; }
 
-	friend bool operator!=(const zSTRING &xStr1, const zSTRING &xStr2) { return !(xStr1 == xStr1); }
-	friend bool operator!=(const zSTRING &xStr1, const char *xStr2) { return !(xStr1 == xStr2); }
-	friend bool operator!=(const char *xStr1, const zSTRING &xStr2) { return !(xStr1 == xStr2); }
+	friend bool32 operator!=(const zSTRING &xStr1, const zSTRING &xStr2) { return !(xStr1 == xStr1); }
+	friend bool32 operator!=(const zSTRING &xStr1, const char *xStr2) { return !(xStr1 == xStr2); }
+	friend bool32 operator!=(const char *xStr1, const zSTRING &xStr2) { return !(xStr1 == xStr2); }
 };
 
 class zCOLOR
@@ -580,7 +582,7 @@ struct zTRenderContext
 
 struct zTTraceRayReport
 {
-	bool foundHit;
+	bool32 foundHit;
 	zCVob *foundVob;
 	zCPolygon *foundPoly;
 	zVEC3 foundIntersection;
@@ -597,7 +599,7 @@ struct myVert
 	int polyIndices[50];
 	int numPolyIndices;
 
-	bool active;
+	bool32 active;
 };
 
 struct myThunder
@@ -608,12 +610,12 @@ struct myThunder
 	float startTime[5];
 	zCPolyStrip *polyStrip;
 	int numSegs;
-	bool valid;
+	bool32 valid;
 	float t0;
 	float t1;
 	int numSplits;
-	bool dead;
-	bool isChild;
+	bool32 dead;
+	bool32 isChild;
 	int sector;
 };
 
@@ -654,7 +656,7 @@ public:
 	zSTRING objectName;
 
 public:
-	static bool CheckInheritance(zCClassDef *baseClass, zCClassDef *subClass) { XCALL(0x00470130); }
+	static bool32 CheckInheritance(zCClassDef *baseClass, zCClassDef *subClass) { XCALL(0x00470130); }
 
 	zCObject() { XCALL(0x00401C20); }
 
@@ -675,7 +677,7 @@ class oCVisualFXAI : public zCAIBase
 {
 public:
 	zCVob *vob;
-	bool delete_it;
+	bool32 delete_it;
 };
 
 class zCBBox3DSorterBase
@@ -706,12 +708,12 @@ public:
 	float lodNearFadeOutDistance;
 
 public:
-	virtual bool Render(zTRenderContext &renderContext) = 0;
-	virtual bool IsBBox3DLocal() = 0;
+	virtual bool32 Render(zTRenderContext &renderContext) = 0;
+	virtual bool32 IsBBox3DLocal() = 0;
 	virtual zTBBox3D GetBBox3D() = 0;
 	virtual zCOBBox3D *GetOBBox3D() = 0;
 	virtual zSTRING GetVisualName() = 0;
-	virtual bool GetVisualDied() = 0;
+	virtual bool32 GetVisualDied() = 0;
 };
 
 class zCVisualAnimate : public zCVisual { };
@@ -811,7 +813,7 @@ public:
 	int masterFrameCtr;
 
 	zSTRING meshName;
-	bool hasLightmaps;
+	bool32 hasLightmaps;
 
 	int numVertAlloc;
 	int numPolyAlloc;
@@ -819,7 +821,7 @@ public:
 public:
 	static zCMesh *Load(zSTRING &meshFileName) { XCALL(0x005501A0); }
 
-	virtual bool Render(zTRenderContext &renderContext, zCOLOR *vertexColor) { XCALL(0x005537E0); }
+	virtual bool32 Render(zTRenderContext &renderContext, zCOLOR *vertexColor) { XCALL(0x005537E0); }
 };
 
 class zCTexAniCtrl
@@ -829,7 +831,7 @@ public:
 	float actFrame;
 	float aniFPS;
 	int frameCtr;
-	bool bOneShotAni;
+	bool32 bOneShotAni;
 };
 
 class zCMaterial : public zCObject
@@ -922,7 +924,7 @@ class zCCollisionObjectDef
 {
 public:
 	zCCollisionObject *(*m_createNewInstance)(void);
-	bool m_bIsVolatile;
+	bool32 m_bIsVolatile;
 	int m_iIndex;
 };
 
@@ -1029,23 +1031,23 @@ public:
 	virtual zTVobCharClass GetCharacterClass() { return zVOB_CHAR_CLASS_NONE; }
 	virtual void SetSleepingMode(zTVobSleepingMode smode) { XCALL(0x005D7280); }
 	virtual void EndMovement() { XCALL(0x005F0B60); }
-	virtual bool CanThisCollideWith(zCVob *vob) { return TRUE; }
-	virtual bool __fastcall Render(zTRenderContext &renderContext) { XCALL(0x005D6090); }
+	virtual bool32 CanThisCollideWith(zCVob *vob) { return TRUE; }
+	virtual bool32 __fastcall Render(zTRenderContext &renderContext) { XCALL(0x005D6090); }
 	virtual void SetVisual(zCVisual *v) { XCALL(0x005D6E10); }
 	virtual void SetVisual(zSTRING &visualFileName) { XCALL(0x005D6FA0); }
-	virtual bool GetScriptInstance(zSTRING *&scriptInstanceName, int &scriptInstanceIndex) { scriptInstanceName = NULL; scriptInstanceIndex = 0; return FALSE; }
-	virtual bool SetByScriptInstance(zSTRING *scriptInstanceName, const int scriptInstanceIndex) { return FALSE; }
+	virtual bool32 GetScriptInstance(zSTRING *&scriptInstanceName, int &scriptInstanceIndex) { scriptInstanceName = NULL; scriptInstanceIndex = 0; return FALSE; }
+	virtual bool32 SetByScriptInstance(zSTRING *scriptInstanceName, const int scriptInstanceIndex) { return FALSE; }
 	virtual int GetCSStateFlags() { return 0; }
-	virtual bool TraceRay(zVEC3 &rayOrigin, zVEC3 &ray, int traceFlags, zTTraceRayReport &report) { XCALL(0x005D49E0); }
+	virtual bool32 TraceRay(zVEC3 &rayOrigin, zVEC3 &ray, int traceFlags, zTTraceRayReport &report) { XCALL(0x005D49E0); }
 	virtual zSTRING *GetTriggerTarget(int i) { return NULL; }
 	virtual void ThisVobAddedToWorld(zCWorld *homeWorld) { XCALL(0x005D66B0); }
 	virtual void ThisVobRemovedFromWorld(zCWorld *homeWorld) { XCALL(0x005D66D0); }
 
-	zCEventManager *__fastcall GetEM(bool dontCreate) { XCALL(0x005D49B0); }
-	void SetSleeping(bool sleep) { if (sleep) this->SetSleepingMode(zVOB_SLEEPING); else this->SetSleepingMode(zVOB_AWAKE); }
+	zCEventManager *__fastcall GetEM(bool32 dontCreate) { XCALL(0x005D49B0); }
+	void SetSleeping(bool32 sleep) { if (sleep) this->SetSleepingMode(zVOB_SLEEPING); else this->SetSleepingMode(zVOB_AWAKE); }
 	float GetDistanceToVob2(zCVob &v) { XCALL(0x005EE530); }
 	void SetPositionWorld(zVEC3 &posWorld) { XCALL(0x005EE650); }
-	void SetPhysicsEnabled(bool enable) { XCALL(0x005EFC20); }
+	void SetPhysicsEnabled(bool32 enable) { XCALL(0x005EFC20); }
 	void BeginMovement() { XCALL(0x005F0510); }
 	void SetCollisionClass(zCCollisionObjectDef *collClass) { XCALL(0x005F1080); }
 	void RemoveVobFromWorld() { XCALL(0x005D6670); }
@@ -1055,9 +1057,9 @@ public:
 	void UpdateVisualDependencies() { XCALL(0x005D7460); }
 	void SetTrafo(zMAT4 &intrafo) { XCALL(0x005EE6B0); }
 	void SetVobName(const zSTRING &n) { XCALL(0x005D4970); }
-	void __fastcall SetCollDetStat(bool b) { XCALL(0x005EF8D0); }
-	void __fastcall SetCollDetDyn(bool b) { XCALL(0x005EF9C0); }
-	void SetCollDet(bool b) { SetCollDetStat(b); SetCollDetDyn(b); }
+	void __fastcall SetCollDetStat(bool32 b) { XCALL(0x005EF8D0); }
+	void __fastcall SetCollDetDyn(bool32 b) { XCALL(0x005EF9C0); }
+	void SetCollDet(bool32 b) { SetCollDetStat(b); SetCollDetDyn(b); }
 	void SetAI(zCAIBase *cbai) { XCALL(0x005D3730); }
 	zVEC3 GetPositionWorld() { return trafoObjToWorld.GetTranslation(); }
 	zMAT4 GetTrafoModelNodeToWorld(zCModelNodeInst *modelNode) { XCALL(0x005D84D0); }
@@ -1102,7 +1104,7 @@ public:
 	zSTRING lightPresetInUse;
 
 public:
-	void SetRange(float r, bool doBackup) { XCALL(0x005DBAF0); }
+	void SetRange(float r, bool32 doBackup) { XCALL(0x005DBAF0); }
 };
 
 class zCCamera
@@ -1129,7 +1131,7 @@ public:
 	zMAT4 camMatrix;
 	zMAT4 camMatrixInv;
 
-	bool tremorToggle;
+	bool32 tremorToggle;
 	float tremorScale;
 	zVEC3 tremorAmplitude;
 	zVEC3 tremorOrigin;
@@ -1149,15 +1151,15 @@ public:
 	zCMesh *polyMesh;
 	zCMaterial *polyMaterial;
 
-	bool screenFadeEnabled;
+	bool32 screenFadeEnabled;
 	zCOLOR screenFadeColor;
-	bool cinemaScopeEnabled;
+	bool32 cinemaScopeEnabled;
 	zCOLOR cinemaScopeColor;
 
 	int projection;
 	int drawMode;
 	int shadeMode;
-	bool drawWire;
+	bool32 drawWire;
 
 	float farClipZ;
 	float nearClipZ;
@@ -1192,10 +1194,10 @@ public:
 	float ydim;
 	float xoffset;
 	float yoffset;
-	bool decal2Sided;
+	bool32 decal2Sided;
 
 public:
-	virtual bool Render(zTRenderContext &renderContext) { XCALL(0x00542280); }
+	virtual bool32 Render(zTRenderContext &renderContext) { XCALL(0x00542280); }
 
 	void SetDecalDim(float xd, float yd) { this->xdim = xd; this->ydim = yd; }
 };
@@ -1234,7 +1236,7 @@ public:
 	byte localFOR : 1;
 
 public:
-	virtual bool Render(zTRenderContext &renderContext) { XCALL(0x0059BF50); }
+	virtual bool32 Render(zTRenderContext &renderContext) { XCALL(0x0059BF50); }
 
 	void SetVisibleSegments(float visibleFirst, float visibleLast) { XCALL(0x0059BE80); }
 };
@@ -1270,11 +1272,11 @@ public:
 
 	int topestPoint;
 
-	bool bFadeInOut;
+	bool32 bFadeInOut;
 	int fadeState;
 
-	bool fadeIn;
-	bool fadeOut;
+	bool32 fadeIn;
+	bool32 fadeOut;
 
 	zCSoundFX *sfx1;
 	zTSoundHandle sfxHandle1;
@@ -1287,10 +1289,10 @@ public:
 
 	zCDecal *thunderStartDecal;
 
-	bool activeThunder_Sector1;
-	bool activeThunder_Sector2;
-	bool activeThunder_Sector3;
-	bool activeThunder_Sector4;
+	bool32 activeThunder_Sector1;
+	bool32 activeThunder_Sector2;
+	bool32 activeThunder_Sector3;
+	bool32 activeThunder_Sector4;
 
 	zVEC2 *originalTexUVList;
 
@@ -1298,11 +1300,11 @@ public:
 	void Initialise(int newNumMaxThunders) { XCALL(0x00630470); }
 	void AddTremor(zTRenderContext &renderContext) { XCALL(0x00630570); }
 	void RenderLayer(zTRenderContext &rndContext, int layerNumber, int &addNewThunder) { XCALL(0x00630580); }
-	bool Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible) { XCALL(0x006307C0); }
+	bool32 Render(zTRenderContext &rndContext, bool32 fadeInOut, bool32 alwaysVisible) { XCALL(0x006307C0); }
 	void RemoveThunder(myThunder *thunder) { XCALL(0x00631220); }
 	int AddThunderSub(myThunder *rootThunder, int startIndex, int startNexIntex, int length, int mumSplits) { XCALL(0x006312D0); }
 	int AddThunder(int startIndex, int length, float random, int sector) { XCALL(0x00631620); }
-	bool RenderThunder(myThunder *thunder, zTRenderContext &rndContext) { XCALL(0x00631D10) }
+	bool32 RenderThunder(myThunder *thunder, zTRenderContext &rndContext) { XCALL(0x00631D10) }
 };
 
 class zCRenderer
@@ -1318,24 +1320,24 @@ public:
 	virtual void DrawLineZ(float x1Scr, float y1Scr, float z1CamSpaceInv, float x2Scr, float y2Scr, float z2CamSpaceInv, zCOLOR col) = 0;
 	virtual void SetPixel(float x, float y, zCOLOR col) = 0;
 	virtual void DrawPolySimple(zCTexture *texture, zTRndSimpleVertex *vertex, int numVert) = 0;
-	virtual void SetFog(bool foggy) = 0;
-	virtual bool GetFog() = 0;
+	virtual void SetFog(bool32 foggy) = 0;
+	virtual bool32 GetFog() = 0;
 	virtual void SetFogColor(zCOLOR &col) = 0;
 	virtual zCOLOR GetFogColor() = 0;
 	virtual void SetFogRange(float nearz, float farz, int falloff) = 0;
 	virtual void GetFogRange(float &nearz, float &farz, int &falloff) = 0;
 	virtual int GetPolyDrawMode() = 0;
 	virtual void SetPolyDrawMode(int &drawMode) = 0;
-	virtual void SetTextureWrapEnabled(bool b) = 0;
-	virtual bool GetTextureWrapEnabled() = 0;
-	virtual void SetBilerpFilterEnabled(bool b) = 0;
-	virtual bool GetBilerpFilterEnabled() = 0;
-	virtual void SetDitherEnabled(bool b) = 0;
-	virtual bool GetDitherEnabled() = 0;
+	virtual void SetTextureWrapEnabled(bool32 b) = 0;
+	virtual bool32 GetTextureWrapEnabled() = 0;
+	virtual void SetBilerpFilterEnabled(bool32 b) = 0;
+	virtual bool32 GetBilerpFilterEnabled() = 0;
+	virtual void SetDitherEnabled(bool32 b) = 0;
+	virtual bool32 GetDitherEnabled() = 0;
 	virtual int GetPolySortMode() = 0;
 	virtual void SetPolySortMode(int &smode) = 0;
-	virtual bool GetZBufferWriteEnabled() = 0;
-	virtual void SetZBufferWriteEnabled(bool flag) = 0;
+	virtual bool32 GetZBufferWriteEnabled() = 0;
+	virtual void SetZBufferWriteEnabled(bool32 flag) = 0;
 
 	zTRnd_AlphaBlendFunc AlphaBlendFuncStringToType(const zSTRING &s) { XCALL(0x005AE600); }
 };
@@ -1353,24 +1355,24 @@ public:
 	virtual void DrawLineZ(float x1Scr, float y1Scr, float z1CamSpaceInv, float x2Scr, float y2Scr, float z2CamSpaceInv, zCOLOR col) { XCALL(0x00716D20); }
 	virtual void SetPixel(float x, float y, zCOLOR col) { XCALL(0x00716920); }
 	virtual void DrawPolySimple(zCTexture *texture, zTRndSimpleVertex *vertex, int numVert) { XCALL(0x007143F0); }
-	virtual void SetFog(bool foggy) { XCALL(0x00719B70); }
-	virtual bool GetFog() { XCALL(0x00719C10); }
+	virtual void SetFog(bool32 foggy) { XCALL(0x00719B70); }
+	virtual bool32 GetFog() { XCALL(0x00719C10); }
 	virtual void SetFogColor(zCOLOR &col) { XCALL(0x00719C20); }
 	virtual zCOLOR GetFogColor() { XCALL(0x00719C50); }
 	virtual void SetFogRange(float nearz, float farz, int falloff) { XCALL(0x00719C60); }
 	virtual void GetFogRange(float &nearz, float &farz, int &falloff) { XCALL(0x00719CB0); }
 	virtual int GetPolyDrawMode() { XCALL(0x00719CF0); }
 	virtual void SetPolyDrawMode(int &drawMode) { XCALL(0x00719CE0); }
-	virtual void SetTextureWrapEnabled(bool b) { XCALL(0x00719D00); }
-	virtual bool GetTextureWrapEnabled() { XCALL(0x00719D10); }
-	virtual void SetBilerpFilterEnabled(bool b) { XCALL(0x00719D20); }
-	virtual bool GetBilerpFilterEnabled() { XCALL(0x00719DA0); }
-	virtual void SetDitherEnabled(bool b) { XCALL(0x00719DB0); }
-	virtual bool GetDitherEnabled() { XCALL(0x00719DC0); }
+	virtual void SetTextureWrapEnabled(bool32 b) { XCALL(0x00719D00); }
+	virtual bool32 GetTextureWrapEnabled() { XCALL(0x00719D10); }
+	virtual void SetBilerpFilterEnabled(bool32 b) { XCALL(0x00719D20); }
+	virtual bool32 GetBilerpFilterEnabled() { XCALL(0x00719DA0); }
+	virtual void SetDitherEnabled(bool32 b) { XCALL(0x00719DB0); }
+	virtual bool32 GetDitherEnabled() { XCALL(0x00719DC0); }
 	virtual int GetPolySortMode() { XCALL(0x00719E20); }
 	virtual void SetPolySortMode(int &smode) { XCALL(0x00719DD0); }
-	virtual bool GetZBufferWriteEnabled() { XCALL(0x00719E50); }
-	virtual void SetZBufferWriteEnabled(bool flag) { XCALL(0x00719E30); }
+	virtual bool32 GetZBufferWriteEnabled() { XCALL(0x00719E50); }
+	virtual void SetZBufferWriteEnabled(bool32 flag) { XCALL(0x00719E30); }
 };
 
 class zCSkyPlanet
@@ -1415,8 +1417,8 @@ public:
 	zVEC3 domeColor1;
 	zVEC3 domeColor0;
 	float fogDist;
-	bool sunOn;
-	bool cloudShadowOn;
+	bool32 sunOn;
+	bool32 cloudShadowOn;
 
 	zCSkyLayerData layer[2];
 };
@@ -1430,14 +1432,14 @@ public:
 	float cloudShadowScale;
 
 	zCOLOR backgroundColor;
-	bool fillBackground;
+	bool32 fillBackground;
 	zCTexture *backgroundTexture;
 };
 
 class zCSkyControler_Mid : public zCSkyControler
 {
 public:
-	bool underwaterFX;
+	bool32 underwaterFX;
 	zCOLOR underwaterColor;
 	float underwaterFarZ;
 
@@ -1471,7 +1473,7 @@ public:
 public:
 	static zCClassDef &classDef;
 
-	bool initDone;
+	bool32 initDone;
 	float masterTime;
 	float masterTimeLast;
 
@@ -1523,7 +1525,7 @@ class oCSkyControler_Barrier : public zCSkyControler_Outdoor
 {
 public:
 	oCBarrier *barrier;
-	bool bFadeInOut;
+	bool32 bFadeInOut;
 
 public:
 	void RenderSkyPre() { XCALL(0x00632140); }
@@ -1555,12 +1557,12 @@ public:
 	float vobFarClipZ;
 	zTPlane vobFarPlane;
 	int vobFarPlaneSignbits;
-	bool drawVobBBox3D;
+	bool32 drawVobBBox3D;
 	int leafsRendered;
 	int vobsRendered;
 	int masterFrameCtr;
 	zCPolygon **actPolyPtr;
-	bool compiled;
+	bool32 compiled;
 };
 
 class zCVobBBox3DSorter
@@ -1568,7 +1570,7 @@ class zCVobBBox3DSorter
 public:
 	zCArray<zCBBox3DSorterBase::zTBoxSortHandle *> handles;
 	zCArraySort<zTNode *> nodeList[3];
-	bool sorted;
+	bool32 sorted;
 
 public:
 	virtual ~zCVobBBox3DSorter() { XCALL(0x005FA0E0); }
@@ -1603,9 +1605,9 @@ public:
 	zCSession *ownerSession;
 	zCCSPlayer *csPlayer;
 
-	bool compiled;
-	bool compiledEditorMode;
-	bool traceRayIgnoreVobFlag;
+	bool32 compiled;
+	bool32 compiledEditorMode;
+	bool32 traceRayIgnoreVobFlag;
 	int worldRenderMode;
 	zCWayNet *wayNet;
 	int masterFrameCtr;
@@ -1615,10 +1617,10 @@ public:
 	zCArray<zCVob *> traceRayVobList;
 	zCArray<zCVob *> traceRayTempIgnoreVobList;
 
-	bool renderingFirstTime;
-	bool showWaynet;
-	bool showTraceRayLines;
-	bool showTextureStats;
+	bool32 renderingFirstTime;
+	bool32 showWaynet;
+	bool32 showTraceRayLines;
+	bool32 showTextureStats;
 
 	zCViewProgressBar *progressBar;
 	int unarchiveFileLen;
@@ -1638,8 +1640,8 @@ public:
 	zCVobBBox3DSorter zoneBoxSorter;
 	zCBBox3DSorterBase::zTBoxSortHandle zoneActiveHandle;
 
-	bool addZonesToWorld;
-	bool showZonesDebugInfo;
+	bool32 addZonesToWorld;
+	bool32 showZonesDebugInfo;
 
 	zCCBspTree *cbspTree;
 	zCBspTree bspTree;
@@ -1650,10 +1652,10 @@ public:
 	zCArray<zCVob *> vobHashTable[2048];
 
 public:
-	bool __fastcall TraceRayFirstHit(zVEC3 &rayOrigin, zVEC3 &ray, zCArray<zCVob *> *ignoreVobList, int traceFlags) { XCALL(0x005F40C0); }
-	bool __fastcall TraceRayFirstHit(zVEC3 &rayOrigin, zVEC3 &ray, zCVob *ignoreVob, int traceFlags) { XCALL(0x005F4590); }
-	bool __fastcall TraceRayNearestHit(zVEC3 &rayOrigin, zVEC3 &ray, zCArray<zCVob *> *ignoreVobList, int traceFlags) { XCALL(0x005F42C0); }
-	bool __fastcall TraceRayNearestHit(zVEC3 &rayOrigin, zVEC3 &ray, zCVob *ignoreVob, int traceFlags) { XCALL(0x005F46E0); }
+	bool32 __fastcall TraceRayFirstHit(zVEC3 &rayOrigin, zVEC3 &ray, zCArray<zCVob *> *ignoreVobList, int traceFlags) { XCALL(0x005F40C0); }
+	bool32 __fastcall TraceRayFirstHit(zVEC3 &rayOrigin, zVEC3 &ray, zCVob *ignoreVob, int traceFlags) { XCALL(0x005F4590); }
+	bool32 __fastcall TraceRayNearestHit(zVEC3 &rayOrigin, zVEC3 &ray, zCArray<zCVob *> *ignoreVobList, int traceFlags) { XCALL(0x005F42C0); }
+	bool32 __fastcall TraceRayNearestHit(zVEC3 &rayOrigin, zVEC3 &ray, zCVob *ignoreVob, int traceFlags) { XCALL(0x005F46E0); }
 	zCTree<zCVob *> *AddVob(zCVob *vob) { XCALL(0x005F6340); }
 };
 
@@ -1676,8 +1678,10 @@ public:
 		int loopType;
 		float coneAngleDeg;
 		float reverbLevel;
-		bool isAmbient3D;
+		bool32 isAmbient3D;
 		float pitchOffset;
+
+		void SetDefaults() { obstruction = 0.0f; volume = 1.0f; radius = -1.0f; loopType = 0; coneAngleDeg = 0.0f; reverbLevel = 1.0f; isAmbient3D = FALSE; pitchOffset = -999999.0f; }
 	};
 
 public:
@@ -1696,11 +1700,11 @@ public:
 	virtual zTSoundHandle PlaySound3D(zSTRING &soundName, zCVob *sourceVob, int vobSlot, zTSound3DParams *sound3DParams) = 0;
 	virtual void StopSound(zTSoundHandle &sfxHandle) = 0;
 	virtual void StopAllSounds() = 0;
-	virtual bool GetSound3DProps(zTSoundHandle &sfxHandle, zTSound3DParams &sound3DParams) = 0;
-	virtual bool UpdateSound3D(zTSoundHandle &sfxHandle, zTSound3DParams *sound3DParams) = 0;
+	virtual bool32 GetSound3DProps(zTSoundHandle &sfxHandle, zTSound3DParams &sound3DParams) = 0;
+	virtual bool32 UpdateSound3D(zTSoundHandle &sfxHandle, zTSound3DParams *sound3DParams) = 0;
 	virtual void GetSoundProps(zTSoundHandle &sfxHandle, int &freq, float &vol, float &pan) = 0;
 	virtual void UpdateSoundProps(zTSoundHandle &sfxHandle, int freq, float vol, float pan) = 0;
-	virtual bool IsSoundActive(zTSoundHandle &sfxHandle) = 0;
+	virtual bool32 IsSoundActive(zTSoundHandle &sfxHandle) = 0;
 };
 
 class zCSndSys_MSS : public zCSoundSystem
@@ -1721,23 +1725,23 @@ public:
 	virtual zTSoundHandle PlaySound3D(zSTRING &soundName, zCVob *sourceVob, int vobSlot, zTSound3DParams *sound3DParams) { XCALL(0x004E3740); }
 	virtual void StopSound(zTSoundHandle &sfxHandle) { XCALL(0x004E4610); }
 	virtual void StopAllSounds() { XCALL(0x004E46D0); }
-	virtual bool GetSound3DProps(zTSoundHandle &sfxHandle, zTSound3DParams &sound3DParams) { XCALL(0x004E5830); }
-	virtual bool UpdateSound3D(zTSoundHandle &sfxHandle, zTSound3DParams *sound3DParams) { XCALL(0x004E4700); }
+	virtual bool32 GetSound3DProps(zTSoundHandle &sfxHandle, zTSound3DParams &sound3DParams) { XCALL(0x004E5830); }
+	virtual bool32 UpdateSound3D(zTSoundHandle &sfxHandle, zTSound3DParams *sound3DParams) { XCALL(0x004E4700); }
 	virtual void GetSoundProps(zTSoundHandle &sfxHandle, int &freq, float &vol, float &pan) { XCALL(0x004E5630); }
 	virtual void UpdateSoundProps(zTSoundHandle &sfxHandle, int freq, float vol, float pan) { XCALL(0x004E5A20); }
-	virtual bool IsSoundActive(zTSoundHandle &sfxHandle) { XCALL(0x004E5E90); }
+	virtual bool32 IsSoundActive(zTSoundHandle &sfxHandle) { XCALL(0x004E5E90); }
 };
 
 class zCOption
 {
 public:
-	bool ReadBool(zSTRING &secName, char *name, bool value) { XCALL(0x0045CB80); }
+	bool32 ReadBool(zSTRING &secName, char *name, bool32 value) { XCALL(0x0045CB80); }
 };
 
 class zCInputCallback
 {
 public:
-	virtual bool HandleEvent(int key) { XCALL(0x00439A60); }
+	virtual bool32 HandleEvent(int key) { XCALL(0x00439A60); }
 };
 
 class zCSoundManager
@@ -1760,11 +1764,11 @@ struct TNpcAIState
 	int timeBehaviour;
 	float restTime;
 	int phase;
-	bool valid;
+	bool32 valid;
 	zSTRING name;
 	float stateTime;
 	int prgIndex;
-	bool isRtnState;
+	bool32 isRtnState;
 };
 
 struct TNpcPerc
@@ -1776,13 +1780,13 @@ struct TNpcPerc
 struct TNpcSlot
 {
 	zSTRING name;
-	bool inInventory;
-	bool tmpLevel;
+	bool32 inInventory;
+	bool32 tmpLevel;
 	zSTRING itemName;
 
 	oCVob *vob;
 
-	bool wasVobTreeWhenInserted : 1;
+	bool32 wasVobTreeWhenInserted : 1;
 };
 
 enum oTSndMaterial
@@ -1802,9 +1806,9 @@ public:
 	virtual void ShowDebugInfo(zCCamera *) { XCALL(0x0077B8D0); }
 	virtual int GetInstance() { return -1; }
 	virtual zSTRING GetInstanceName() { return ""; }
-	virtual bool IsOwnedByGuild(int guild) { return FALSE; }
-	virtual bool IsOwnedByNpc(int instance) { return FALSE; }
-	virtual bool DoFocusCheckBBox() { return FALSE; }
+	virtual bool32 IsOwnedByGuild(int guild) { return FALSE; }
+	virtual bool32 IsOwnedByNpc(int instance) { return FALSE; }
+	virtual bool32 DoFocusCheckBBox() { return FALSE; }
 	virtual oCAIVobMove *GetAIVobMove() { XCALL(0x0077D5F0); }
 	virtual void GetSoundMaterial_AM(zCSoundManager::zTSndManMedium &med2, oTSndMaterial &mat2, int damage) { }
 	virtual void SetSoundMaterial(oTSndMaterial mat) { }
@@ -1858,13 +1862,13 @@ public:
 	float cliprange;
 	float fogrange;
 
-	bool inScriptStartup;
-	bool inLoadSaveGame;
-	bool inLevelChange;
+	bool32 inScriptStartup;
+	bool32 inLoadSaveGame;
+	bool32 inLevelChange;
 
 	zCView *array_view[6];
-	bool array_view_visible[6];
-	bool array_view_enabled[6];
+	bool32 array_view_visible[6];
+	bool32 array_view_enabled[6];
 
 	oCSavegameManager *savegameManager;
 	zCView *game_text;
@@ -1875,21 +1879,21 @@ public:
 	oCViewStatusBar *swimBar;
 	oCViewStatusBar *manaBar;
 	oCViewStatusBar *focusBar;
-	bool showPlayerStatus;
+	bool32 showPlayerStatus;
 
-	bool game_drawall;
-	bool game_frameinfo;
-	bool game_showaniinfo;
-	bool game_showwaynet;
-	bool game_testmode;
-	bool game_editwaynet;
-	bool game_showtime;
-	bool drawWayBoxes;
-	bool scriptStartup;
-	bool showFreePoints;
+	bool32 game_drawall;
+	bool32 game_frameinfo;
+	bool32 game_showaniinfo;
+	bool32 game_showwaynet;
+	bool32 game_testmode;
+	bool32 game_editwaynet;
+	bool32 game_showtime;
+	bool32 drawWayBoxes;
+	bool32 scriptStartup;
+	bool32 showFreePoints;
 	oCNpc *showRoutineNpc;
 
-	bool loadNextLevel;
+	bool32 loadNextLevel;
 	zSTRING loadNextLevelName;
 	zSTRING loadNextLevelStart;
 
@@ -1900,7 +1904,7 @@ public:
 
 	oCWorldTimer *wldTimer;
 	float timeStep;
-	bool singleStep;
+	bool32 singleStep;
 
 	oCGuilds *guilds;
 	oCInfoManager *infoman;
@@ -1918,7 +1922,7 @@ public:
 
 	zCArray<zCVob *> debugInstances;
 	int debugChannels;
-	bool debugAllInstances;
+	bool32 debugAllInstances;
 
 	int oldRoutineDay;
 	zCListSort<TObjectRoutine> objRoutineList;
@@ -1959,16 +1963,16 @@ public:
 	TNpcAIState nextState;
 	int lastAIState;
 
-	bool hasRoutine;
-	bool rtnChanged;
+	bool32 hasRoutine;
+	bool32 rtnChanged;
 	oCRtnEntry *rtnBefore;
 	oCRtnEntry *rtnNow;
 	zCRoute *rtnRoute;
-	bool rtnOverlay;
+	bool32 rtnOverlay;
 	int rtnOverlayCount;
 	int walkmode_routine;
-	bool weaponmode_routine;
-	bool startNewRoutine;
+	bool32 weaponmode_routine;
+	bool32 startNewRoutine;
 
 	int aiStateDriven;
 	zVEC3 aiStatePosition;
@@ -1982,10 +1986,10 @@ public:
 public:
 	virtual void Archive(zCArchiver &arc) { XCALL(0x006C7810); }
 
-	bool StartAIState(zSTRING &name, bool endOldState, int timeBehaviour, float timed, bool isRtnState) { XCALL(0x006C5350); }
+	bool32 StartAIState(zSTRING &name, bool32 endOldState, int timeBehaviour, float timed, bool32 isRtnState) { XCALL(0x006C5350); }
 	void ClearAIState() { XCALL(0x006C61A0); }
 	void EndCurrentState() { XCALL(0x006C6340); }
-	bool IsInState(int stateID) { XCALL(0x006C4C90); }
+	bool32 IsInState(int stateID) { XCALL(0x006C4C90); }
 };
 
 class oCItemContainer : public zCInputCallback
@@ -1997,11 +2001,11 @@ public:
 	int offset;
 	int drawItemMax;
 	int itemListMode;
-	bool frame;
-	bool right;
-	bool ownList;
-	bool prepared;
-	bool passive;
+	bool32 frame;
+	bool32 right;
+	bool32 ownList;
+	bool32 prepared;
+	bool32 passive;
 
 	zCView *viewCat;
 	zCView *viewItem;
@@ -2022,8 +2026,8 @@ public:
 	int posx;
 	int posy;
 	zSTRING textCategoryStatic;
-	bool m_bManipulateItemsDisabled;
-	bool m_bCanTransferMoreThanOneItem;
+	bool32 m_bManipulateItemsDisabled;
+	bool32 m_bCanTransferMoreThanOneItem;
 	zCOLOR image_chroma;
 	zCOLOR blit_chroma;
 };
@@ -2034,7 +2038,7 @@ class oCNpcInventory : public oCItemContainer
 {
 public:
 	oCNpc *owner;
-	bool packAbility;
+	bool32 packAbility;
 
 	zCListSort<oCItem> inventory[INV_MAX];
 
@@ -2045,7 +2049,7 @@ public:
 	int invnr;
 
 public:
-	bool IsEmpty() { XCALL(0x0066D550); }
+	bool32 IsEmpty() { XCALL(0x0066D550); }
 };
 
 class oCNewsMemory
@@ -2225,7 +2229,7 @@ public:
 public:
 	static zCClassDef &classDef;
 	static oCNpc *&player;
-	static bool &godmode;
+	static bool32 &godmode;
 
 	int idx;
 	zSTRING name[5];
@@ -2258,23 +2262,23 @@ public:
 	int learn_points;
 	int parserEnd;
 
-	bool bloodEnabled;
+	bool32 bloodEnabled;
 	int bloodDistance;
 	int bloodAmount;
 	int bloodFlow;
 	zSTRING bloodEmitter;
 	zSTRING bloodTexture;
-	bool didHit;
-	bool didParade;
-	bool didShoot;
-	bool hasLockedEnemy;
-	bool isDefending;
-	bool wasAming;
+	bool32 didHit;
+	bool32 didParade;
+	bool32 didShoot;
+	bool32 hasLockedEnemy;
+	bool32 isDefending;
+	bool32 wasAming;
 	oCNpc *enemy;
 
 	float speedTurn;
-	bool foundFleePoint;
-	bool reachedFleePoint;
+	bool32 foundFleePoint;
+	bool32 reachedFleePoint;
 	zVEC3 vecFlee;
 	zVEC3 posFlee;
 	zCWaypoint *waypointFlee;
@@ -2297,21 +2301,21 @@ public:
 	zCArray<zTSoundHandle> listOfVoiceHandles;
 	int voiceIndex;
 
-	bool showaidebug : 1;
-	bool showNews : 1;
-	bool csAllowedAsRole : 1;
+	bool32 showaidebug : 1;
+	bool32 showNews : 1;
+	bool32 csAllowedAsRole : 1;
 
-	bool isSummoned : 1;
-	bool respawnOn : 1;
-	bool movlock : 1;
-	bool drunk : 1;
-	bool mad : 1;
-	bool overlay_wounded : 1;
-	bool inOnDamage : 1;
-	bool autoremoveweapon : 1;
-	bool openinventory : 1;
-	bool askroutine : 1;
-	bool spawnInRange : 1;
+	bool32 isSummoned : 1;
+	bool32 respawnOn : 1;
+	bool32 movlock : 1;
+	bool32 drunk : 1;
+	bool32 mad : 1;
+	bool32 overlay_wounded : 1;
+	bool32 inOnDamage : 1;
+	bool32 autoremoveweapon : 1;
+	bool32 openinventory : 1;
+	bool32 askroutine : 1;
+	bool32 spawnInRange : 1;
 
 	int body_TexVarNr : 16;
 	int body_TexColorNr : 16;
@@ -2345,14 +2349,14 @@ public:
 	int attitude;
 	int tmp_attitude;
 	float attTimer;
-	bool knowsPlayer;
+	bool32 knowsPlayer;
 
 	TNpcPerc percList[NPC_PERC_MAX];
 	int percActive;
 	float percActiveTime;
 	float percActiveDelta;
 
-	bool overrideFallDownHeight;
+	bool32 overrideFallDownHeight;
 	float fallDownHeight;
 	int fallDownDamage;
 
@@ -2420,35 +2424,35 @@ public:
 
 	void OnDamage_Hit(oSDamageDescriptor &descDamage) { XCALL(0x00731410); }
 	void OnDamage_Events(oSDamageDescriptor &descDamage) { XCALL(0x00746950); }
-	void StandUp(bool walkingallowed, bool startAniTransition) { XCALL(0x0074D5A0); }
+	void StandUp(bool32 walkingallowed, bool32 startAniTransition) { XCALL(0x0074D5A0); }
 	zCModel *GetModel() { XCALL(0x00695300); }
 	oCSpell *IsSpellActive(int nr) { XCALL(0x00699F70); }
 	void InsertActiveSpell(oCSpell *spell) { XCALL(0x00699CA0); }
-	bool CheckForOwner(zCVob *v) { XCALL(0x0069CED0); }
+	bool32 CheckForOwner(zCVob *v) { XCALL(0x0069CED0); }
 	void SetAsPlayer() { XCALL(0x0069EAE0); }
 	void ClearVobList() { XCALL(0x006B6EB0); }
 	void CreateVobList(float max_dist) { XCALL(0x006B7110); }
-	bool HasBodyStateModifier(int nr) { XCALL(0x006B8250); }
+	bool32 HasBodyStateModifier(int nr) { XCALL(0x006B8250); }
 	void SetBodyStateModifier(int nr) { XCALL(0x006B8270); }
 	int ModifyBodyState(int add, int remove) { XCALL(0x006B85B0); }
 	void CreatePassivePerception(int percType, zCVob *other, zCVob *victim) { XCALL(0x006B49C0); }
-	bool IsDead() { return this->attribute[NPC_ATR_HITPOINTS] <= 0; }
-	bool IsUnconscious() { return this->state.IsInState(NPC_AISTATE_UNCONSCIOUS); }
-	bool IsFadingAway() { return this->state.IsInState(NPC_AISTATE_FADEAWAY); }
-	bool IsHuman() { XCALL(0x0069EA90); }
-	bool IsOrc() { XCALL(0x0069EAB0); }
-	bool IsGoblin() { XCALL(0x0069EAA0); }
-	bool IsSkeleton() { XCALL(0x0069EAD0); }
-	bool IsMonster() { XCALL(0x0069EA30); }
-	bool IsHalfMonster() { return !this->IsHuman() && !this->IsOrc() && !this->IsGoblin() && !this->IsSkeleton(); }
+	bool32 IsDead() { return this->attribute[NPC_ATR_HITPOINTS] <= 0; }
+	bool32 IsUnconscious() { return this->state.IsInState(NPC_AISTATE_UNCONSCIOUS); }
+	bool32 IsFadingAway() { return this->state.IsInState(NPC_AISTATE_FADEAWAY); }
+	bool32 IsHuman() { XCALL(0x0069EA90); }
+	bool32 IsOrc() { XCALL(0x0069EAB0); }
+	bool32 IsGoblin() { XCALL(0x0069EAA0); }
+	bool32 IsSkeleton() { XCALL(0x0069EAD0); }
+	bool32 IsMonster() { XCALL(0x0069EA30); }
+	bool32 IsHalfMonster() { return !this->IsHuman() && !this->IsOrc() && !this->IsGoblin() && !this->IsSkeleton(); }
 	int GetWeaponMode() { XCALL(0x00695820); }
 	int GetTalentValue(int talentNr) { XCALL(0x0068E570); }
-	bool HasFlag(unsigned int dwValue, unsigned int dwFlag) { XCALL(0x00747B40); }
-	bool HasFlag(int nr) { XCALL(0x0068E150); }
-	bool IsSelfPlayer() { return this == oCNpc::player; }
+	bool32 HasFlag(unsigned int dwValue, unsigned int dwFlag) { XCALL(0x00747B40); }
+	bool32 HasFlag(int nr) { XCALL(0x0068E150); }
+	bool32 IsSelfPlayer() { return this == oCNpc::player; }
 	void ChangeAttribute(int nr, int value) { XCALL(0x0068D7C0); }
-	bool AssessMagic_S(oCNpc *other, int spellType) { XCALL(0x006B62F0); }
-	bool AssessStopMagic_S(oCNpc *other, int spellType) { XCALL(0x006B65F0); }
+	bool32 AssessMagic_S(oCNpc *other, int spellType) { XCALL(0x006B62F0); }
+	bool32 AssessStopMagic_S(oCNpc *other, int spellType) { XCALL(0x006B65F0); }
 };
 
 enum zTPFX_EmitterShape { };
@@ -2462,8 +2466,8 @@ class zCParticleEmitter
 public:
 	float ppsValue;
 	zSTRING ppsScaleKeys_S;
-	bool ppsIsLooping;
-	bool ppsIsSmooth;
+	bool32 ppsIsLooping;
+	bool32 ppsIsSmooth;
 	float ppsFPS;
 	zSTRING ppsCreateEm_S;
 	float ppsCreateEmDelay;
@@ -2473,13 +2477,13 @@ public:
 	zSTRING shpOffsetVec_S;
 	zSTRING shpDistribType_S;
 	float shpDistribWalkSpeed;
-	bool shpIsVolume;
+	bool32 shpIsVolume;
 	zSTRING shpDim_S;
 	zSTRING shpMesh_S;
-	bool shpMeshRender_B;
+	bool32 shpMeshRender_B;
 	zSTRING shpScaleKeys_S;
-	bool shpScaleIsLooping;
-	bool shpScaleIsSmooth;
+	bool32 shpScaleIsLooping;
+	bool32 shpScaleIsSmooth;
 	float shpScaleFPS;
 
 	zSTRING dirMode_S;
@@ -2496,13 +2500,13 @@ public:
 	float lspPartAvg;
 	float lspPartVar;
 	zSTRING flyGravity_S;
-	bool flyCollDet_B;
+	bool32 flyCollDet_B;
 
 	zSTRING visName_S;
 	zSTRING visOrientation_S;
-	bool visTexIsQuadPoly;
+	bool32 visTexIsQuadPoly;
 	float visTexAniFPS;
-	bool visTexAniIsLooping;
+	bool32 visTexAniIsLooping;
 
 	zSTRING visTexColorStart_S;
 	zSTRING visTexColorEnd_S;
@@ -2563,7 +2567,7 @@ public:
 	zCTexture *trlTexture;
 	zCTexture *mrkTexture;
 
-	bool isOneShotFX;
+	bool32 isOneShotFX;
 	float dirAngleHeadVarRad;
 	float dirAngleElevVarRad;
 };
@@ -2584,15 +2588,13 @@ struct zSParticle
 	zCPolyStrip *polyStrip;
 };
 
-typedef zSParticle zTParticle;
-
 class zCParticleEmitterVars
 {
 public:
 	float ppsScaleKeysActFrame;
 	float ppsNumParticlesFraction;
 	float ppsTotalLifeTime;
-	bool ppsDependentEmitterCreated;
+	bool32 ppsDependentEmitterCreated;
 
 	float shpScaleKeysActFrame;
 	float uniformValue;
@@ -2604,7 +2606,7 @@ class zCParticleFX : public zCVisual
 public:
 	static zCClassDef &classDef;
 
-	zTParticle *firstPart;
+	zSParticle *firstPart;
 	zCParticleEmitterVars emitterVars;
 	zCParticleEmitter *emitter;
 
@@ -2631,7 +2633,7 @@ public:
 public:
 	static zCClassDef *GetStaticClassDef() { return &classDef; }
 
-	bool CalcIsDead() { XCALL(0x0058F0B0); }
+	bool32 CalcIsDead() { XCALL(0x0058F0B0); }
 	void StopEmitterOutput() { this->isOneShotFX = TRUE; }
 };
 
@@ -2644,8 +2646,8 @@ public:
 	static zCClassDef *GetStaticClassDef() { return &classDef; }
 
 	zCModelAni *GetAniFromAniID(int aniID) { XCALL(0x0046D1E0); }
-	bool IsAniActive(zSTRING &aniName);
-	bool IsAniActive(zCModelAni *modelAni) { XCALL(0x0046D220); }
+	bool32 IsAniActive(zSTRING &aniName);
+	bool32 IsAniActive(zCModelAni *modelAni) { XCALL(0x0046D220); }
 	int GetAniIDFromAniName(zSTRING &aniName) { XCALL(0x0047EC50); }
 	zCModelNodeInst *SearchNode(zSTRING &nodeName) { XCALL(0x00563F80); }
 };
@@ -2653,9 +2655,9 @@ public:
 class oCAniCtrl_Human : public zCObject
 {
 public:
-	void SearchStandAni(bool forceStartAni) { XCALL(0x0061C700); }
+	void SearchStandAni(bool32 forceStartAni) { XCALL(0x0061C700); }
 	int GetWaterLevel() { XCALL(0x006B89D0); }
-	bool IsInWater() { return this->GetWaterLevel() > 0; }
+	bool32 IsInWater() { return this->GetWaterLevel() > 0; }
 };
 
 #define SPL_STATUS_DONTINVEST 0
@@ -2760,11 +2762,11 @@ public:
 	int spellStatus;
 	int spellID;
 	int spellInfo;
-	bool spellEnabled;
-	bool spellInitDone;
+	bool32 spellEnabled;
+	bool32 spellInitDone;
 
-	bool timerEffect;
-	bool canBeDeleted;
+	bool32 timerEffect;
+	bool32 canBeDeleted;
 
 	float up;
 	float hoverY;
@@ -2777,8 +2779,8 @@ public:
 	int damagePerLevel;
 	int damageType;
 	int spellType;
-	bool canTurnDuringInvest;
-	bool canChangeTargetDuringInvest;
+	bool32 canTurnDuringInvest;
+	bool32 canChangeTargetDuringInvest;
 	int isMultiEffect;
 	int targetCollectAlgo;
 	int targetCollectType;
@@ -2789,10 +2791,10 @@ public:
 public:
 	oCVisualFX *CreateEffect() { XCALL(0x0047BED0); }
 	void StopTargetEffects(zCVob *vob) { XCALL(0x0047D790); }
-	bool IsValidTarget(zCVob *v) { XCALL(0x0047DD80); }
-	bool IsInvestSpell() { XCALL(0x0047E340); }
+	bool32 IsValidTarget(zCVob *v) { XCALL(0x0047DD80); }
+	bool32 IsInvestSpell() { XCALL(0x0047E340); }
 	void DoLogicInvestEffect() { XCALL(0x0047E690); }
-	bool CastSpecificSpell() { XCALL(0x0047EC70); }
+	bool32 CastSpecificSpell() { XCALL(0x0047EC70); }
 	void EndTimedEffect() { XCALL(0x0047F330); }
 	void DoTimedEffect() { XCALL(0x0047F8F0); }
 	void SetReleaseStatus() { XCALL(0x0047E3B0); }
@@ -2805,10 +2807,33 @@ class oCMOB : public oCVob
 public:
 	static zCClassDef &classDef;
 
+	zSTRING name;
+
+	int hitp : 12;
+	int damage : 12;
+
+	bool32 isDestryoed : 1;
+	bool32 takeable : 1;
+	bool32 focusOverride : 1;
+
+	int sndNamt : 3;
+
+	zSTRING visualDestroyed;
+
+	zSTRING ownerStr;
+	zSTRING ownerGuildStr;
+
+	int owner;
+	int ownerGuild;
+
+	int focusNameIndex;
+
+	zCList<zCVob> ignoreVobList;
+
 public:
 	static zCClassDef *GetStaticClassDef() { return &classDef; }
 
-	bool IsMoveable() { XCALL(0x0067AD40); }
+	bool32 IsMoveable() { XCALL(0x0067AD40); }
 };
 
 class oCMobInter : public oCMOB
@@ -2816,10 +2841,34 @@ class oCMobInter : public oCMOB
 public:
 	static zCClassDef &classDef;
 
+	zCList<TMobOptPos> optimalPosList;
+
+	zSTRING triggerTarget;
+	zSTRING useWithItem;
+	zSTRING sceme;
+	zSTRING conditionFunc;
+	zSTRING onStateFuncName;
+	int state;
+	int state_num;
+	int state_target;
+	bool32 rewind;
+
+	int mobStateAni;
+	int npcStateAni;
+
+	int	npcsMax : 8;
+	int	npcsNeeded : 8;
+	int	npcsCurrent : 8;
+	int	tmpState : 8;
+
+	bool32 tmpStateChanged;
+
+	// TODO to be continued
+
 public:
 	static zCClassDef *GetStaticClassDef() { return &classDef; }
 
-	bool IsOccupied() { return FALSE; } // TODO ???
+	bool32 IsOccupied() { return npcsCurrent > 0; }
 };
 
 class zCEffect : public zCVob { };
@@ -2855,14 +2904,14 @@ public:
 	float scaleDuration;
 
 	float pfx_ppsValue;
-	bool pfx_ppsIsSmoothChg;
-	bool pfx_ppsIsLoopingChg;
+	bool32 pfx_ppsIsSmoothChg;
+	bool32 pfx_ppsIsLoopingChg;
 
 	float pfx_scTime;
 	zSTRING pfx_flyGravity_S;
 
 	zSTRING pfx_shpDim_S;
-	bool pfx_shpIsVolumeChg;
+	bool32 pfx_shpIsVolumeChg;
 	float pfx_shpScaleFPS;
 	float pfx_shpDistribWalkSpeed;
 	zSTRING pfx_shpOffsetVec_S;
@@ -2878,14 +2927,14 @@ public:
 	zSTRING lightPresetName;
 	float lightRange;
 	zSTRING sfxID;
-	bool sfxIsAmbient;
+	bool32 sfxIsAmbient;
 
 	zSTRING emCreateFXID;
 	float emFlyGravity;
 	zSTRING emSelfRotVel_S;
 	zSTRING emTrjMode_S;
 	float emTrjEaseVel;
-	bool emCheckCollision;
+	bool32 emCheckCollision;
 	float emFXLifeSpan;
 
 	byte dScriptEnd;
@@ -2935,7 +2984,7 @@ public:
 	float visAlpha;
 	zSTRING visAlphaBlendFunc_S;
 	float visTexAniFPS;
-	bool visTexAniIsLooping;
+	bool32 visTexAniIsLooping;
 	zSTRING emTrjMode_S;
 	zSTRING emTrjOriginNode_S;
 	zSTRING emTrjTargetNode_S;
@@ -2965,8 +3014,8 @@ public:
 	zSTRING emFXCollDynAlign_S;
 	float emFXLifeSpan;
 
-	bool emCheckCollision;
-	bool emAdjustShpToOrigin;
+	bool32 emCheckCollision;
+	bool32 emAdjustShpToOrigin;
 	float emInvestNextKeyDuration;
 	float emFlyGravity;
 	zSTRING emSelfRotVel_S;
@@ -2974,8 +3023,8 @@ public:
 
 	zSTRING lightPresetName;
 	zSTRING sfxID;
-	bool sfxIsAmbient;
-	bool sendAssessMagic;
+	bool32 sfxIsAmbient;
+	bool32 sendAssessMagic;
 	float secsPerDamage;
 
 	byte dScriptEnd; // isLightning
@@ -2995,9 +3044,9 @@ public:
 	oCVisualFX *fxInvestTarget;
 	oCVisualFXAI *ai;
 
-	bool fxInvestOriginInitialized;
-	bool fxInvestTargetInitialized;
-	bool fxInvestStopped;
+	bool32 fxInvestOriginInitialized;
+	bool32 fxInvestTargetInitialized;
+	bool32 fxInvestStopped;
 
 	zCArray <oCVisualFX *> fxList;
 	zCArray <oCVisualFX *> childList;
@@ -3032,14 +3081,14 @@ public:
 	oCEmitterKey *actKey;
 
 	int level;
-	bool collisionOccured;
+	bool32 collisionOccured;
 	int collisionCtr;
-	bool showVisual;
-	bool isChild;
-	bool isDeleted;
-	bool initialized;
-	bool shouldDelete;
-	bool lightning;
+	bool32 showVisual;
+	bool32 isChild;
+	bool32 isDeleted;
+	bool32 initialized;
+	bool32 shouldDelete;
+	bool32 lightning;
 	int queueSetLevel;
 
 	float frameTime;
@@ -3071,14 +3120,14 @@ public:
 	zVEC2 saveVisSizeStart;
 	zVEC3 transRing[10];
 	int ringPos;
-	bool emTrjFollowHitLastCheck;
-	bool bIsProjectile;
+	bool32 emTrjFollowHitLastCheck;
+	bool32 bIsProjectile;
 
 public:
 	static zCClassDef *GetStaticClassDef() { return &classDef; }
 	static oCVisualFX *_CreateNewInstance() { XCALL(0x0048FE60); }
-	static oCVisualFX *CreateAndPlay(zSTRING &id, zCVob *org, zCVob *target, int level, float damage, int damageType, bool bIsProjectile) { XCALL(0x00486A70); }
-	static oCVisualFX *CreateAndPlay(zSTRING &id, zVEC3 &orgPos, zCVob *target, int level, float damage, int damageType, bool bIsProjectile) { XCALL(0x00486D60); }
+	static oCVisualFX *CreateAndPlay(zSTRING &id, zCVob *org, zCVob *target, int level, float damage, int damageType, bool32 bIsProjectile) { XCALL(0x00486A70); }
+	static oCVisualFX *CreateAndPlay(zSTRING &id, zVEC3 &orgPos, zCVob *target, int level, float damage, int damageType, bool32 bIsProjectile) { XCALL(0x00486D60); }
 
 	oCVisualFX() { XCALL(0x004820C0); }
 
@@ -3088,7 +3137,7 @@ public:
 	virtual ~oCVisualFX() { XCALL(0x00482820); }
 
 	virtual void OnTick() { XCALL(0x0048FB60); }
-	virtual bool CanThisCollideWith(zCVob *vob) { XCALL(0x0048DEC0); }
+	virtual bool32 CanThisCollideWith(zCVob *vob) { XCALL(0x0048DEC0); }
 
 	virtual void Open() { XCALL(0x004898F0); }
 	virtual void SetOrigin(zCVob *orgVob) { XCALL(0x004892D0); }
@@ -3104,37 +3153,37 @@ public:
 	virtual void InvestNext() { XCALL(0x0048A7D0); }
 	virtual void SetLevel(int level) { XCALL(0x0048AB70); }
 	virtual int GetLevel() { return this->level; }
-	virtual void Cast(bool killAfterDone) { XCALL(0x0048AF40); }
-	virtual void Stop(bool killAfterDone) { XCALL(0x0048BB30); }
+	virtual void Cast(bool32 killAfterDone) { XCALL(0x0048AF40); }
+	virtual void Stop(bool32 killAfterDone) { XCALL(0x0048BB30); }
 	virtual void Kill() { XCALL(0x0048BEE0); }
 	virtual void Play(float keyCycleTime, zMAT4 *orgTrafo, zMAT4 *targetTrafo) { }
-	virtual bool CanBeDeleted() { XCALL(0x0048C150); }
-	virtual bool IsFinished() { XCALL(0x0048C190); }
-	virtual bool IsLooping() { XCALL(0x0048C220); }
+	virtual bool32 CanBeDeleted() { XCALL(0x0048C150); }
+	virtual bool32 IsFinished() { XCALL(0x0048C190); }
+	virtual bool32 IsLooping() { XCALL(0x0048C220); }
 	virtual void SetByScript(const zSTRING &id) { XCALL(0x00485790); }
 	virtual void SetDuration(float fSecDuration) { this->emFXLifeSpan = fSecDuration; }
 	virtual void Reset() { XCALL(0x00489C20); }
 	virtual void ReportCollision(zCCollisionReport &collisionReport) { XCALL(0x0048C6F0); }
-	virtual void SetCollisionEnabled(bool en) { XCALL(0x00485640); }
+	virtual void SetCollisionEnabled(bool32 en) { XCALL(0x00485640); }
 	virtual void SetCollisionCandidates(zCArray<zCVob *> collisionVobs) { XCALL(0x0048DCD0); }
 	virtual void GetCollisionCandidates(zCArray<zCVob *> &collisionVobs) { XCALL(0x00482640); }
 	virtual int GetNumCollisionCandidates() { return this->allowedCollisionVobList.numInArray; }
-	virtual bool GetCollidedCandidates(zCArray<zCVob *> &collidedVobs) { XCALL(0x0048DDF0); }
+	virtual bool32 GetCollidedCandidates(zCArray<zCVob *> &collidedVobs) { XCALL(0x0048DDF0); }
 	virtual void SetDamage(float dam) { this->damage = dam; }
 	virtual void SetDamageType(int damType) { this->damageType = damType; }
 	virtual float GetDamage() { return this->damage; }
 	virtual int GetDamageType() { return this->damageType; }
-	virtual bool IsASpell() { return this->sendAssessMagic; }
+	virtual bool32 IsASpell() { return this->sendAssessMagic; }
 	virtual void SetSpellType(int _type) { this->spellType = _type; }
 	virtual int GetSpellType() { return this->spellType; }
 	virtual int GetSpellTargetTypes() { return this->spellTargetTypes; }
 	virtual void SetSpellTargetTypes(int types) { this->spellTargetTypes = types; }
-	virtual bool GetIsProjectile() { return this->bIsProjectile; }
-	virtual void SetIsProjectile(bool b) { this->bIsProjectile = b; }
+	virtual bool32 GetIsProjectile() { return this->bIsProjectile; }
+	virtual void SetIsProjectile(bool32 b) { this->bIsProjectile = b; }
 	virtual void SetVisualByString(const zSTRING &visName) { XCALL(0x00484580); }
-	virtual void CalcTrajectory(bool &updateTargetOnly) { XCALL(0x00487870); }
-	virtual void Collide(bool killAfterDone) { XCALL(0x0048B750); }
-	virtual void CollisionResponse(zVEC3 &collisionNormal, bool alignCollNormal) { XCALL(0x0048D850); }
+	virtual void CalcTrajectory(bool32 &updateTargetOnly) { XCALL(0x00487870); }
+	virtual void Collide(bool32 killAfterDone) { XCALL(0x0048B750); }
+	virtual void CollisionResponse(zVEC3 &collisionNormal, bool32 alignCollNormal) { XCALL(0x0048D850); }
 
 	void InitValues() { XCALL(0x00483B90); }
 	oCVisualFX *CreateAndCastFX(const zSTRING &id, zCVob *org, zCVob *inflictor) { XCALL(0x00487170); }
@@ -3154,7 +3203,7 @@ public:
 class oCFXScanner
 {
 public:
-	bool enabled;
+	bool32 enabled;
 	byte alpha;
 
 	zCVob *initVob;
@@ -3167,9 +3216,9 @@ public:
 	int phase;
 	float lightRange;
 	
-	bool showScanner;
-	bool investedNext;
-	bool castOnSelf;
+	bool32 showScanner;
+	bool32 investedNext;
+	bool32 castOnSelf;
 
 	int unknown;
 
@@ -3185,7 +3234,7 @@ public:
 public:
 	void Draw() { XCALL(0x004960E0); }
 	void UpdateBurnVobs() { XCALL(0x00495D50); }
-	bool UpdateBurnVobsInvestNext() { XCALL(0x00496800); }
+	bool32 UpdateBurnVobsInvestNext() { XCALL(0x00496800); }
 };
 
 class zCTimer

@@ -10,8 +10,8 @@
 
 #define WORLD_NAME "WORLD"
 
-static bool magFrontierInited = FALSE;
-static bool pointsWorldGRM = FALSE;
+static bool32 magFrontierInited = FALSE;
+static bool32 pointsWorldGRM = FALSE;
 
 static char worldName[MAX_PATH] = { '\0' };
 
@@ -226,26 +226,26 @@ void PatchMagicFrontier(void)
 
 static float UV_SCALER = 1.0f;
 
-static int barrierEverLoomingMinOpacity = 5;
-static int barrierEverLoomingMaxOpacity = 15;
+static int everLoomingMinOpacity;
+static int everLoomingMaxOpacity;
 
 static int barrierMinOpacity = 0;
 static int barrierMaxOpacity = 120;
 
-static bool meshLoaded = FALSE;
-static bool firstRender = TRUE;
+static bool32 meshLoaded = FALSE;
+static bool32 firstRender = TRUE;
 
 static int earthQuakeInterval = 20;
 static int earthQuakeTimer = 0;
 
-static bool ignoreSkyEffectsSetting = TRUE;
-static bool alwaysVisible = FALSE;
-static bool tremorEnable = FALSE;
-static bool earthQuakeEnable = FALSE;
+static bool32 ignoreSkyEffectsSetting = TRUE;
+static bool32 alwaysVisible = FALSE;
+static bool32 tremorEnable = FALSE;
+static bool32 earthQuakeEnable = FALSE;
 
 static float nextActivation = 8000.0f;
 
-static bool showThunders = FALSE;
+static bool32 showThunders = FALSE;
 static float fadeTime;
 static float timeUpdatedFade = 0.0f;
 static float timeStepToUpdateFade = 1.0f;
@@ -342,7 +342,7 @@ void hCBarrier::Init()
 		this->myVertList = new myVert[this->numMyVerts];
 		memset(this->myVertList, 0x00, sizeof(myVert) * this->numMyVerts);
 
-		bool goOn = TRUE;
+		bool32 goOn = TRUE;
 
 		for (int x = 0; x < this->numMyVerts; x++)
 		{
@@ -473,7 +473,7 @@ void hCBarrier::Init()
 	}
 }
 
-bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible)
+void hCBarrier::Render(zTRenderContext &rndContext)
 {
 	if (this->skySphereMesh)
 	{
@@ -542,10 +542,10 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					if (this->fadeState <= barrierMinOpacity)
 					{
 						// ever looming barrier
-						if (barrierMinOpacity >= barrierEverLoomingMinOpacity)
+						if (barrierMinOpacity >= everLoomingMinOpacity)
 						{
 							// randomise it a bit
-							barrierMinOpacity = barrierEverLoomingMinOpacity + _rand() % ((barrierEverLoomingMaxOpacity + 1) - barrierEverLoomingMinOpacity);
+							barrierMinOpacity = everLoomingMinOpacity + _rand() % ((everLoomingMaxOpacity + 1) - everLoomingMinOpacity);
 							this->fadeState = barrierMinOpacity;
 						}
 						else
@@ -574,7 +574,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 			}
 		}
 
-		bool zBufferWriteEnabled;
+		bool32 zBufferWriteEnabled;
 		float zFarClip;
 
 		if (this->fadeState > 0 || alwaysVisible)
@@ -598,17 +598,9 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 			zSTRING mfxBarriereAmbient("MFX_Barriere_Ambient");
 
 			zCSoundSystem::zTSound3DParams sound3DParams;
-			sound3DParams.obstruction = 0.0f;
-			sound3DParams.volume = 1.0f;
-			sound3DParams.radius = -1.0f;
-			sound3DParams.loopType = 0;
-			sound3DParams.coneAngleDeg = 0.0f;
-			sound3DParams.reverbLevel = 1.0f;
-			sound3DParams.isAmbient3D = FALSE;
-			sound3DParams.pitchOffset = -999999.0f;
 
 			if (!this->activeThunder_Sector1 && !zsound->IsSoundActive(this->sfxHandle1) &&
-				(ztimer.totalTimeFloat - delayTimeSector1) > 8000.f)
+				(ztimer.totalTimeFloat - delayTimeSector1) > 8000.0f)
 			{
 				this->AddThunder(this->startPointList1[(this->numStartPoints1 - 1) & _rand()], 11, 0, 1);
 				this->activeThunder_Sector1 = TRUE;
@@ -619,6 +611,8 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->sfx1 = zsound->LoadSoundFXScript(mfxBarriereAmbient);
 				}
 
+				sound3DParams.SetDefaults();
+
 				if (tremorEnable)
 				{
 					this->AddTremor(rndContext);
@@ -628,7 +622,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 			}
 
 			if (!this->activeThunder_Sector2 && !zsound->IsSoundActive(this->sfxHandle2) &&
-				(ztimer.totalTimeFloat - delayTimeSector2) > 6000.f)
+				(ztimer.totalTimeFloat - delayTimeSector2) > 6000.0f)
 			{
 				this->AddThunder(this->startPointList2[(this->numStartPoints2 - 1) & _rand()], 11, 0, 2);
 				this->activeThunder_Sector2 = TRUE;
@@ -639,6 +633,8 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->sfx2 = zsound->LoadSoundFXScript(mfxBarriereAmbient);
 				}
 
+				sound3DParams.SetDefaults();
+
 				if (tremorEnable)
 				{
 					this->AddTremor(rndContext);
@@ -648,7 +644,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 			}
 
 			if (!this->activeThunder_Sector3 && !zsound->IsSoundActive(this->sfxHandle3) &&
-				(ztimer.totalTimeFloat - delayTimeSector3) > 14000.f)
+				(ztimer.totalTimeFloat - delayTimeSector3) > 14000.0f)
 			{
 				this->AddThunder(this->startPointList3[(this->numStartPoints3 - 1) & _rand()], 11, 0, 3);
 				this->activeThunder_Sector3 = TRUE;
@@ -659,6 +655,8 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 					this->sfx3 = zsound->LoadSoundFXScript(mfxBarriereAmbient);
 				}
 
+				sound3DParams.SetDefaults();
+
 				if (tremorEnable)
 				{
 					this->AddTremor(rndContext);
@@ -668,7 +666,7 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 			}
 
 			if (!this->activeThunder_Sector4 && !zsound->IsSoundActive(this->sfxHandle4) &&
-				(ztimer.totalTimeFloat - delayTimeSector4) > 2000.f)
+				(ztimer.totalTimeFloat - delayTimeSector4) > 2000.0f)
 			{
 				this->AddThunder(this->startPointList4[(this->numStartPoints4 - 1) & _rand()], 11, 0, 4);
 				this->activeThunder_Sector4 = TRUE;
@@ -678,6 +676,8 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 				{
 					this->sfx4 = zsound->LoadSoundFXScript(mfxBarriereAmbient);
 				}
+
+				sound3DParams.SetDefaults();
 
 				if (tremorEnable)
 				{
@@ -721,8 +721,6 @@ bool hCBarrier::Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysV
 			zCCamera::activeCam->SetFarClipZ(zFarClip);
 		}
 	}
-
-	return this->bFadeInOut;
 }
 
 void hCSkyControler_Barrier::RenderSkyPre()
@@ -751,7 +749,7 @@ void hCSkyControler_Barrier::RenderSkyPre()
 		rndContext.world = zCCamera::activeCam->connectedVob->homeWorld;
 		rndContext.vob = zCCamera::activeCam->connectedVob;
 
-		barrier->Render(rndContext, this->bFadeInOut, alwaysVisible);
+		barrier->Render(rndContext);
 	}
 }
 
@@ -780,10 +778,10 @@ void PatchBarrier(void)
 		{
 			alwaysVisible = FALSE; // set this to false to avoid clashing
 
-			barrierEverLoomingMinOpacity = G12GetPrivateProfileInt("BarrierEverLoomingMinOpacity", barrierEverLoomingMinOpacity);
-			barrierEverLoomingMaxOpacity = G12GetPrivateProfileInt("BarrierEverLoomingMaxOpacity", barrierEverLoomingMaxOpacity);
+			everLoomingMinOpacity = G12GetPrivateProfileInt("BarrierEverLoomingMinOpacity", 5);
+			everLoomingMaxOpacity = G12GetPrivateProfileInt("BarrierEverLoomingMaxOpacity", 15);
 
-			barrierMinOpacity = barrierEverLoomingMinOpacity;
+			barrierMinOpacity = everLoomingMinOpacity;
 		}
 
 		// option for more detailed barrier via UV scaling

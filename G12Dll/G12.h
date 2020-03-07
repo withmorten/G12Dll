@@ -1,5 +1,4 @@
-typedef int _bool;
-#define bool _bool
+typedef int bool32;
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;

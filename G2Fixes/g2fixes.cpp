@@ -18,7 +18,7 @@ void hCNpc::CreateVobList(float max_dist)
 	zCClassDef *classDef;
 	int i;
 
-	bool delete_vob;
+	bool32 delete_vob;
 
 	if (this->homeWorld)
 	{
@@ -75,7 +75,7 @@ void hCNpc::CreateVobList(float max_dist)
 	}
 }
 
-bool hCNpc::IsSkeleton()
+bool32 hCNpc::IsSkeleton()
 {
 	return this->guildTrue == NPC_GIL_SKELETON || this->guildTrue == NPC_GIL_SUMMONED_SKELETON || this->guildTrue == NPC_GIL_SKELETON_MAGE;
 }
@@ -143,8 +143,8 @@ void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 		}
 	}
 
-	bool bDivideTotalDamage = !nDamageTotal;
-	bool bIsSemiHuman = pNpcAttacker && !pNpcAttacker->IsHalfMonster();
+	bool32 bDivideTotalDamage = !nDamageTotal;
+	bool32 bIsSemiHuman = pNpcAttacker && !pNpcAttacker->IsHalfMonster();
 
 	if (bDivideTotalDamage)
 	{
@@ -173,9 +173,9 @@ void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 	{
 		if (!descDamage.pFXHit && bIsSemiHuman)
 		{
-			bool bBlunt = ((descDamage.enuModeDamage & oEDamageType_Blunt) == oEDamageType_Blunt);
-			bool bEdge = ((descDamage.enuModeDamage & oEDamageType_Edge) == oEDamageType_Edge);
-			bool bPoint = ((descDamage.enuModeDamage & oEDamageType_Point) == oEDamageType_Point);
+			bool32 bBlunt = ((descDamage.enuModeDamage & oEDamageType_Blunt) == oEDamageType_Blunt);
+			bool32 bEdge = ((descDamage.enuModeDamage & oEDamageType_Edge) == oEDamageType_Edge);
+			bool32 bPoint = ((descDamage.enuModeDamage & oEDamageType_Point) == oEDamageType_Point);
 
 			if (!(bBlunt || bEdge || bPoint) && pNpcAttacker->IsMonster())
 			{
@@ -204,8 +204,8 @@ void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 	int nDamageCurrent = 0;
 	int nProtectionTotal = 0;
 	int nProtectionCurrent = 0;
-	bool immortalByProtection = FALSE;
-	bool canBeImmortalByProtection = TRUE;
+	bool32 immortalByProtection = FALSE;
+	bool32 canBeImmortalByProtection = TRUE;
 
 	for (int nDamageIndex = 0; nDamageIndex < oEDamageIndex_MAX; nDamageIndex++)
 	{
@@ -240,15 +240,15 @@ void hCNpc::OnDamage_Hit(oSDamageDescriptor &descDamage)
 	descDamage.fDamageReal = descDamage.fDamageEffective;
 	int nDamage = (int)descDamage.fDamageReal;
 
-	bool bBarrier = this->HasFlag(descDamage.enuModeDamage, oEDamageType_Barrier);
-	bool bDeathByBarrier = FALSE;
-	const bool bForceBarrierDeath = TRUE; // for some extra spicy barrier behaviour
+	bool32 bBarrier = this->HasFlag(descDamage.enuModeDamage, oEDamageType_Barrier);
+	bool32 bDeathByBarrier = FALSE;
+	const bool32 bForceBarrierDeath = TRUE; // for some extra spicy barrier behaviour
 
 	if (bBarrier)
 	{
 		if (this->anictrl)
 		{
-			bool bInWater = this->anictrl->GetWaterLevel() > 1;
+			bool32 bInWater = this->anictrl->GetWaterLevel() > 1;
 			bDeathByBarrier = bInWater;
 		}
 
@@ -427,7 +427,7 @@ void PatchGothic1(void)
 #define PD_ITEM_MOBSI 24
 #define PD_MAGIC 25
 
-bool PrintDebugInstCh()
+bool32 PrintDebugInstCh()
 {
 	zCPar_Symbol *sym = cur_parser->GetSymbol("SELF");
 
@@ -472,18 +472,23 @@ void PatchGothic2(void)
 	}
 
 	// Some SystemPack fixes not in Gothic 2
+#if 0
 	if (G12GetPrivateProfileBool("MoverBugfix", TRUE))
 	{
 		// MoverBugfix
 		Patch(0x00612316, (BYTE)0xEB); // zCMover::InvertMovement()
 	}
+#endif
 
+#if 0
 	if (G12GetPrivateProfileBool("DisableCacheOut", TRUE))
 	{
 		// DisableCacheOut
 		Nop(0x006489B4, 5); // zCRnd_D3D::XD3D_ClearDevice()
 	}
+#endif
 
+#if 0
 	if (G12GetPrivateProfileBool("PfxFix", TRUE))
 	{
 		// PfxFix
@@ -494,7 +499,9 @@ void PatchGothic2(void)
 		Patch(0x005ADA71 + 1, zPARTICLE_MAX_GLOBAL); // zCParticleFX::zCStaticPfxList::ProcessList()
 		Patch(0x005ADA88 + 1, zPARTICLE_MAX_GLOBAL); // zCParticleFX::zCStaticPfxList::ProcessList()
 	}
+#endif
 
+#if 0
 	if (G12GetPrivateProfileBool("Disable_HUMANS_SWIM.MDS", FALSE))
 	{
 		// Disable_HUMANS_SWIM.MDS
@@ -503,7 +510,9 @@ void PatchGothic2(void)
 		Nop(0x0069A5EC, 9); // oCAIHuman::PC_SlowMove()
 		Nop(0x0069B00D, 9); // oCAIHuman::Moving()
 	}
+#endif
 
+#if 0
 	{
 		// Portal distance for Forests
 		float woodPortalDistanceMultiplier = G12GetPrivateProfileFloat("WoodPortalDistanceMultiplier", "1");
@@ -517,6 +526,7 @@ void PatchGothic2(void)
 		Patch(0x005348DB + 4, _DIST_MAX2); // zCBspSector::ActivateSectorRec()
 		Patch(0x005348E3 + 4, _DIST_MIN2); // zCBspSector::ActivateSectorRec()
 	}
+#endif
 
 	// if (G12GetPrivateProfileBool("ThrowFlag", TRUE))
 	{
@@ -524,7 +534,7 @@ void PatchGothic2(void)
 		// ...
 	}
 
-	if (G12GetPrivateProfileBool("HideFocus", FALSE))
+	if (G12GetPrivateProfileBool("HideFocus", TRUE))
 	{
 		// Unlike HideFocus from Systempack which is sometimes buggy and where vobs can still be focused when turning around quickly and spamming ctrl
 		// this patches CreateVobList() to the Sequel variant where a dead, empty NPC does not even end up in the focusable voblist
@@ -550,6 +560,7 @@ void PatchGothic2(void)
 		InjectHook(0x004F3275, &hCActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::UpdateSoundPropsAmbient()
 	}
 
+#if 0
 	if (G12GetPrivateProfileBool("FixGetDistance", TRUE))
 	{
 		// GetDistance* all don't check the last point in the list
@@ -557,6 +568,7 @@ void PatchGothic2(void)
 		Patch(0x00474568 + 2, 0x008CDEC0 + sizeof(zVEC2)); // oCMagFrontier::GetDistanceDragonIsland()
 		Patch(0x00474728 + 2, 0x008CDE6C + sizeof(zVEC2)); // oCMagFrontier::GetDistanceAddonWorld()
 	}
+#endif
 
 	if (G12GetPrivateProfileBool("FixSkeletonMageGuild", TRUE))
 	{

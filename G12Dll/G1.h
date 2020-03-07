@@ -12,12 +12,12 @@ zMAT4 &zMAT4::s_identity = *(zMAT4 *)0x0086F868;
 
 zCCamera *&zCCamera::activeCam = *(zCCamera **)0x00873240;
 
-bool &zCSkyControler::s_skyEffectsEnabled = *(bool *)0x008422A0;
+bool32 &zCSkyControler::s_skyEffectsEnabled = *(bool32 *)0x008422A0;
 
 oCNpc *&oCNpc::player = *(oCNpc **)0x008DBBB0;
-bool &oCNpc::godmode = *(bool *)0x008DBB98;
+bool32 &oCNpc::godmode = *(bool32 *)0x008DBB98;
 
-bool &showTarget = *(bool *)0x00869EA0;
+bool32 &showTarget = *(bool32 *)0x00869EA0;
 
 #define SIN_TABLE_SIZE 6284
 float (&SinTable)[SIN_TABLE_SIZE] = *(float (*)[SIN_TABLE_SIZE])0x007D5100;
@@ -80,7 +80,7 @@ zVEC3 operator*(zMAT4 &m, zVEC3 &v)
 	);
 }
 
-bool zCModel::IsAniActive(zSTRING &aniName)
+bool32 zCModel::IsAniActive(zSTRING &aniName)
 {
 	return this->IsAniActive(this->GetAniFromAniID(this->GetAniIDFromAniName(aniName)));
 }

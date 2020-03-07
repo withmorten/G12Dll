@@ -18,7 +18,7 @@
 #define SPL_THUNDERBALL 34
 #define SPL_SUMMONGOLEM 35
 #define SPL_DESTROYUNDEAD 36
-#define SPL_PYROKINESIS 37
+#define SPL_FIRESTORM 37
 #define SPL_ICEWAVE 39
 #define SPL_SUMMONDEMON 40
 #define SPL_FIRERAIN 42
@@ -45,7 +45,7 @@
 #define SPL_TELEKINESIS2 66
 #define SPL_BERZERK 67
 #define SPL_HEAL 68
-#define SPL_FIRESTORM  69
+#define SPL_PYROKINESIS  69
 #define SPL_STORMFIST 72
 #pragma warning(default : 4005) // restore macro redefinition warning
 
@@ -59,13 +59,13 @@ class hCSpell : public oCSpell
 {
 public:
 	void StopTargetEffects(zCVob *vob);
-	bool IsValidTarget(zCVob *v);
-	bool IsInvestSpell();
+	bool32 IsValidTarget(zCVob *v);
+	bool32 IsInvestSpell();
 	void DoLogicInvestEffect();
-	bool CastSpecificSpell();
+	bool32 CastSpecificSpell();
 	void EndTimedEffect();
 	void DoTimedEffect();
-	bool Invest();
+	bool32 Invest();
 	oCVisualFX *CreateEffect();
 	void InitValues(int _spellID);
 	void InitByScript(const zSTRING &name) { this->oCSpell::InitByScript(name); this->spellLevel = 0; }
@@ -74,9 +74,9 @@ public:
 class hCVisualFX : public oCVisualFX
 {
 public:
-	virtual void SetCollisionEnabled(bool en);
+	virtual void SetCollisionEnabled(bool32 en);
 
-	void _SetCollisionEnabled(bool en) { this->hCVisualFX::SetCollisionEnabled(en); }
+	void _SetCollisionEnabled(bool32 en) { this->hCVisualFX::SetCollisionEnabled(en); }
 
 	void InitValues() { this->oCVisualFX::InitValues(); this->level = 0; }
 	void InitInvestFX() { if (this->level >= 1) this->oCVisualFX::InitInvestFX(); }
@@ -87,7 +87,7 @@ public:
 class hCFXScanner
 {
 public:
-	bool enabled;
+	bool32 enabled;
 	byte alpha;
 	zCVob *initVob;
 	zCVob *scannerVobs[NUM_SCANNER_VOBS];
@@ -96,11 +96,11 @@ public:
 	hCFXScanner *Constructor();
 	void Destructor();
 
-	bool Initialized();
+	bool32 Initialized();
 	void SetAlpha(byte a) { this->alpha = a; }
 	void Enable(zCVob *orgVob);
 	void Disable();
-	bool Enabled() { return this->enabled; }
+	bool32 Enabled() { return this->enabled; }
 	void Run();
 };
 
@@ -112,9 +112,9 @@ public:
 	int phase;
 	// float lightRange;
 
-	bool showScanner;
-	bool investedNext;
-	bool castOnSelf;
+	bool32 showScanner;
+	bool32 investedNext;
+	bool32 castOnSelf;
 
 	// zCModelNodeInst *targetNode;
 
@@ -135,20 +135,20 @@ public:
 	virtual void Open();
 	virtual void Init(zCArray<zCVob *> &trajectoryVobs);
 	virtual void InvestNext();
-	virtual void Cast(bool killAfterDone);
-	virtual void Stop(bool killAfterDone);
+	virtual void Cast(bool32 killAfterDone);
+	virtual void Stop(bool32 killAfterDone);
 	
 	// virtual overrides
 	void _OnTick() { this->hCVisFX_Lightning::OnTick(); }
 	void _Open() { this->hCVisFX_Lightning::Open(); }
 	void _Init_3(zCArray<zCVob *> &trajectoryVobs) { this->hCVisFX_Lightning::Init(trajectoryVobs); }
 	void _InvestNext() { this->hCVisFX_Lightning::InvestNext(); }
-	void _Cast(bool killAfterDone) { this->hCVisFX_Lightning::Cast(killAfterDone); }
-	void _Stop(bool killAfterDone) { this->hCVisFX_Lightning::Stop(killAfterDone); }
+	void _Cast(bool32 killAfterDone) { this->hCVisFX_Lightning::Cast(killAfterDone); }
+	void _Stop(bool32 killAfterDone) { this->hCVisFX_Lightning::Stop(killAfterDone); }
 
-	bool CheckDeletion();
+	bool32 CheckDeletion();
 	void UpdateBurnVobs();
-	bool UpdateBurnVobsInvestNext();
+	bool32 UpdateBurnVobsInvestNext();
 	void Draw();
 	void CreateScanner(zCVob *orgVob);
 	void UpdateScanner() { if (this->scanner.Enabled()) this->scanner.Run(); }

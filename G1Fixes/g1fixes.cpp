@@ -18,7 +18,7 @@ void hCNpc::CreateVobList(float max_dist)
 	zCClassDef *classDef;
 	int i;
 
-	bool delete_vob;
+	bool32 delete_vob;
 
 	if (this->homeWorld)
 	{
@@ -78,7 +78,7 @@ void hCNpc::CreateVobList(float max_dist)
 void PatchGothic(void)
 {
 
-	if (G12GetPrivateProfileBool("HideFocus", FALSE))
+	if (G12GetPrivateProfileBool("HideFocus", TRUE))
 	{
 		// Unlike HideFocus from Systempack which is sometimes buggy and where vobs can still be focused when turning around quickly and spamming ctrl
 		// this patches CreateVobList() to the Sequel variant where a dead, empty NPC does not even end up in the focusable voblist

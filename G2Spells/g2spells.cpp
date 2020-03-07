@@ -41,7 +41,7 @@ void hCFXScanner::Destructor()
 	}
 }
 
-bool hCFXScanner::Initialized()
+bool32 hCFXScanner::Initialized()
 {
 	for (int i = 0; i < NUM_SCANNER_VOBS; i++)
 	{
@@ -224,7 +224,7 @@ ASM(hCVisFX_Lightning_Destructor_Hook)
 	RET(0x0049ECC5);
 }
 
-bool hCVisFX_Lightning::CheckDeletion()
+bool32 hCVisFX_Lightning::CheckDeletion()
 {
 	if (this->shouldDelete)
 	{
@@ -376,7 +376,7 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 	this->trajectory.SetByList(this->burnVobs);
 }
 
-bool hCVisFX_Lightning::UpdateBurnVobsInvestNext()
+bool32 hCVisFX_Lightning::UpdateBurnVobsInvestNext()
 {
 	zCVob *nearestVob = NULL;
 
@@ -756,12 +756,12 @@ void hCVisFX_Lightning::InvestNext()
 	}
 }
 
-void hCVisFX_Lightning::Cast(bool killAfterDone)
+void hCVisFX_Lightning::Cast(bool32 killAfterDone)
 {
 	this->oCVisualFX::Stop(killAfterDone);
 }
 
-void hCVisFX_Lightning::Stop(bool killAfterDone)
+void hCVisFX_Lightning::Stop(bool32 killAfterDone)
 {
 	oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
 
@@ -901,7 +901,7 @@ void hCNpc::OnDamage_Events(oSDamageDescriptor &descDamage)
 	}
 }
 
-bool bTelekinesisManaTaken = FALSE;
+bool32 bTelekinesisManaTaken = FALSE;
 
 void hCSpell::DoLogicInvestEffect()
 {
@@ -1014,7 +1014,7 @@ void hCSpell::DoLogicInvestEffect()
 	}
 }
 
-bool hCSpell::Invest()
+bool32 hCSpell::Invest()
 {
 	if (!this->effect) return FALSE;
 
@@ -1066,7 +1066,7 @@ bool hCSpell::Invest()
 	return TRUE;
 }
 
-bool hCSpell::IsInvestSpell()
+bool32 hCSpell::IsInvestSpell()
 {
 	switch (this->spellID)
 	{
@@ -1085,7 +1085,7 @@ bool hCSpell::IsInvestSpell()
 	}
 }
 
-bool hCSpell::CastSpecificSpell()
+bool32 hCSpell::CastSpecificSpell()
 {
 	int rV = this->oCSpell::CastSpecificSpell();
 
@@ -1188,9 +1188,9 @@ void hCSpell::DoTimedEffect()
 	}
 }
 
-bool hCSpell::IsValidTarget(zCVob *v)
+bool32 hCSpell::IsValidTarget(zCVob *v)
 {
-	bool rV = oCSpell::IsValidTarget(v);
+	bool32 rV = oCSpell::IsValidTarget(v);
 
 	if (rV)
 	{
@@ -1297,7 +1297,7 @@ ASM(oCSpell_Kill_Hook)
 	RET(0x00485841);
 }
 
-void hCVisualFX::SetCollisionEnabled(bool en)
+void hCVisualFX::SetCollisionEnabled(bool32 en)
 {
 	if (this->collDetectionDynamic || this->collDetectionStatic)
 	{

@@ -12,10 +12,10 @@ public:
 	void Init();
 	void AddTremor(zTRenderContext &renderContext);
 	void AddEarthQuake();
-	bool Render(zTRenderContext &rndContext, bool fadeInOut, bool alwaysVisible);
+	void Render(zTRenderContext &rndContext);
 	int AddThunderSub(myThunder *rootThunder, int startIndex, int startNexIntex, int length, int mumSplits);
 	int AddThunder(int startIndex, int length, float random, int sector);
-	bool RenderThunder(myThunder *thunder, zTRenderContext &rndContext);
+	bool32 RenderThunder(myThunder *thunder, zTRenderContext &rndContext);
 };
 
 class hCSkyControler_Barrier : public oCSkyControler_Barrier

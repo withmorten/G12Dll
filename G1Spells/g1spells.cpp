@@ -14,7 +14,7 @@ const float AUTODISPOSE_TIME_LIGHTNING = 0.1f;
 // const float AUTODISPOSE_TIME_LIGHTNING = 1.0f;
 const float AUTODISPOSE_TIME_LIGHTNING_INV = 1.0f / AUTODISPOSE_TIME_LIGHTNING;
 
-bool hCFXScanner::Initialized()
+bool32 hCFXScanner::Initialized()
 {
 	for (int i = 0; i < NUM_SCANNER_VOBS; i++)
 	{
@@ -88,7 +88,7 @@ void hCFXScanner::Run()
 	}
 }
 
-bool hCVisFX_Lightning::CheckDeletion()
+bool32 hCVisFX_Lightning::CheckDeletion()
 {
 	if (this->shouldDelete)
 	{
@@ -240,7 +240,7 @@ void hCVisFX_Lightning::UpdateBurnVobs()
 	this->trajectory.SetByList(this->burnVobs);
 }
 
-bool hCVisFX_Lightning::UpdateBurnVobsInvestNext()
+bool32 hCVisFX_Lightning::UpdateBurnVobsInvestNext()
 {
 	zCVob *nearestVob = NULL;
 
@@ -620,12 +620,12 @@ void hCVisFX_Lightning::InvestNext()
 	}
 }
 
-void hCVisFX_Lightning::Cast(bool killAfterDone)
+void hCVisFX_Lightning::Cast(bool32 killAfterDone)
 {
 	this->oCVisualFX::Stop(killAfterDone);
 }
 
-void hCVisFX_Lightning::Stop(bool killAfterDone)
+void hCVisFX_Lightning::Stop(bool32 killAfterDone)
 {
 	oCNpc *orgNpc = zDYNAMIC_CAST<oCNpc>(this->origin);
 
