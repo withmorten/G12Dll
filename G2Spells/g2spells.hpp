@@ -53,6 +53,7 @@ class hCNpc : public oCNpc
 {
 public:
 	void OnDamage_Events(oSDamageDescriptor &descDamage);
+	oCSpell *IsSpellActive(int nr);
 };
 
 class hCSpell : public oCSpell

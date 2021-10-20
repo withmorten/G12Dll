@@ -789,6 +789,7 @@ void hCVisFX_Lightning::Stop(bool32 killAfterDone)
 oCVisualFX *hCSpell::CreateEffect()
 {
 	if (this->spellID == SPL_CHAINLIGHTNING) this->effect = hCVisFX_Lightning::_CreateNewInstance();
+	// else if (this->isMultiEffect) this->effect = oCVisFX_MultiTarget::_CreateNewInstance(); // currently disabled because we use this function for the hCVisFX_Lightning constructor
 	else this->effect = oCVisualFX::_CreateNewInstance();
 
 	this->effect->SetSpellTargetTypes(this->targetCollectType);
@@ -1018,9 +1019,17 @@ bool32 hCSpell::Invest()
 {
 	if (!this->effect) return FALSE;
 
-	if (!this->spellCasterNpc || this->spellCasterNpc->attribute[this->spellEnergy] <= 0)
+	int manaLeft = 0;
+
+	if (this->spellCasterNpc) manaLeft = this->spellCasterNpc->attribute[this->spellEnergy];
+
+	if (manaLeft > 0)
 	{
-		if (this->manaInvested > 0)
+		this->DoLogicInvestEffect();
+	}
+	else
+	{
+		if (manaInvested > 0)
 		{
 			this->SetReleaseStatus();
 
@@ -1030,40 +1039,58 @@ bool32 hCSpell::Invest()
 		return FALSE;
 	}
 
-	this->DoLogicInvestEffect();
 	this->spellCasterNpc->CreatePassivePerception(NPC_PERC_ASSESSCASTER, NULL, NULL);
 
-	this->manaTimer += this->manaInvested ? ztimer.frameTimeFloat : this->manaInvestTime;
-
-	if (this->manaTimer < this->manaInvestTime) return FALSE;
-
-	this->manaTimer -= this->manaInvestTime;
-
-	if (this->spellStatus != SPL_STATUS_CANINVEST || !this->spellCasterNpc) return FALSE;
-
-	this->CallScriptInvestedMana();
-
-	if (this->spellStatus == SPL_STATUS_CANINVEST || this->spellStatus == SPL_STATUS_CAST || this->spellStatus == SPL_STATUS_NEXTLEVEL)
+	if (this->manaInvested == 0)
 	{
-		if (this->manaInvested) this->spellCasterNpc->ChangeAttribute(this->spellEnergy, -1);
-
-		this->manaInvested++;
+		this->manaTimer += this->manaInvestTime;
+	}
+	else
+	{
+		this->manaTimer += ztimer.frameTimeFloat;
 	}
 
-	if (this->spellStatus == SPL_STATUS_CAST) return TRUE;
-	if (this->spellStatus == SPL_STATUS_STOP) return TRUE;
-
-	if (this->spellStatus == SPL_STATUS_NEXTLEVEL)
+	if (this->manaTimer >= this->manaInvestTime)
 	{
-		this->spellStatus = SPL_STATUS_CANINVEST;
-		this->spellLevel++;
+		this->manaTimer -= this->manaInvestTime;
 
-		if (effect) effect->InvestNext();
+		if (this->spellStatus == SPL_STATUS_CANINVEST)
+		{
+			if (this->spellCasterNpc && manaLeft > 0)
+			{
+				this->CallScriptInvestedMana();
 
-		return TRUE;
+				if (this->spellStatus == SPL_STATUS_CAST ||
+					this->spellStatus == SPL_STATUS_CANINVEST ||
+					this->spellStatus == SPL_STATUS_NEXTLEVEL)
+				{
+					if (this->manaInvested)
+					{
+						this->spellCasterNpc->ChangeAttribute(this->spellEnergy, -1);
+					}
+
+					this->manaInvested++;
+				}
+
+				if (this->spellStatus == SPL_STATUS_CAST) return TRUE;
+				if (this->spellStatus == SPL_STATUS_STOP) return TRUE;
+
+				if (this->spellStatus == SPL_STATUS_NEXTLEVEL)
+				{
+					this->spellStatus = SPL_STATUS_CANINVEST;
+					this->spellLevel++;
+
+					if (this->effect) effect->InvestNext();
+
+					return TRUE;
+				}
+
+				return TRUE;
+			}
+		}
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 bool32 hCSpell::IsInvestSpell()
@@ -1390,11 +1417,31 @@ void hCSpell::InitValues(int _spellID)
 	this->keyNo = 32565;
 }
 
+oCSpell *hCNpc::IsSpellActive(int nr)
+{
+	if (nr == SPL_TRANSFORM)
+	{
+		oCSpell *spell = NULL;
+
+		spell = this->oCNpc::IsSpellActive(nr);
+
+		if (!spell) spell = this->oCNpc::IsSpellActive(SPL_CONTROL);
+
+		return spell;
+	}
+	else
+	{
+		return this->oCNpc::IsSpellActive(nr);
+	}
+}
+
 void PatchSpells(void)
 {
 	// Patch necessary functions for Telekinesis and Control
 	InjectHook(0x006665BF, &hCNpc::OnDamage_Events); // oCNpc::OnDamage()
 	InjectHook(0x004854CF, &hCSpell::CastSpecificSpell); // oCSpell::Cast()
+	InjectHook(0x0043BE77, &hCNpc::IsSpellActive); // oCTriggerChangeLevel::TriggerTarget()
+	InjectHook(0x00472137, &hCNpc::IsSpellActive); // oCAIHuman::CheckActiveSpells()
 	InjectHook(0x0043BEB0, &hCSpell::EndTimedEffect); // oCTriggerChangeLevel::TriggerTarget()
 	InjectHook(0x0047214D, &hCSpell::EndTimedEffect); // oCAIHuman::CheckActiveSpells()
 	InjectHook(0x004872BB, &hCSpell::EndTimedEffect); // oCSpell::DoTimedEffect()
@@ -1433,6 +1480,21 @@ void PatchSpells(void)
 	// InitInvestFX level check
 	InjectHook(0x00492A97, &hCVisualFX::InitInvestFX); // oCVisualFX::InvestNext()
 	InjectHook(0x00492F1A, &hCVisualFX::InitInvestFX); // oCVisualFX::SetLevel()
+
+	// Check for actual SPL_PYROKINESIS
+	Patch(0x00735231 + 2, (BYTE)SPL_PYROKINESIS); // oCNpc::IsConditionValid()
+
+	// and inlined calls
+	Patch(0x00732B0C + 2, (BYTE)SPL_PYROKINESIS); // oCNpc::GetCSStateFlags()
+	Patch(0x00734C78 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::SetEnemy()
+	Patch(0x00734DF5 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::SetEnemy()
+	Patch(0x00734EC5 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::GetNextEnemy()
+	Patch(0x007350C0 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::GetNextEnemy()
+	Patch(0x00740D71 + 2, (BYTE)SPL_PYROKINESIS); // oCNpc::FindNpcEx()
+	Patch(0x00740FCF + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::FindNpcExAtt()
+	Patch(0x00741265 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::GetComrades()
+	Patch(0x0074B575 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::OnMessage()
+	Patch(0x0074BA32 + 1, (BYTE)SPL_PYROKINESIS); // oCNpc::OnMessage()
 
 	// Restore oCVisFX_Lightning
 	if (G12GetPrivateProfileBool("ChainLightning", FALSE))

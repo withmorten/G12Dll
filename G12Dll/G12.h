@@ -5,7 +5,6 @@ typedef unsigned int dword;
 
 #define DEBUG_BREAK() { if (IsDebuggerPresent()) __asm int 3 }
 
-// first 4 bytes of each version (with debug info)
 #define BASE_ADDR (0x00401000)
 
 #define GOTHIC101D_VER		"1.01d_christmas_edition"
@@ -99,7 +98,7 @@ void G12AllocConsole(void)
 	strncpy(G12LogPath, G12Cwd, sizeof(G12LogPath));
 	strncat(G12LogPath, "\\G12.log", sizeof(G12LogPath));
 
-	fileout = fopen(G12LogPath, "wb");
+	// fileout = fopen(G12LogPath, "wb");
 
 	strncpy(G12IniPath, G12Cwd, sizeof(G12IniPath));
 	strncat(G12IniPath, "\\G12.ini", sizeof(G12IniPath));

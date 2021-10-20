@@ -1748,6 +1748,17 @@ class zCSoundManager
 {
 public:
 	enum zTSndManMedium { };
+
+	struct zTScriptSoundData
+	{
+		zSTRING file;
+		int pitchOff;
+		int pitchVar;
+		int vol;
+		int loop;
+		float reverbLevel;
+		zSTRING pfxName;
+	};
 };
 
 class zCBspBase

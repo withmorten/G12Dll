@@ -2,6 +2,8 @@
 
 #define G12DLL_NAME "G2Fixes"
 
+#define IGNORE_CUSTOM_SYSTEMPACK_FIXES // these are already in a custom SytemPack .PATCH file
+
 #include "..\G12Dll\G12.h"
 
 #include "..\G12Dll\G2.hpp"
@@ -285,6 +287,11 @@ void hCSkyControler_Outdoor::ReadFogColorsFromINI()
 	this->fogColorDayVariations[1] = defaultCol1;
 	this->fogColorDayVariations[2] = defaultCol2;
 	this->fogColorDayVariations[3] = defaultCol3;
+
+	this->fogColorDayVariations2[0] = defaultCol0;
+	this->fogColorDayVariations2[1] = defaultCol1;
+	this->fogColorDayVariations2[2] = defaultCol2;
+	this->fogColorDayVariations2[3] = defaultCol3;
 }
 
 ASM(zCSkyControler_Mid_Hook)
@@ -334,22 +341,24 @@ ASM(zCRenderLightContainer_CollectLights_StatLights_Hook)
 	RET(0x005D5891);
 }
 
-const char *Gothic1AppName = "Gothic - 2.6 (fix)";
-const char *Gothic1WorldZen = "WORLD.ZEN";
-const char *ItMiNugget = "ItMiNugget";
+const char *AppName = "Gothic - 2.6 (fix)";
+const char *WorldZen = "world.zen";
+const char *ItMiNugget = "ITMINUGGET";
 const char *Erz = "Erz: ";
 const char *NotEnoughOre = "Nicht genug Erz um den Gegenstand zu kaufen.";
 const char *NoSound = "NEWGAME";
 const char *SectorName = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+hCSoundManager::hTScriptSoundData *scriptSoundData = NULL;
+
 void PatchGothic1(void)
 {
 	// Fix App Title
-	Patch(0x0089D9AC, Gothic1AppName); // APP_NAME
+	Patch(0x0089D9AC, AppName); // APP_NAME
 
 	// New game starts WORLD.ZEN
-	Patch(0x00429A23 + 1, Gothic1WorldZen); // CGameManager::Menu()
-	Patch(0x00429A52 + 1, Gothic1WorldZen); // CGameManager::Menu()
+	Patch(0x00429A23 + 1, WorldZen); // CGameManager::Menu()
+	Patch(0x00429A52 + 1, WorldZen); // CGameManager::Menu()
 
 	// Currency
 	Patch(0x00704931 + 1, ItMiNugget); // oCItemContainer::GetCurrencyInstanceName()
@@ -384,20 +393,68 @@ void PatchGothic1(void)
 	// Patch fogcolors to Gothic 1 fogcolors
 	InjectHook(0x005E6443, &hCSkyControler_Outdoor::ReadFogColorsFromINI); // zCSkyControler_Outdoor::zCSkyControler_Outdoor()
 
+	// Fix Evening preset
+	Patch(0x005E3BAF + 4, 180.0f); // zCSkyState::PresetEvening()
+	Patch(0x005E3BBF + 4, 75.0f); // zCSkyState::PresetEvening()
+	Patch(0x005E3BCE + 4, 60.0f); // zCSkyState::PresetEvening()
+
 	// No snow in NCI and NCO
 	PatchJump(0x00640811, 0x00640861); // oCZoneMusic::ProcessZoneList()
+	PatchJump(0x00640CA3, 0x00640CF3); // oCZoneMusic::ProcessZoneList()
 
 	// Fix dark trees in WALD sectors
-	// very hacky - there are other lighting differences, too (see Old Mine Entrance, Abandoned Mine Entrance ...)
+	// very hacky - there are other lighting differences, too (see Old Mine Entrance, Abandoned Mine Entrance, Sleeper Entrance ...)
 	// perhaps it's better to understand how the lighting differs from G1 to G2 ...
 	InjectHook(0x005D57DA, zCRenderLightContainer_CollectLights_StatLights_Hook); // zCRenderLightContainer::CollectLights_StatLights()
 
 	// Damage calculation
 	InjectHook(0x00666513, &hCNpc::OnDamage_Hit); // oCNpc::OnDamage()
 
+	// Disable some Gothic 2 specific cheats
+	// HESSE / GARRETT
+	Nop(0x0043350D, 6); // HandleResultString()
+	Nop(0x00433518, 6); // HandleResultString()
+
+	// LARES
+	Nop(0x00433523); // HandleResultString()
+	Patch(0x00433523 + 1, (BYTE)0xE9); // HandleResultString()
+
+	// THEQUEENISDEAD
+	Nop(0x004345DA); // HandleResultString()
+	Patch(0x004345DA + 1, (BYTE)0xE9); // HandleResultString()
+
+	// No CheckMeleeWeaponHitsLevel
+	Nop(0x0075004B, 6); // oCNpc::EV_AttackForward()
+	Nop(0x00750BF2, 6); // oCNpc::EV_AttackLeft()
+	Nop(0x007516CA, 6); // oCNpc::EV_AttackRight()
+	Nop(0x007519ED, 6); // oCNpc::EV_AttackRun()
+
+	// Movers collide with static vobs
+	Patch(0x00611221, (BYTE)0xEB); // zCMover::CanThisCollideWith
+
+	// Fix scriptSoundData pfxName (use zCSndFrame here)
+	scriptSoundData = new hCSoundManager::hTScriptSoundData();
+
+	Patch(0x005ED7B8 + 1, scriptSoundData); // zCSoundManager::zCSoundEventData::GetData()
+	Patch(0x005ED7D4 + 1, scriptSoundData + offsetof(hCSoundManager::hTScriptSoundData, pfxName)); // zCSoundManager::zCSoundEventData::GetData()
+
+	Patch(0x005ED865 + 1, scriptSoundData); // zCSoundManager::zCSoundEventData::GetData()
+	Patch(0x005ED875 + 1, scriptSoundData + offsetof(hCSoundManager::hTScriptSoundData, pfxName)); // zCSoundManager::zCSoundEventData::GetData()
+
+	Patch(0x005EDFBB + 1, scriptSoundData); // zCSoundManager::StartSlideSound()
+	Patch(0x005EDFCB + 1, scriptSoundData + offsetof(hCSoundManager::hTScriptSoundData, pfxName)); // zCSoundManager::StartSlideSound()
+
+	Patch(0x005EE220 + 1, scriptSoundData); // zCSoundManager::StartDestructionSound()
+	Patch(0x005EE230 + 1, scriptSoundData + offsetof(hCSoundManager::hTScriptSoundData, pfxName)); // zCSoundManager::StartDestructionSound()
+
+	// Same time for PrintTimedCXY() as in G1 SystemPack
+	Patch(0x006FD1FE + 1, 1500.0f); // oCGame::HandleEvent()
+
+	// Fix less transparent water
+	Patch(0x005D84A7, (BYTE)0xEB);
+
+	// TODO wtf is up with walking in the SleeperEntrance? On angled floor it's veeeery slow - also lighting there is fucked
 	// TODO Fire in OnDamage_Anim (or not? honestly not one of the more desirable features from G1 ...)
-	// TODO Why is the water less transparent?
-	// TODO Weird sounds when swinging sword near water
 	// TODO override GetTalentValue ... Npc_SetTalentSkill doesn't set talent value, which is unnice to say the least since no NPC actually has "value" ...
 }
 
@@ -456,6 +513,36 @@ bool32 PrintDebugInstCh()
 	return FALSE;
 }
 
+zCArchiver *arc;
+zCTrigger *trigger;
+
+void zCTrigger_Unarchive(void)
+{
+	bool32 isEnabled = TRUE;
+	arc->ReadBool("isEnabled", isEnabled);
+	trigger->flags.isEnabled = isEnabled;
+}
+
+ASM(zCTrigger_Unarchive_Hook)
+{
+	__asm
+	{
+		mov arc, esi
+		mov trigger, edi
+		call zCTrigger_Unarchive
+	}
+
+	RET(0x00610D02);
+}
+
+int Game_SpeciesConsole_TempFightRange;
+float Game_SpeciesConsole_JumpupHeight;
+int Game_SpeciesConsole_BloodMaxDistance;
+int Game_SpeciesConsole_BloodFlow;
+int Game_SpeciesConsole_BloodAmount;
+
+#define zCON_TYPE_FLOAT 1
+
 #define zPARTICLE_MAX_GLOBAL 65536
 
 void PatchGothic2(void)
@@ -465,6 +552,54 @@ void PatchGothic2(void)
 		Patch(0x006D4B1B + 1, PrintDebugInstCh); // oCGame::DefineExternals_Ulfi()
 	}
 
+	if (G12GetPrivateProfileBool("FixTriggerIsEnabled", FALSE))
+	{
+		// Fix zCTrigger::Unarchive - isEnabled doesn't get read properly
+		InjectHook(0x00610CFD, zCTrigger_Unarchive_Hook, PATCH_JUMP); // zCTrigger::Unarchive()
+	}
+
+	if (G12GetPrivateProfileBool("FixSpeciesConsoleVars", TRUE))
+	{
+		// These values are shorts in the exe, but get treated as ints by the functions that receive these pointers ... so replace them with ints
+		Nop(0x006D3821); // Game_OpenSpeciesConsole()
+		Patch(0x006D3821 + 2, &Game_SpeciesConsole_TempFightRange); // Game_OpenSpeciesConsole()
+		Patch(0x006D384C + 1, &Game_SpeciesConsole_TempFightRange); // Game_OpenSpeciesConsole()
+
+		// replace this one with a float, so get rid of all the float2int, int2float conversions
+		Nop(0x006D2A3C); // Game_SpeciesChanged()
+		Patch(0x006D2A3C + 1, (BYTE)0x8B); // Game_SpeciesChanged()
+		Patch(0x006D2A3C + 3, &Game_SpeciesConsole_JumpupHeight); // Game_SpeciesChanged()
+		Nop(0x006D2A43, 4); // Game_OpenSpeciesConsole()
+		Nop(0x006D2A48, 4); // Game_OpenSpeciesConsole()
+		Nop(0x006D2A4E, 3); // Game_OpenSpeciesConsole()
+		Nop(0x006D309C, 5); // Game_OpenSpeciesConsole()
+		Patch(0x006D30A1 + 0, (BYTE)0xD9); // Game_OpenSpeciesConsole()
+		Patch(0x006D30A1 + 1, (BYTE)0x1D); // Game_OpenSpeciesConsole()
+		Patch(0x006D30A1 + 2, &Game_SpeciesConsole_JumpupHeight); // Game_OpenSpeciesConsole()
+		Patch(0x006D30E0 + 1, &Game_SpeciesConsole_JumpupHeight); // Game_OpenSpeciesConsole()
+		Patch(0x006D30E5 + 1, (BYTE)zCON_TYPE_FLOAT); // Game_OpenSpeciesConsole()
+
+		Nop(0x006D2A8D, 2); // Game_SpeciesChanged()
+		Patch(0x006D2A8D + 2, (BYTE)0xA1); // Game_SpeciesChanged()
+		Patch(0x006D2A8D + 3, &Game_SpeciesConsole_BloodMaxDistance); // Game_SpeciesChanged()
+		Nop(0x006D31D4); // Game_OpenSpeciesConsole()
+		Patch(0x006D31D4 + 2, &Game_SpeciesConsole_BloodMaxDistance); // Game_OpenSpeciesConsole()
+		Patch(0x006D320F + 1, &Game_SpeciesConsole_BloodMaxDistance); // Game_OpenSpeciesConsole()
+
+		Nop(0x006D2AE9); // Game_SpeciesChanged()
+		Patch(0x006D2AE9 + 3, &Game_SpeciesConsole_BloodFlow); // Game_SpeciesChanged()
+		Nop(0x006D3272); // Game_OpenSpeciesConsole()
+		Patch(0x006D3272 + 2, &Game_SpeciesConsole_BloodFlow); // Game_OpenSpeciesConsole()
+		Patch(0x006D32A3 + 1, &Game_SpeciesConsole_BloodFlow); // Game_OpenSpeciesConsole()
+
+		Nop(0x006D2B31, 2); // Game_SpeciesChanged()
+		Patch(0x006D2B31 + 2, (BYTE)0xA1); // Game_SpeciesChanged()
+		Patch(0x006D2B31 + 3, &Game_SpeciesConsole_BloodAmount); // Game_SpeciesChanged()
+		Nop(0x006D32F9); // Game_OpenSpeciesConsole()
+		Patch(0x006D32F9 + 2, &Game_SpeciesConsole_BloodAmount); // Game_OpenSpeciesConsole()
+		Patch(0x006D333E + 1, &Game_SpeciesConsole_BloodAmount); // Game_OpenSpeciesConsole()
+	}
+
 	if (G12GetPrivateProfileBool("NoHardcodedThreatMusic", FALSE))
 	{
 		// No hardcoded threat music in forest
@@ -472,23 +607,19 @@ void PatchGothic2(void)
 	}
 
 	// Some SystemPack fixes not in Gothic 2
-#if 0
+#ifndef IGNORE_CUSTOM_SYSTEMPACK_FIXES
 	if (G12GetPrivateProfileBool("MoverBugfix", TRUE))
 	{
 		// MoverBugfix
 		Patch(0x00612316, (BYTE)0xEB); // zCMover::InvertMovement()
 	}
-#endif
 
-#if 0
 	if (G12GetPrivateProfileBool("DisableCacheOut", TRUE))
 	{
 		// DisableCacheOut
 		Nop(0x006489B4, 5); // zCRnd_D3D::XD3D_ClearDevice()
 	}
-#endif
 
-#if 0
 	if (G12GetPrivateProfileBool("PfxFix", TRUE))
 	{
 		// PfxFix
@@ -499,9 +630,7 @@ void PatchGothic2(void)
 		Patch(0x005ADA71 + 1, zPARTICLE_MAX_GLOBAL); // zCParticleFX::zCStaticPfxList::ProcessList()
 		Patch(0x005ADA88 + 1, zPARTICLE_MAX_GLOBAL); // zCParticleFX::zCStaticPfxList::ProcessList()
 	}
-#endif
 
-#if 0
 	if (G12GetPrivateProfileBool("Disable_HUMANS_SWIM.MDS", FALSE))
 	{
 		// Disable_HUMANS_SWIM.MDS
@@ -510,9 +639,7 @@ void PatchGothic2(void)
 		Nop(0x0069A5EC, 9); // oCAIHuman::PC_SlowMove()
 		Nop(0x0069B00D, 9); // oCAIHuman::Moving()
 	}
-#endif
 
-#if 0
 	{
 		// Portal distance for Forests
 		float woodPortalDistanceMultiplier = G12GetPrivateProfileFloat("WoodPortalDistanceMultiplier", "1");
@@ -560,7 +687,7 @@ void PatchGothic2(void)
 		InjectHook(0x004F3275, &hCActiveSnd::AutoCalcObstruction); // zCSndSys_MSS::UpdateSoundPropsAmbient()
 	}
 
-#if 0
+#ifndef IGNORE_CUSTOM_SYSTEMPACK_FIXES
 	if (G12GetPrivateProfileBool("FixGetDistance", TRUE))
 	{
 		// GetDistance* all don't check the last point in the list
@@ -592,68 +719,48 @@ void PatchGothic2(void)
 	{
 		PatchGothic1();
 	}
-}
-
-void PatchSpacer2(void)
-{
-	// Gothic 1 uncompiled Zens and Material libraries would be compatible in Spacer2 if the following values were read safely
-	// Nopping them results in Spacer2 using the default values instead of overwriting them with garbage
-
-	// Note that the Unarchiver will still complain about many missing entries from other values, but those get read safely and the original value remains intact
-
-	if (G12GetPrivateProfileBool("SpacerG1Pmls", FALSE))
+	else
 	{
-		// Only enable this temporarily if you want to open Gothic 1 PMLs
+		// disable use of scriptSoundData - program reads over the actual size of the struct
+		Patch(0x005ED7B6, (BYTE)0xEB); // zCSoundManager::zCSoundEventData::GetData()
+		Patch(0x005ED85B, (BYTE)0xEB); // zCSoundManager::zCSoundEventData::GetData()
+		Patch(0x005EDFB1, (BYTE)0xEB); // zCSoundManager::StartSlideSound()
+		Patch(0x005EE216, (BYTE)0xEB); // zCSoundManager::StartDestructionSound()
 
-		// zCMaterial::Unarchive()
-		{
-			// Some WATER materials will require manual setting of the alphaFunc, as in Gothic 1 it got used differently on WATER
+		// no SPL_CHARGEFIRESTORM (SPL_PYROKINESIS, G1 engine leftover) check
+		Patch(0x00735231 + 2, (BYTE)SPL_SUCKENERGY); // oCNpc::IsConditionValid()
+		PatchJump(0x00735240, 0x00735265); // oCNpc::IsConditionValid()
 
-			// detailObjectScale
-			PatchJump(0x006F10E5, 0x006F10F7);
+		// and inlined calls
+		Patch(0x00732B0C + 2, (BYTE)SPL_SUCKENERGY); // oCNpc::GetCSStateFlags()
+		PatchJump(0x00732B1B, 0x00732B3A); // oCNpc::GetCSStateFlags()
 
-			// forceOccluder
-			PatchJump(0x006F10F7, 0x006F1112);
+		Patch(0x00734C78 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::SetEnemy()
+		PatchJump(0x00734C85, 0x00734E18); // oCNpc::SetEnemy()
 
-			// environmentalMapping
-			PatchJump(0x006F1112, 0x006F112D);
+		Patch(0x00734DF5 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::SetEnemy()
+		PatchJump(0x00734E02, 0x00734E0F); // oCNpc::SetEnemy()
 
-			// environmentalMappingStrength
-			PatchJump(0x006F112D, 0x006F113C);
+		Patch(0x00734EC5 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::GetNextEnemy()
+		PatchJump(0x00734ED2, 0x00734EDF); // oCNpc::GetNextEnemy()
 
-			// waveMode
-			PatchJump(0x006F113C, 0x006F115A);
+		Patch(0x007350C0 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::GetNextEnemy()
+		PatchJump(0x007350CD, 0x007350DA); // oCNpc::GetNextEnemy()
 
-			// waveSpeed
-			PatchJump(0x006F115A, 0x006F1175);
+		Patch(0x00740D71 + 2, (BYTE)SPL_SUCKENERGY); // oCNpc::FindNpcEx()
+		PatchJump(0x00740D80, 0x00740DA5); // oCNpc::FindNpcEx()
 
-			// ignoreSunLight
-			PatchJump(0x006F1195, 0x006F11B0);
+		Patch(0x00740FCF + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::FindNpcExAtt()
+		PatchJump(0x00740FE0, 0x00740FF1); // oCNpc::FindNpcExAtt()
 
-			// alphaFunc
-			PatchJump(0x006F11B0, 0x006F11C2);
-			Nop(0x006F11C2);
-			Patch(0x006F11C2 + 1, (BYTE)0xE9);
-			Nop(0x006F127E, 3);
-		}
-	}
+		Patch(0x00741265 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::GetComrades()
+		PatchJump(0x00741272, 0x0074127F); // oCNpc::GetComrades()
 
-	if (G12GetPrivateProfileBool("SpacerG1Zens", FALSE))
-	{
-		// Keep this enabled as long as you need to work on a Gothic 1 uncompiled ZEN
-		// I would not advise resaving it as an uncompiled Gothic 2 ZEN, because you will lose any items you have not implemented in your scripts yet
+		Patch(0x0074B575 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::OnMessage()
+		PatchJump(0x0074B582, 0x0074B58F); // oCNpc::OnMessage()
 
-		// zCVob::UnarchiveVerbose()
-		{
-			// visualAniMode
-			PatchJump(0x0078A8A0, 0x0078A8B5);
-
-			// visualAniModeStrength
-			PatchJump(0x0078A8B5, 0x0078A8C7);
-
-			// vobFarClipZScale
-			PatchJump(0x0078A8C7, 0x0078A8D9);
-		}
+		Patch(0x0074BA32 + 1, (BYTE)SPL_SUCKENERGY); // oCNpc::OnMessage()
+		PatchJump(0x0074BA43, 0x0074BA54); // oCNpc::OnMessage()
 	}
 }
 
@@ -663,11 +770,6 @@ void Init(void)
 	{
 		G12AllocConsole();
 		PatchGothic2();
-	}
-	else if (SPACER26MOD)
-	{
-		G12AllocConsole();
-		PatchSpacer2();
 	}
 }
 

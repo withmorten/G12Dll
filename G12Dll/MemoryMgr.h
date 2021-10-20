@@ -41,7 +41,7 @@ inline void PatchBytes(DWORD address, void *value, size_t nCount)
 inline void ReadBytes(DWORD address, void *out, size_t nCount)
 {
 	DWORD dwProtect[2];
-	VirtualProtect((void *)address, nCount, PAGE_EXECUTE_READWRITE, &dwProtect[0]);
+	VirtualProtect((void *)address, nCount, PAGE_EXECUTE_READ, &dwProtect[0]);
 	memcpy(out, (void *)address, nCount);
 	VirtualProtect((void *)address, nCount, dwProtect[0], &dwProtect[1]);
 }
@@ -54,6 +54,11 @@ inline void Nop(DWORD address, size_t nCount = 1)
 	VirtualProtect((void *)address, nCount, dwProtect[0], &dwProtect[1]);
 }
 
+inline void NopTo(DWORD address, DWORD to)
+{
+	Nop(address, to - address);
+}
+
 enum
 {
 	PATCH_CALL,
@@ -62,7 +67,7 @@ enum
 	HOOK_SIZE = 5,
 };
 
-template<typename HT> inline void InjectHook(DWORD address, HT hook, int nType = PATCH_NOTHING)
+template<typename T> inline void InjectHook(DWORD address, T hook, int nType = PATCH_NOTHING)
 {
 	DWORD dwProtect[2];
 	switch (nType)
@@ -80,10 +85,11 @@ template<typename HT> inline void InjectHook(DWORD address, HT hook, int nType =
 		break;
 	}
 	DWORD dwHook;
+	// DWORD PTR for casting 8 byte function pointers down to 4
 	_asm
 	{
-		mov	eax, hook
-		mov	dwHook, eax
+		mov	eax, DWORD PTR hook
+		mov DWORD PTR dwHook, eax
 	}
 
 	*(ptrdiff_t *)((DWORD)address + 1) = (DWORD)dwHook - (DWORD)address - HOOK_SIZE;

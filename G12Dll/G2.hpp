@@ -106,6 +106,7 @@ class zCLensFlareFX;
 class zCOBBox3D;
 class zCProgMeshProto;
 class zCQuadMark;
+class zCBuffer;
 
 class oCNpc;
 class oCNpcTalent;
@@ -1882,6 +1883,17 @@ class zCSoundManager
 {
 public:
 	enum zTSndManMedium { };
+
+	struct zTScriptSoundData
+	{
+		zSTRING file;
+		int pitchOff;
+		int pitchVar;
+		int vol;
+		int loop;
+		float reverbLevel;
+		zSTRING pfxName;
+	};
 };
 
 class zCBspBase
@@ -2913,8 +2925,8 @@ public:
 #define SPL_THUNDERBALL 34
 #define SPL_SUMMONGOLEM 35
 #define SPL_DESTROYUNDEAD 36
-#define SPL_PYROKINESIS 37
-#define SPL_FIRESTORM 38
+#define SPL_CHARGEFIRESTORM 37 // SPL_PYROKINESIS
+#define SPL_INSTANTFIRESTORM 38 // SPL_FIRESTORM
 #define SPL_ICEWAVE 39
 #define SPL_SUMMONDEMON 40
 #define SPL_FULLHEAL 41
@@ -3509,4 +3521,141 @@ public:
 class zCView : public zCViewBase
 {
 
+};
+
+enum zTArchiveMode { };
+
+class zCArchiver : public zCObject
+{
+public:
+	virtual void __fastcall WriteInt(const char *entryName, const int value) = 0;
+	virtual void __fastcall WriteByte(const char *entryName, const byte value) = 0;
+	virtual void __fastcall WriteWord(const char *entryName, const word value) = 0;
+	virtual void __fastcall WriteFloat(const char *entryName, const float value) = 0;
+	virtual void __fastcall WriteBool(const char *entryName, const bool32 value) = 0;
+	virtual void __fastcall WriteString(const char *entryName, const zSTRING &value) = 0;
+	virtual void __fastcall WriteVec3(const char *entryName, const zVEC3 &value) = 0;
+	virtual void __fastcall WriteColor(const char *entryName, const zCOLOR &value) = 0;
+	virtual void __fastcall WriteRaw(const char *entryName, void *buffer, const dword size) = 0;
+	virtual void __fastcall WriteRawFloat(const char *entryName, void *buffer, const dword size) = 0;
+	virtual void __fastcall WriteEnum(const char *entryName, const char *enumChoices, const int value) = 0;
+	virtual void __fastcall WriteObject(zCObject *object) = 0;
+	virtual void __fastcall WriteObject(const char *chunkName, zCObject *object) = 0;
+	virtual void __fastcall WriteChunkStart(const char *chunkName, word chunkVersion = 0) = 0;
+	virtual void __fastcall WriteChunkEnd() = 0;
+	virtual void __fastcall WriteGroupBegin(const char *groupName) = 0;
+	virtual void __fastcall WriteGroupEnd(const char *groupName) = 0;
+
+	virtual void __fastcall ReadInt(const char *entryName, int &value) = 0;
+	virtual void __fastcall ReadByte(const char *entryName, byte &value) = 0;
+	virtual void __fastcall ReadWord(const char *entryName, word &value) = 0;
+	virtual void __fastcall ReadFloat(const char *entryName, float &value) = 0;
+	virtual void __fastcall ReadBool(const char *entryName, bool32 &value) = 0;
+	virtual void __fastcall ReadString(const char *entryName, zSTRING &value) = 0;
+	virtual void __fastcall ReadVec3(const char *entryName, zVEC3 &value) = 0;
+	virtual void __fastcall ReadColor(const char *entryName, zCOLOR &value) = 0;
+	virtual void __fastcall ReadEnum(const char *entryName, int &value) = 0;
+	virtual void __fastcall ReadRaw(const char *entryName, void *buffer, const word size) = 0;
+	virtual void __fastcall ReadRawFloat(const char *entryName, void *buffer, const word size) = 0;
+
+	virtual zCObject *__fastcall ReadObject(zCObject *objectUseThis) = 0;
+	virtual zCObject *__fastcall ReadObject(const char *chunkName, zCObject *objectUseThis) = 0;
+
+	virtual zCObject *__fastcall ReadObjectAccount(const char *file, int line, zCObject *objectUseThis) { XCALL(0x0051AFF0); }
+	virtual zCObject *__fastcall ReadObjectAccount(const char *file, int line, const char *chunkName, zCObject *objectUseThis) { XCALL(0x0051B020); }
+
+	virtual	bool32 __fastcall ReadChunkStart(zSTRING &chunkName, word &chunkVersion) = 0;
+	virtual bool32 __fastcall ReadChunkStartNamed(const char *chunkName, word &chunkVersion) = 0;
+	virtual void __fastcall SkipOpenChunk() = 0;
+	virtual word __fastcall GetCurrentChunkVersion() = 0;
+
+	virtual int	__fastcall ReadInt(const char *entryName) = 0;
+	virtual byte __fastcall ReadByte(const char *entryName) = 0;
+	virtual word __fastcall ReadWord(const char *entryName) = 0;
+	virtual float __fastcall ReadFloat(const char *entryName) = 0;
+	virtual bool32 __fastcall ReadBool(const char *entryName) = 0;
+	virtual zSTRING	__fastcall ReadString(const char *entryName) = 0;
+	virtual zVEC3 __fastcall ReadVec3(const char *entryName) = 0;
+	virtual zCOLOR __fastcall ReadColor(const char *entryName) = 0;
+	virtual int	__fastcall ReadEnum(const char *entryName) = 0;
+
+	virtual zFILE *GetFile() const = 0;
+	virtual void __fastcall GetBufferString(zSTRING &result) = 0;
+	virtual zCBuffer *__fastcall GetBuffer() = 0;
+	virtual bool32 __fastcall EndOfArchive() = 0;
+
+	virtual void Close() = 0;
+
+	virtual void SetStringEOL(const zSTRING &eol) = 0;
+	virtual zSTRING	GetStringEOL() const = 0;
+	virtual bool32 IsStringValid(const char *string) = 0;
+	virtual bool32 GetChecksumEnabled() const = 0;
+	virtual void SetChecksumEnabled(const bool32 b) = 0;
+	virtual void SetNoReadSearchCycles(const bool32 b) = 0;
+	virtual bool32 InProperties() const = 0;
+	virtual bool32 InSaveGame() const = 0;
+	virtual bool32 InBinaryMode() const = 0;
+
+	virtual zCObject *__fastcall GetParentObject() = 0;
+
+	virtual bool32 OpenWriteBuffer(zCBuffer *buffer, zTArchiveMode arcMode, bool32 saveGame, int arcFlags, bool32 arcOwnsMedium) = 0;
+	virtual void OpenWriteFile(zFILE *fileWrite, zTArchiveMode arcMode, bool32 saveGame, int arcFlags, bool32 arcOwnsMedium) = 0;
+
+	virtual void __fastcall WriteChunkStart(const char *chunkName, const char *className, word classVersion, dword objectIndex) = 0;
+	virtual void __fastcall WriteObject(const char *chunkName, zCObject &object) = 0;
+	virtual void __fastcall WriteHeader(const int arcFlags = 0) = 0;
+	virtual void __fastcall WriteHeaderNumObj() = 0;
+	virtual void __fastcall WriteASCIILine(const char *entryName, const char *typeName, const zSTRING &value) = 0;
+	virtual void __fastcall StoreBuffer(void *buffer, const dword size) = 0;
+	virtual void __fastcall StoreString(const char *string) = 0;
+	virtual void __fastcall StoreStringEOL(const char *string) = 0;
+	virtual dword __fastcall StoreGetPos() = 0;
+	virtual void __fastcall StoreSeek(const dword newPos) = 0;
+
+	virtual	bool32 OpenReadBuffer(zCBuffer &buffer, zTArchiveMode arcMode, bool32 saveGame, int arcFlags) = 0;
+	virtual void OpenReadFile(zFILE *fileRead, zTArchiveMode arcMode, bool32 saveGame, int arcFlags, bool32 deleteFileOnClose) = 0;
+
+	virtual zCClassDef *__fastcall GetClassDefByString(const zSTRING &className) = 0;
+	virtual zCObject *__fastcall CreateObject(const zSTRING &className) = 0;
+	virtual void __fastcall SkipChunk(const bool32 removeFromChunkStack) = 0;
+	virtual bool32 __fastcall ReadChunkStart(const char *chunkName) = 0;
+	virtual void __fastcall ReadChunkStartASCII(const char *chunkName, zSTRING &resultLine) = 0;
+	virtual void __fastcall ReadChunkEnd() = 0;
+	virtual bool32 __fastcall ReadEntryASCII(const char *entryName, zSTRING &resultValue) = 0;
+	virtual void __fastcall ReadHeader() = 0;
+	virtual void __fastcall RestoreBuffer(void *buffer, const dword size) = 0;
+	virtual void __fastcall RestoreStringEOL(zSTRING &string) = 0;
+	virtual void __fastcall RestoreString0(zSTRING &string) = 0;
+	virtual bool32 __fastcall RestoreGetPos() = 0;
+	virtual void __fastcall RestoreSeek(const dword newPos) = 0;
+
+	virtual void __fastcall	DeleteBuffer() = 0;
+};
+
+class zCTriggerBase : public zCVob
+{
+public:
+	zSTRING triggerTarget;
+};
+
+class zCTrigger : public zCTriggerBase
+{
+public:
+	struct
+	{
+		byte reactToOnTrigger : 1;
+		byte reactToOnTouch : 1;
+		byte reactToOnDamage : 1;
+
+		byte respondToObject : 1;
+		byte respondToPC : 1;
+		byte respondToNPC : 1;
+	} filterFlags;
+
+	struct
+	{
+		byte startEnabled : 1;
+		byte isEnabled : 1;
+		byte sendUntrigger : 1;
+	} flags;
 };

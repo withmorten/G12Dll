@@ -157,6 +157,66 @@ void PatchSpacer26(void)
 
 	// Enable saving of (small) meshes ...
 	Patch(0x00423C8D, (BYTE)0xEB);
+
+	// Gothic 1 uncompiled Zens and Material libraries would be compatible in Spacer2 if the following values were read safely
+	// Nopping them results in Spacer2 using the default values instead of overwriting them with garbage
+
+	// Note that the Unarchiver will still complain about many missing entries from other values, but those get read safely and the original value remains intact
+
+	if (G12GetPrivateProfileBool("SpacerG1Pmls", FALSE))
+	{
+		// Only enable this temporarily if you want to open Gothic 1 PMLs
+
+		// zCMaterial::Unarchive()
+		{
+			// Some WATER materials will require manual setting of the alphaFunc, as in Gothic 1 it got used differently on WATER
+
+			// detailObjectScale
+			PatchJump(0x006F10E5, 0x006F10F7);
+
+			// forceOccluder
+			PatchJump(0x006F10F7, 0x006F1112);
+
+			// environmentalMapping
+			PatchJump(0x006F1112, 0x006F112D);
+
+			// environmentalMappingStrength
+			PatchJump(0x006F112D, 0x006F113C);
+
+			// waveMode
+			PatchJump(0x006F113C, 0x006F115A);
+
+			// waveSpeed
+			PatchJump(0x006F115A, 0x006F1175);
+
+			// ignoreSunLight
+			PatchJump(0x006F1195, 0x006F11B0);
+
+			// alphaFunc
+			PatchJump(0x006F11B0, 0x006F11C2);
+			Nop(0x006F11C2);
+			Patch(0x006F11C2 + 1, (BYTE)0xE9);
+			Nop(0x006F127E, 3);
+		}
+	}
+
+	if (G12GetPrivateProfileBool("SpacerG1Zens", FALSE))
+	{
+		// Keep this enabled as long as you need to work on a Gothic 1 uncompiled ZEN
+		// I would not advise resaving it as an uncompiled Gothic 2 ZEN, because you will lose any items you have not implemented in your scripts yet
+
+		// zCVob::UnarchiveVerbose()
+		{
+			// visualAniMode
+			PatchJump(0x0078A8A0, 0x0078A8B5);
+
+			// visualAniModeStrength
+			PatchJump(0x0078A8B5, 0x0078A8C7);
+
+			// vobFarClipZScale
+			PatchJump(0x0078A8C7, 0x0078A8D9);
+		}
+	}
 }
 
 void Init(void)

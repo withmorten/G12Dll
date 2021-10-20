@@ -17,3 +17,20 @@ class hCActiveSnd : public zCActiveSnd
 public:
 	void AutoCalcObstruction(bool32 immediate) { }
 };
+
+class hCSoundManager : public zCSoundManager
+{
+public:
+	struct hTScriptSoundData
+	{
+		zSTRING file;
+		int pitchOff;
+		int pitchVar;
+		int vol;
+		int loop;
+		int loopStartOFfset;
+		int loopEndOffset;
+		float reverbLevel;
+		zSTRING pfxName;
+	};
+};
