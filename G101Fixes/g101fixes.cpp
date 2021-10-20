@@ -123,11 +123,11 @@ void hCGame::LoadPML(zSTRING &matfilename)
 
 			if (!mat)
 			{
-				mat = dynamic_cast<zCMaterial *>(arch->ReadObject(NULL));
+				mat = zDYNAMIC_CAST<zCMaterial>(arch->ReadObject(NULL));
 			}
 			else
 			{
-				dynamic_cast<zCMaterial *>(arch->ReadObject(NULL));
+				zDYNAMIC_CAST<zCMaterial>(arch->ReadObject(NULL));
 			}
 
 			if (mat)

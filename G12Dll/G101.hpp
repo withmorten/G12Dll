@@ -83,6 +83,8 @@ public:
 	zSTRING objectName;
 
 public:
+	static bool32 CheckInheritance(zCClassDef *baseClass, zCClassDef *subClass) { XCALL(0x005AB5E0); }
+
 	virtual zCClassDef *_GetClassDef() { XCALL(0x00402800); }
 
 	int Release() { XCALL(0x00472A60); }
@@ -91,6 +93,11 @@ public:
 class zCMaterial : public zCObject
 {
 public:
+	static zCClassDef &classDef;
+
+public:
+	static zCClassDef *GetStaticClassDef() { return &classDef; }
+
 	static zCMaterial *SearchName(zSTRING &name) { XCALL(0x00568B00); }
 };
 
