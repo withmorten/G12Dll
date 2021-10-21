@@ -8,27 +8,17 @@ newoption {
 	description = "don't print full paths into binary"
 }
 
-newoption {
-	trigger     = "ci-build",
-	description = "disable things like setpaths for ci builds"
-}
-
--- change this to your liking >
--- DebugDir = path.translate(os.getenv("") or "")
--- DebugExe = ""
--- DebugArgs = ""
--- < change this to your liking
-
 workspace "G12Dll"
-	function setpaths (gamepath, exename, args)
-		postbuildcommands { '{COPYFILE} "%{cfg.buildtarget.abspath}" "' .. gamepath .. "/" .. '%{cfg.buildtarget.name}"' }
-		postbuildcommands { '{COPYFILE} "%{cfg.buildtarget.directory}/%{cfg.buildtarget.basename}.pdb" "' .. gamepath .. "/" .. '%{cfg.buildtarget.basename}.pdb"' }
+	function setdebugpath (gamepath, exename, args)
 		debugdir (gamepath)
 		debugcommand (gamepath .. "/" .. exename)
 		debugargs (args)
 	end
 
-	-- LTCG configurations for during development, they will become the default again sometime
+	function addpostbuildcopy(gamepath)
+		postbuildcommands { '{COPYFILE} "%{cfg.buildtarget.abspath}" "' .. gamepath .. "/" .. '%{cfg.buildtarget.name}"' }
+	end
+
 	configurations
 	{
 		"Debug",
@@ -114,9 +104,14 @@ project "DInput"
 	files { "DInput/dinput.cpp" }
 	files { "DInput/main.def" }
 
-	-- if (not _OPTIONS["ci-build"]) then
-		-- setpaths(DebugDir, DebugExe, DebugArgs)
-	-- end
+	addpostbuildcopy(os.getenv("GOTHIC101D_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC101E_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC104D_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC107C_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC108K_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC112F_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC26_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC12_DIR"))
 
 project "G12Dll"
 	kind "SharedLib"
@@ -134,6 +129,15 @@ project "G12Dll"
 	files { "G12Dll/G12Dll.rc" }
 
 	files { "G12Dll/g12.cpp" }
+
+	addpostbuildcopy(os.getenv("GOTHIC101D_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC101E_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC104D_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC107C_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC108K_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC112F_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC26_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC12_DIR"))
 
 project "G101Fixes"
 	kind "SharedLib"
@@ -155,6 +159,9 @@ project "G101Fixes"
 	files { "G101Fixes/g101fixes.hpp" }
 	files { "G101Fixes/g101fixes.cpp" }
 
+	addpostbuildcopy(os.getenv("GOTHIC101D_DIR"))
+	setdebugpath(os.getenv("GOTHIC101D_DIR"), "gothic.exe", "")
+
 project "G1Barrier"
 	kind "SharedLib"
 	language "C++"
@@ -174,6 +181,9 @@ project "G1Barrier"
 
 	files { "G1Barrier/g1barrier.hpp" }
 	files { "G1Barrier/g1barrier.cpp" }
+
+	addpostbuildcopy(os.getenv("GOTHIC108K_DIR"))
+	setdebugpath(os.getenv("GOTHIC108K_DIR"), "Gothic.exe", "")
 
 project "G1Fixes"
 	kind "SharedLib"
@@ -195,6 +205,9 @@ project "G1Fixes"
 	files { "G1Fixes/g1fixes.hpp" }
 	files { "G1Fixes/g1fixes.cpp" }
 
+	addpostbuildcopy(os.getenv("GOTHIC108K_DIR"))
+	setdebugpath(os.getenv("GOTHIC108K_DIR"), "Gothic.exe", "")
+
 project "G1Spells"
 	kind "SharedLib"
 	language "C++"
@@ -214,6 +227,9 @@ project "G1Spells"
 
 	files { "G1Spells/g1spells.hpp" }
 	files { "G1Spells/g1spells.cpp" }
+
+	addpostbuildcopy(os.getenv("GOTHIC108K_DIR"))
+	setdebugpath(os.getenv("GOTHIC108K_DIR"), "Gothic.exe", "")
 
 project "G2Barrier"
 	kind "SharedLib"
@@ -235,6 +251,10 @@ project "G2Barrier"
 	files { "G2Barrier/g2barrier.hpp" }
 	files { "G2Barrier/g2barrier.cpp" }
 
+	addpostbuildcopy(os.getenv("GOTHIC26_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC12_DIR"))
+	setdebugpath(os.getenv("GOTHIC12_DIR"), "Gothic2.exe", "")
+
 project "G2Fixes"
 	kind "SharedLib"
 	language "C++"
@@ -254,6 +274,10 @@ project "G2Fixes"
 
 	files { "G2Fixes/g2fixes.hpp" }
 	files { "G2Fixes/g2fixes.cpp" }
+
+	addpostbuildcopy(os.getenv("GOTHIC26_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC12_DIR"))
+	setdebugpath(os.getenv("GOTHIC12_DIR"), "Gothic2.exe", "")
 
 project "G2Spells"
 	kind "SharedLib"
@@ -275,6 +299,10 @@ project "G2Spells"
 	files { "G2Spells/g2spells.hpp" }
 	files { "G2Spells/g2spells.cpp" }
 
+	addpostbuildcopy(os.getenv("GOTHIC26_DIR"))
+	addpostbuildcopy(os.getenv("GOTHIC12_DIR"))
+	setdebugpath(os.getenv("GOTHIC12_DIR"), "Gothic2.exe", "")
+
 project "S1Fixes"
 	kind "SharedLib"
 	language "C++"
@@ -294,3 +322,6 @@ project "S1Fixes"
 
 	files { "S1Fixes/s1fixes.hpp" }
 	files { "S1Fixes/s1fixes.cpp" }
+
+	addpostbuildcopy(os.getenv("GOTHIC108K_DIR"))
+	setdebugpath(os.getenv("GOTHIC108K_DIR"), "Spacer.exe", "")
