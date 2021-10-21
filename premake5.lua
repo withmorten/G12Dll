@@ -294,23 +294,3 @@ project "S1Fixes"
 
 	files { "S1Fixes/s1fixes.hpp" }
 	files { "S1Fixes/s1fixes.cpp" }
-
-project "S1SFixes"
-	kind "SharedLib"
-	language "C++"
-	targetname "s1sfixes"
-	targetdir "bin/%{cfg.buildcfg}"
-	targetextension ".dll"
-
-	files { "G12Dll/G12.h" }
-	files { "G12Dll/G12Core.h" }
-	files { "G12Dll/S1S.h" }
-	files { "G12Dll/S1S.hpp" }
-	files { "G12Dll/MemoryMgr.h" }
-	files { "G12Dll/version.h" }
-
-	files { "S1SFixes/resource.h" }
-	files { "S1SFixes/S1SFixes.rc" }
-
-	files { "S1SFixes/s1sfixes.hpp" }
-	files { "S1SFixes/s1sfixes.cpp" }

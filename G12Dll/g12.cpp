@@ -4,12 +4,88 @@
 
 #include "G12.h"
 
-void PatchGothic107(void)
+namespace Gothic101e
 {
-	PatchJump(0x0044A6F7, 0x0044A70C); // SendMessageA
+ASM(fix_num_texstages)
+{
+	__asm
+	{
+		mov[ebp + 0x4ec], eax
+		cmp eax, 4
+		jle locret
+		mov[ebp + 0x4ec], 4
+		locret:
+	}
+
+	RET(0x0074B4F9);
 }
 
-void PatchGothic108k(void)
+void Apply(void)
+{
+	// What the fuck Windows 10??? Nop SendMessageA call ...
+	PatchJump(0x00447345, 0x00447359);
+
+	Nop(0x005ED2BA, 7); // fps
+
+	InjectHook(0x0074B4F3, &fix_num_texstages, PATCH_JUMP);
+}
+}
+
+namespace Gothic104d
+{
+ASM(fix_num_texstages)
+{
+	__asm
+	{
+		mov[ebp + 0x4ec], eax
+		cmp eax, 4
+		jle locret
+		mov[ebp + 0x4ec], 4
+		locret:
+	}
+
+	RET(0x0074B4F9);
+}
+
+void Apply(void)
+{
+	PatchJump(0x00445125, 0x0044513C); // SendMessageA
+
+	Nop(0x005D110A, 7); // fps
+
+	InjectHook(0x00718F22, &fix_num_texstages, PATCH_JUMP);
+}
+}
+
+namespace Gothic107
+{
+ASM(fix_num_texstages)
+{
+	__asm
+	{
+		mov[ebp + 0x4ec], eax
+		cmp eax, 4
+		jle locret
+		mov[ebp + 0x4ec], 4
+		locret:
+	}
+
+	RET(0x0072CE1B);
+}
+
+void Apply(void)
+{
+	PatchJump(0x0044A6F5, 0x0044A70C); // SendMessageA
+
+	Nop(0x005DCECA, 7); // fps
+
+	InjectHook(0x0072CE15, &fix_num_texstages, PATCH_JUMP);
+}
+}
+
+namespace Gothic108k
+{
+void Apply(void)
 {
 	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE))
 	{
@@ -32,18 +108,75 @@ void PatchGothic108k(void)
 	// Debug damage (this doesn't work with SystemPack)
 	// Patch(0x009D987C, TRUE);
 }
+}
 
-void PatchGothic112f(void)
+namespace Gothic112f
+{
+void Apply(void)
 {
 	// Fix Fps
 	Nop(0x005ED341, 7);
 }
+}
 
+namespace Spacer142g
+{
+const char *GameDat = "game.dat";
+
+void Apply(void)
+{
+	if (G12GetPrivateProfileBool("DisableNumlock", FALSE))
+	{
+		// Disable NumLock
+		Patch(0x0074D23C, (BYTE)0xEB);
+		Patch(0x007B54D6, (BYTE)0xEB);
+	}
+
+	if (G12GetPrivateProfileBool("NoLODGenerate", TRUE))
+	{
+		// Don't generate LOD polygons
+		Patch(0x005AAA23, (BYTE)0xEB);
+	}
+
+	if (G12GetPrivateProfileBool("FastMSHSave", FALSE))
+	{
+		// Faster mesh saving? Untested ... but seems to work
+		Patch(0x005021F9, (BYTE)0xEB);
+	}
+
+	// Enable saving of (indoor) meshes ...
+	Patch(0x007BCBEA, (BYTE)0xEB);
+
+	// Don't save mesh for compiled ascii
+	Patch(0x007B904F + 1, (BYTE)FALSE);
+
+	// Don't save mesh for uncompiled ascii
+	Patch(0x007B90C0 + 1, (BYTE)FALSE);
+
+	// Don't show "memory leaks found" everytime quitting
+	Patch(0x0053AED2 + 1, (BYTE)2);
+
+	// BSP vobs ...
+	Patch(0x004C4CCE + 1, (BYTE)2);
+
+	// BSP lights ...
+	Patch(0x004C4DB1 + 1, (BYTE)2);
+
+	// Use game.dat ...
+	Patch(0x00667A02 + 1, GameDat);
+	Patch(0x00667A36 + 1, GameDat);
+	Patch(0x00667A5D + 1, GameDat);
+	Patch(0x00757CD0 + 1, GameDat);
+}
+}
+
+namespace Spacer150
+{
 const char *SpacerAppName = "Spacer 1.50";
 const char *SpacerAppVersion = "1.50";
 const float SpacerFarClipping = 3.9f; // ??? 4.0f
 
-void PatchSpacer150(void)
+void Apply(void)
 {
 	if (G12GetPrivateProfileBool("SpacerDisableNumlock", FALSE))
 	{
@@ -52,7 +185,7 @@ void PatchSpacer150(void)
 		Patch(0x0079E4E0, (BYTE)0xEB);
 	}
 
-	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE) || TRUE)
+	if (G12GetPrivateProfileBool("BarrierIgnoreSkyEffectsSetting", FALSE))
 	{
 		// Ignore skyEffects setting in oCSkyControler_Barrier::RenderSkyPre()
 		Nop(0x0065B932, 6);
@@ -120,8 +253,11 @@ void PatchSpacer150(void)
 	// Vob info is not packed
 	Patch(0x007B6978 + 1, (BYTE)FALSE);
 }
+}
 
-void PatchGothic26(void)
+namespace Gothic26
+{
+void Apply(void)
 {
 	if (G12GetPrivateProfileBool("ShowTime", FALSE))
 	{
@@ -141,8 +277,11 @@ void PatchGothic26(void)
 	// Debug damage (this doesn't work with SystemPack)
 	// Patch(0x00AAC60C, TRUE);
 }
+}
 
-void PatchSpacer26(void)
+namespace Spacer26
+{
+void Apply(void)
 {
 	if (G12GetPrivateProfileBool("SpacerDisableNumlock", FALSE))
 	{
@@ -217,39 +356,61 @@ void PatchSpacer26(void)
 			PatchJump(0x0078A8C7, 0x0078A8D9);
 		}
 	}
+
+	if (G12GetPrivateProfileBool("MergeVobsWithLevel", FALSE))
+	{
+		Nop(0x007AE26F, 6);
+		Nop(0x007AE3D4, 6);
+
+		Nop(0x007AD9A7, 6);
+		Nop(0x007AD9C4, 6);
+		Nop(0x007AD9D0, 6);
+		Nop(0x007AD9DC, 6);
+		Nop(0x007AD9F7, 6);
+		Nop(0x007ADA3F, 6);
+	}
+}
 }
 
 void Init(void)
 {
-	if (GOTHIC107C)
+	G12AllocConsole();
+
+	if (GOTHIC101E)
 	{
-		G12AllocConsole();
-		PatchGothic107();
+		Gothic101e::Apply();
+	}
+	else if (GOTHIC104D)
+	{
+		Gothic104d::Apply();
+	}
+	else if (GOTHIC107C)
+	{
+		Gothic107::Apply();
 	}
 	else if (GOTHIC108KMOD)
 	{
-		G12AllocConsole();
-		PatchGothic108k();
+		Gothic108k::Apply();
 	}
 	else if (GOTHIC112F)
 	{
-		G12AllocConsole();
-		PatchGothic112f();
+		Gothic112f::Apply();
+	}
+	else if (SPACER142G)
+	{
+		Spacer142g::Apply();
 	}
 	else if (SPACER150)
 	{
-		G12AllocConsole();
-		PatchSpacer150();
+		Spacer150::Apply();
 	}
 	else if (GOTHIC26FIX)
 	{
-		G12AllocConsole();
-		PatchGothic26();
+		Gothic26::Apply();
 	}
 	else if (SPACER26MOD)
 	{
-		G12AllocConsole();
-		PatchSpacer26();
+		Spacer26::Apply();
 	}
 }
 

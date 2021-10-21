@@ -33,7 +33,7 @@ void hCGame::LoadWorld(int slotID, zSTRING &levelpath)
 {
 	this->game_testmode = TRUE;
 
-	this->LoadMatlib();
+	// this->LoadMatlib();
 
 	this->oCGame::LoadWorld(slotID, levelpath);
 
@@ -154,12 +154,9 @@ void hCGame::LoadPML(zSTRING &matfilename)
 
 void PatchGothic101(void)
 {
-	// InjectHook(0x00548D07, &hMesh::LoadMSH); // zCBspTree::LoadBIN()
-	// InjectHook(0x00666FBA, &hWorld::GenerateStaticWorldLighting); // oCGame::CompileWorld()
-	// InjectHook(0x0066411A, &hGame::LoadWorld); // oCGame::LoadGame()
-
-	// What the fuck Windows 10??? Nop SendMessageA call ...
-	PatchJump(0x00447345, 0x00447359);
+	// InjectHook(0x00548D07, &hCMesh::LoadMSH); // zCBspTree::LoadBIN()
+	// InjectHook(0x00666FBA, &hCWorld::GenerateStaticWorldLighting); // oCGame::CompileWorld()
+	// InjectHook(0x0066411A, &hCGame::LoadWorld); // oCGame::LoadGame()
 
 	// write only vertexbuffer gone
 	// Patch(0x00759336, (BYTE)0xEB);
